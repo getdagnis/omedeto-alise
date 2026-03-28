@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, DragEvent, TouchEvent } from 'react';
+import type { CSSProperties } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMusic, faPen, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faVolumeHigh, faXmark } from '@fortawesome/free-solid-svg-icons';
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
@@ -19,8 +19,6 @@ const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const BG_DESKTOP_SUFFIX = '1920';
 const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
-const ULTRA_MODE_MS = 10000;
-const MAX_SOUNDS_PER_CHARACTER = 3;
 const MAX_SOUNDS_TOTAL = 12;
 
 const COMBO_WORDS = [
@@ -204,7 +202,6 @@ function App() {
   const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
 
   const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({});
-  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
   const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
     parseCharacterCustomStorage(),
@@ -222,7 +219,6 @@ function App() {
   const [renderMode, setRenderMode] = useState<'stable' | 'glitch'>(() => getStoredGlitchMode());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [glitchOverlayVars, setGlitchOverlayVars] = useState<CSSProperties>(() => createGlitchOverlayVars());
-  const [touchDraggedSound, setTouchDraggedSound] = useState<string | null>(null);
 
   const soundCatalogById = useMemo(() => new Map(ALL_SOUNDS.map((sound) => [sound.id, sound] as const)), []);
 
@@ -230,8 +226,6 @@ function App() {
   const activeSoundOrderRef = useRef<Array<{ characterId: string; soundId: string }>>([]);
   const totalActiveSoundsRef = useRef(0);
   const glowBurstTimeoutRef = useRef<number | null>(null);
-  const ultraModeTimeoutRef = useRef<number | null>(null);
-  const comboTimeoutRef = useRef<number | null>(null);
   const activeComboIdRef = useRef<string | null>(null);
 
   const stopAllAudio = useCallback(() => {
@@ -252,10 +246,6 @@ function App() {
     glowBurstTimeoutRef.current = window.setTimeout(() => {
       setIsGlowBurst(false);
     }, GLOW_BURST_MS);
-  }, []);
-
-  const stopCheerAudio = useCallback(() => {
-    // Cheer audio is currently not used but kept for logic stability
   }, []);
 
   const buildAudioKey = useCallback((characterId: string, soundId: string) => `${characterId}:${soundId}`, []);
@@ -297,122 +287,52 @@ function App() {
     });
   }, []);
 
-  const enableSound = useCallback(
-    (characterId: string, soundId: string) => {
-      const sound = soundCatalogById.get(soundId);
-      if (!sound) {
-        return;
-      }
-
-      const audioKey = buildAudioKey(characterId, soundId);
-      const existingAudio = audioRefs.current[audioKey];
-
-      unmuteCharacter(characterId);
-
-      if (existingAudio) {
-        existingAudio.currentTime = 0;
-        existingAudio.volume = 1;
-        void existingAudio.play().catch(() => undefined);
-      } else {
-        const nextAudio = new Audio(sound.path);
-        nextAudio.loop = true;
-        nextAudio.volume = 1;
-        void nextAudio.play().catch(() => undefined);
-        audioRefs.current[audioKey] = nextAudio;
-      }
-
-      setActiveSoundsByCharacter((previous) => {
-        const current = previous[characterId] ?? [];
-        if (current.includes(soundId)) {
-          return previous;
-        }
-
-        const next = { ...previous };
-        let order = [...activeSoundOrderRef.current];
-
-        const removeEntry = (removeCharacterId: string, removeSoundId: string) => {
-          const removeKey = buildAudioKey(removeCharacterId, removeSoundId);
-          const removeAudio = audioRefs.current[removeKey];
-          if (removeAudio) {
-            removeAudio.pause();
-            removeAudio.currentTime = 0;
-            delete audioRefs.current[removeKey];
-          }
-
-          const list = next[removeCharacterId] ?? [];
-          if (list.includes(removeSoundId)) {
-            const updatedList = list.filter((id) => id !== removeSoundId);
-            if (updatedList.length > 0) {
-              next[removeCharacterId] = updatedList;
-            } else {
-              delete next[removeCharacterId];
-            }
-          }
-
-          order = order.filter(
-            (entry) => !(entry.characterId === removeCharacterId && entry.soundId === removeSoundId),
-          );
-        };
-
-        const totalActive = Object.values(next).reduce((sum, ids) => sum + ids.length, 0);
-        while (totalActive >= MAX_SOUNDS_TOTAL && order.length > 0) {
-          const oldest = order[0];
-          if (!oldest) break;
-          removeEntry(oldest.characterId, oldest.soundId);
-        }
-
-        const updatedCurrent = next[characterId] ?? [];
-        if (updatedCurrent.length >= MAX_SOUNDS_PER_CHARACTER) {
-          removeEntry(characterId, updatedCurrent[0]);
-        }
-
-        next[characterId] = [...(next[characterId] ?? []), soundId];
-        order.push({ characterId, soundId });
-        activeSoundOrderRef.current = order;
-        return next;
-      });
-    },
-    [buildAudioKey, soundCatalogById, unmuteCharacter],
-  );
-
-  const disableSound = useCallback(
-    (characterId: string, soundId: string) => {
-      unmuteCharacter(characterId);
-
-      const audioKey = buildAudioKey(characterId, soundId);
-      const audio = audioRefs.current[audioKey];
-      if (audio) {
+  const disableAllSoundsForCharacter = useCallback((characterId: string) => {
+    Object.keys(audioRefs.current).forEach((key) => {
+      if (key.startsWith(`${characterId}:`)) {
+        const audio = audioRefs.current[key];
         audio.pause();
         audio.currentTime = 0;
-        delete audioRefs.current[audioKey];
+        delete audioRefs.current[key];
       }
+    });
+  }, []);
+
+  const setSingleSound = useCallback(
+    (characterId: string, soundId: string) => {
+      const sound = soundCatalogById.get(soundId);
+      if (!sound) return;
+
+      unmuteCharacter(characterId);
+      disableAllSoundsForCharacter(characterId);
+
+      const audioKey = buildAudioKey(characterId, soundId);
+      const nextAudio = new Audio(sound.path);
+      nextAudio.loop = true;
+      nextAudio.volume = 1;
+      void nextAudio.play().catch(() => undefined);
+      audioRefs.current[audioKey] = nextAudio;
 
       setActiveSoundsByCharacter((previous) => {
-        const current = previous[characterId] ?? [];
-        if (!current.includes(soundId)) {
-          return previous;
-        }
-        const nextSounds = current.filter((id) => id !== soundId);
-        return { ...previous, [characterId]: nextSounds };
+        const next = { ...previous, [characterId]: [soundId] };
+
+        activeSoundOrderRef.current = activeSoundOrderRef.current.filter((e) => e.characterId !== characterId);
+        activeSoundOrderRef.current.push({ characterId, soundId });
+
+        return next;
       });
 
-      activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
-        (entry) => !(entry.characterId === characterId && entry.soundId === soundId),
-      );
+      setPickingSoundsCharacterId(null);
     },
-    [buildAudioKey, unmuteCharacter],
+    [buildAudioKey, soundCatalogById, unmuteCharacter, disableAllSoundsForCharacter],
   );
 
   const resetCharacter = useCallback(
     (characterId: string) => {
       unmuteCharacter(characterId);
-
       setActiveSoundsByCharacter((previous) => {
         const current = previous[characterId] ?? [];
-        if (current.length === 0) {
-          return previous;
-        }
-
+        if (current.length === 0) return previous;
         current.forEach((soundId) => {
           const audioKey = buildAudioKey(characterId, soundId);
           const audio = audioRefs.current[audioKey];
@@ -422,26 +342,11 @@ function App() {
             delete audioRefs.current[audioKey];
           }
         });
-
         return { ...previous, [characterId]: [] };
       });
-
-      activeSoundOrderRef.current = activeSoundOrderRef.current.filter((entry) => entry.characterId !== characterId);
+      activeSoundOrderRef.current = activeSoundOrderRef.current.filter((e) => e.characterId !== characterId);
     },
     [buildAudioKey, unmuteCharacter],
-  );
-
-  const toggleSound = useCallback(
-    (soundId: string, characterId: string) => {
-      const characterSounds = activeSoundsByCharacter[characterId] ?? [];
-      if (characterSounds.includes(soundId)) {
-        disableSound(characterId, soundId);
-        return;
-      }
-
-      enableSound(characterId, soundId);
-    },
-    [activeSoundsByCharacter, disableSound, enableSound],
   );
 
   const handleCharacterClick = useCallback(
@@ -460,17 +365,13 @@ function App() {
 
   const handleCharacterImageLoad = useCallback((characterId: string) => {
     setLoadedCharacterMap((previous) => {
-      if (previous[characterId]) {
-        return previous;
-      }
+      if (previous[characterId]) return previous;
       return { ...previous, [characterId]: true };
     });
   }, []);
 
   const resetBoard = useCallback(() => {
     stopAllAudio();
-    setTouchDraggedSound(null);
-    setDropTargetId(null);
     setActiveSoundsByCharacter({});
     setIsGlowBurst(false);
     activeComboIdRef.current = null;
@@ -482,37 +383,26 @@ function App() {
       setRenderMode('stable');
       return;
     }
-
     setGlitchOverlayVars(createGlitchOverlayVars());
     setRenderMode('glitch');
   }, [renderMode]);
 
   useEffect(() => {
-    if (!isBackgroundRotationReady || BACKGROUND_IMAGE_KEYS.length < 2) {
-      return;
-    }
-
+    if (!isBackgroundRotationReady || BACKGROUND_IMAGE_KEYS.length < 2) return;
     const interval = window.setInterval(() => {
       setBackgroundIndex((previous) => (previous + 1) % BACKGROUND_IMAGE_KEYS.length);
     }, 9000);
-
     return () => window.clearInterval(interval);
   }, [isBackgroundRotationReady]);
 
   useEffect(() => {
-    const updateViewportType = () => {
-      setIsMobileVerticalDevice(getIsMobileVerticalDevice());
-    };
-
+    const updateViewportType = () => setIsMobileVerticalDevice(getIsMobileVerticalDevice());
     updateViewportType();
-
     const orientationQuery = window.matchMedia('(orientation: portrait)');
     const pointerQuery = window.matchMedia('(pointer: coarse)');
-
     orientationQuery.addEventListener('change', updateViewportType);
     pointerQuery.addEventListener('change', updateViewportType);
     window.addEventListener('resize', updateViewportType);
-
     return () => {
       orientationQuery.removeEventListener('change', updateViewportType);
       pointerQuery.removeEventListener('change', updateViewportType);
@@ -531,20 +421,15 @@ function App() {
 
   useEffect(() => {
     let isCancelled = false;
-
     const preloadRemainingBackgrounds = async () => {
       const suffix = getIsMobileVerticalDevice() ? BG_MOBILE_SUFFIX : BG_DESKTOP_SUFFIX;
       const remainingBackgrounds = BACKGROUND_IMAGE_KEYS.slice(1).map((backgroundKey) =>
         buildBackgroundImagePath(backgroundKey, suffix),
       );
       await Promise.all(remainingBackgrounds.map((src) => preloadImage(src)));
-      if (!isCancelled) {
-        setIsBackgroundRotationReady(true);
-      }
+      if (!isCancelled) setIsBackgroundRotationReady(true);
     };
-
     void preloadRemainingBackgrounds();
-
     return () => {
       isCancelled = true;
     };
@@ -555,106 +440,23 @@ function App() {
   useEffect(() => {
     try {
       window.localStorage.setItem(GLITCH_PREF_KEY, renderMode);
-    } catch {
-      // Ignore localStorage failures
-    }
+    } catch {}
   }, [renderMode]);
 
   useEffect(() => {
     const total = Object.values(activeSoundsByCharacter).reduce((sum, ids) => sum + ids.length, 0);
-    if (total >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) {
-      triggerGlowBurst();
-    }
+    if (total >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) triggerGlowBurst();
     totalActiveSoundsRef.current = total;
   }, [activeSoundsByCharacter, triggerGlowBurst]);
 
   useEffect(() => {
     const activeSet = new Set(Object.values(activeSoundsByCharacter).flat());
     const matchedCombo = COMBO_WORDS.find((combo) => combo.soundIds.every((soundId) => activeSet.has(soundId)));
-
-    if (!matchedCombo) {
-      activeComboIdRef.current = null;
-      return;
-    }
-
-    if (activeComboIdRef.current === matchedCombo.id) {
-      return;
-    }
-
+    if (!matchedCombo || activeComboIdRef.current === matchedCombo.id) return;
     activeComboIdRef.current = matchedCombo.id;
     setComboWord(matchedCombo.word);
-    if (comboTimeoutRef.current) {
-      window.clearTimeout(comboTimeoutRef.current);
-    }
-    comboTimeoutRef.current = window.setTimeout(() => {
-      setComboWord(null);
-    }, 2200);
+    window.setTimeout(() => setComboWord(null), 2200);
   }, [activeSoundsByCharacter]);
-
-  useEffect(
-    () => () => {
-      if (comboTimeoutRef.current) {
-        window.clearTimeout(comboTimeoutRef.current);
-      }
-      if (glowBurstTimeoutRef.current) {
-        window.clearTimeout(glowBurstTimeoutRef.current);
-      }
-      if (ultraModeTimeoutRef.current) {
-        window.clearTimeout(ultraModeTimeoutRef.current);
-      }
-      stopCheerAudio();
-    },
-    [stopCheerAudio],
-  );
-
-  const handleGlitchMenuAction = () => {
-    toggleRenderMode();
-    setIsMenuOpen(false);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLElement>, characterId: string) => {
-    event.preventDefault();
-    setDropTargetId(null);
-    const soundId = event.dataTransfer.getData('text/plain');
-    if (!soundId) {
-      return;
-    }
-    enableSound(characterId, soundId);
-  };
-
-  const handleTouchMove = (event: TouchEvent<HTMLElement>) => {
-    if (!touchDraggedSound) {
-      return;
-    }
-
-    const touch = event.touches[0];
-    if (!touch) {
-      return;
-    }
-
-    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-    const target = dropTarget?.closest('[data-character-id]') as HTMLElement | null;
-    const targetId = target?.getAttribute('data-character-id') ?? null;
-    setDropTargetId(targetId);
-  };
-
-  const handleTouchEnd = (event: TouchEvent<HTMLElement>) => {
-    if (!touchDraggedSound) {
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-    const target = dropTarget?.closest('[data-character-id]') as HTMLElement | null;
-    const targetId = target?.getAttribute('data-character-id');
-
-    if (targetId) {
-      enableSound(targetId, touchDraggedSound);
-    }
-
-    setTouchDraggedSound(null);
-    setDropTargetId(null);
-  };
 
   const persistTimeoutRef = useRef<number | null>(null);
 
@@ -694,12 +496,17 @@ function App() {
     soundboardColor: '#29063acc',
   };
 
+  const handleGlitchMenuAction = () => {
+    toggleRenderMode();
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className={`${styles.page} ${renderMode === 'glitch' ? styles.pageGlitch : ''}`} style={glitchOverlayVars}>
       <div className={styles.background} style={{ backgroundImage: `url(${activeBackgroundImage})` }} />
       <div className={styles.backgroundOverlay} />
 
-      <main className={styles.content} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      <main className={styles.content}>
         <section
           className={styles.panel}
           style={
@@ -724,23 +531,19 @@ function App() {
             activeSoundsByCharacter={activeSoundsByCharacter}
             mutedCharacterIds={mutedCharacterIds}
             soundCatalogById={soundCatalogById}
-            dropTargetId={dropTargetId}
             loadedCharacterMap={loadedCharacterMap}
             isGlowBurst={isGlowBurst}
             comboWord={comboWord}
             onSelectCharacter={handleCharacterClick}
             onToggleFavorite={handleToggleFavorite}
-            onDragOverCharacter={(_, characterId) => setDropTargetId(characterId)}
-            onDragLeaveCharacter={(characterId) => {
-              if (dropTargetId === characterId) {
-                setDropTargetId(null);
-              }
+            onDropSound={(event, characterId) => {
+              event.preventDefault();
+              const soundId = event.dataTransfer.getData('text/plain');
+              if (soundId) setSingleSound(characterId, soundId);
             }}
-            onDropSound={(event, characterId) => handleDrop(event, characterId)}
             onImageLoad={handleCharacterImageLoad}
             onEditCharacter={(characterId) => navigate(`/${characterId}/edit`)}
             onResetCharacter={resetCharacter}
-            onToggleMuteCharacter={toggleMuteCharacter}
             onOpenSoundPicker={(characterId) => setPickingSoundsCharacterId(characterId)}
           />
         </section>
@@ -756,28 +559,16 @@ function App() {
           imageOptions={CHARACTER_IMAGE_OPTIONS}
           onClose={() => navigate('/')}
           onSelectCharacter={(id) => navigate(`/${id}/edit`)}
-          onUpdateCustomization={(id, patch) => {
-            updateCharacterCustomization(id, patch);
-          }}
+          onUpdateCustomization={(id, patch) => updateCharacterCustomization(id, patch)}
         />
 
         {pickingSoundsCharacterId && (
           <>
             <div className={styles.backdrop} onClick={() => setPickingSoundsCharacterId(null)} />
-            <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add sounds">
+            <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add sound">
               <div className={styles.pickerCard}>
                 <header className={styles.pickerHeader}>
-                  <div className={styles.pickerTitleGroup}>
-                    <h3 className={styles.pickerTitle}>
-                      {(
-                        characterCustomizations[pickingSoundsCharacterId]?.name ||
-                        CHARACTERS.find((c) => c.id === pickingSoundsCharacterId)?.name ||
-                        ''
-                      ).toUpperCase()}
-                      'S SOUNDBOARD
-                    </h3>
-                    <p className={styles.pickerSubtitle}>choose up to 3 char sounds</p>
-                  </div>
+                  <h3 className={styles.pickerTitle}>SELECT LOOP</h3>
                   <button
                     type="button"
                     className={styles.closeButton}
@@ -790,68 +581,37 @@ function App() {
                   {ALL_SOUNDS.slice(0, 12).map((sound) => {
                     const characterSounds = activeSoundsByCharacter[pickingSoundsCharacterId] ?? [];
                     const isActive = characterSounds.includes(sound.id);
-                    const isMaxReached = characterSounds.length >= 3 && !isActive;
-
                     return (
                       <button
                         key={sound.id}
                         type="button"
-                        disabled={isMaxReached}
-                        className={`${styles.pickerItem} ${isActive ? styles.pickerItemActive : ''} ${isMaxReached ? styles.pickerItemDisabled : ''}`}
-                        onClick={() => toggleSound(sound.id, pickingSoundsCharacterId)}
-                        style={{
-                          backgroundColor: isActive ? `var(${sound.colorToken})` : `var(${sound.colorToken}-opq)`,
-                        }}
+                        className={`${styles.pickerItem} ${isActive ? styles.pickerItemActive : ''}`}
+                        onClick={() => setSingleSound(pickingSoundsCharacterId, sound.id)}
+                        style={{ backgroundColor: `var(${sound.colorToken})` }}
                       >
-                        {sound.name}
+                        <FontAwesomeIcon icon={faVolumeHigh} className={styles.pickerItemIcon} />
+                        <span>{sound.name.toUpperCase()}</span>
                       </button>
                     );
                   })}
-                </div>
-                <div className={styles.modalActions}>
-                  <button
-                    type="button"
-                    className={styles.cancelButton}
-                    onClick={() => {
-                      setPickingSoundsCharacterId(null);
-                      navigate(`/${pickingSoundsCharacterId}/edit`);
-                    }}
-                  >
-                    EDIT
-                  </button>
-                  <button type="button" className={styles.okButton} onClick={() => setPickingSoundsCharacterId(null)}>
-                    OK
-                  </button>
                 </div>
               </div>
             </div>
           </>
         )}
 
-        <button
-          type="button"
-          className={styles.refreshButton}
-          onClick={resetBoard}
-          aria-label="Reset all active sounds"
-        >
-          Reset board
+        <button type="button" className={styles.refreshButton} onClick={resetBoard}>
+          Reset Board
         </button>
 
         <div className={styles.hamburgerWrap}>
-          <button
-            type="button"
-            className={styles.hamburgerButton}
-            onClick={() => setIsMenuOpen((previous) => !previous)}
-            aria-expanded={isMenuOpen}
-            aria-controls="main-menu"
-            aria-label="Open menu"
-          >
+          <button type="button" className={styles.hamburgerButton} onClick={() => setIsMenuOpen((prev) => !prev)}>
             ☰
           </button>
           {isMenuOpen && (
-            <div id="main-menu" className={styles.hamburgerMenu} role="menu" aria-label="Main menu">
-              <button type="button" className={styles.hamburgerItem} onClick={handleGlitchMenuAction} role="menuitem">
-                Glitch: {renderMode === 'glitch' ? 'Turn off' : 'Turn on'}
+            <div id="main-menu" className={styles.hamburgerMenu} role="menu">
+              <button type="button" className={styles.hamburgerItem} onClick={handleGlitchMenuAction}>
+                Glitch: {renderMode === 'glitch' ? 'Off' : 'On'}
               </button>
             </div>
           )}

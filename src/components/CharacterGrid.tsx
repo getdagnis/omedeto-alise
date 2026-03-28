@@ -18,19 +18,15 @@ type CharacterGridProps = {
   activeSoundsByCharacter: Record<string, string[]>;
   mutedCharacterIds: Set<string>;
   soundCatalogById: Map<string, SoundOption>;
-  dropTargetId: string | null;
   loadedCharacterMap: Record<string, boolean>;
   isGlowBurst: boolean;
   comboWord: string | null;
   onSelectCharacter: (characterId: string) => void;
   onToggleFavorite: (characterId: string) => void;
-  onDragOverCharacter: (event: DragEvent<HTMLDivElement>, characterId: string) => void;
-  onDragLeaveCharacter: (characterId: string) => void;
   onDropSound: (event: DragEvent<HTMLDivElement>, characterId: string) => void;
   onImageLoad: (characterId: string) => void;
   onEditCharacter: (characterId: string) => void;
   onResetCharacter: (characterId: string) => void;
-  onToggleMuteCharacter: (characterId: string) => void;
   onOpenSoundPicker: (characterId: string) => void;
 };
 
@@ -44,14 +40,11 @@ function CharacterGrid({
   activeSoundsByCharacter,
   mutedCharacterIds,
   soundCatalogById,
-  dropTargetId,
   loadedCharacterMap,
   isGlowBurst,
   comboWord,
   onSelectCharacter,
   onToggleFavorite,
-  onDragOverCharacter,
-  onDragLeaveCharacter,
   onDropSound,
   onImageLoad,
   onEditCharacter,
@@ -65,7 +58,6 @@ function CharacterGrid({
           const customization = customizations[character.id] ?? {};
           const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
           const isFavorite = character.id === favoriteCharacterId;
-          const isDropActive = dropTargetId === character.id;
           const isImageLoaded = Boolean(loadedCharacterMap[character.id]);
           const isMuted = mutedCharacterIds.has(character.id);
 
@@ -93,7 +85,7 @@ function CharacterGrid({
               soundIds={characterSoundIds}
               soundCatalogById={soundCatalogById}
               isActive={isFavorite}
-              isDropActive={isDropActive}
+              isDropActive={false}
               isGlowBurst={isGlowBurst}
               comboWord={comboWord}
               colors={colors}
@@ -104,9 +96,7 @@ function CharacterGrid({
               onToggleFavorite={() => onToggleFavorite(character.id)}
               onDragOver={(event) => {
                 event.preventDefault();
-                onDragOverCharacter(event, character.id);
               }}
-              onDragLeave={() => onDragLeaveCharacter(character.id)}
               onDrop={(event) => onDropSound(event, character.id)}
               onImageLoad={() => onImageLoad(character.id)}
               onEdit={() => onEditCharacter(character.id)}
