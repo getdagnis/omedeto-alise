@@ -4,6 +4,7 @@ import styles from './SoundPanel.module.sass';
 import type { SoundOption } from '../config';
 
 type SoundPanelProps = {
+  activeCharacterName: string;
   activeSoundIds: string[];
   totalActiveSounds: number;
   maxSoundsTotal: number;
@@ -24,6 +25,7 @@ type SoundPanelProps = {
 };
 
 function SoundPanel({
+  activeCharacterName,
   activeSoundIds,
   totalActiveSounds,
   maxSoundsTotal,
@@ -102,7 +104,7 @@ function SoundPanel({
       </div>
 
       <details className={styles.soundDropdown} open>
-        <summary>Tap or Drag</summary>
+        <summary>{activeCharacterName.toUpperCase()}'S SOUNDBOARD</summary>
         <p className={styles.dropdownHelper}>Tap to toggle. Each character can hold up to 3 sounds (12 total).</p>
         <div className={styles.soundGrid}>
           {visibleSounds.map((sound) => {

@@ -6,7 +6,7 @@ import type { CharacterOption, SoundOption } from '../config';
 
 type CharacterCustomization = {
   name?: string;
-  colorMode?: 'auto' | string;
+  colorModes?: string[];
   image?: string;
 };
 
@@ -57,15 +57,25 @@ function CharacterGrid({
       <div className={styles.characterGrid}>
         {characters.map((character) => {
           const customization = customizations[character.id] ?? {};
-          const colorMode = customization.colorMode ?? 'auto';
           const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
           const isActiveCharacter = character.id === activeCharacterId;
           const isDropActive = dropTargetId === character.id;
           const isImageLoaded = Boolean(loadedCharacterMap[character.id]);
+
           const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
           const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
           const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
-          const backgroundColor = colorMode !== 'auto' ? `var(${colorMode})` : autoBackground;
+
+          const colors = (() => {
+            if (customization.colorModes && customization.colorModes.length > 0) {
+              return customization.colorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
+            }
+
+            const defaultColor = character.primaryColor || autoBackground;
+
+            return [defaultColor];
+          })();
+
           const ringColor = isActiveCharacter ? ACTIVE_RING_COLOR : INACTIVE_RING_COLOR;
 
           return (
@@ -79,7 +89,7 @@ function CharacterGrid({
               isDropActive={isDropActive}
               isGlowBurst={isGlowBurst}
               comboWord={comboWord}
-              backgroundColor={backgroundColor}
+              colors={colors}
               ringColor={ringColor}
               isImageLoaded={isImageLoaded}
               onSelect={() => onSelectCharacter(character.id)}

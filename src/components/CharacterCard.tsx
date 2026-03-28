@@ -9,7 +9,7 @@ const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 
 type CharacterCustomization = {
   name?: string;
-  colorMode?: 'auto' | string;
+  colorModes?: string[];
   image?: string;
 };
 
@@ -22,7 +22,7 @@ type CharacterCardProps = {
   isDropActive: boolean;
   isGlowBurst: boolean;
   comboWord: string | null;
-  backgroundColor: string;
+  colors: string[];
   ringColor: string;
   isImageLoaded: boolean;
   onSelect?: () => void;
@@ -34,8 +34,9 @@ type CharacterCardProps = {
   onReset?: () => void;
   isSmallPreview?: boolean;
   hideSounds?: boolean;
-  actions?: React.ReactNode;
+  showActions?: boolean;
   children?: React.ReactNode;
+  forceLoop?: boolean;
 };
 
 const getDropTargetPulseClass = (soundIds: string[], soundCatalogById: Map<string, SoundOption>) => {
@@ -72,7 +73,7 @@ function CharacterCard({
   isDropActive,
   isGlowBurst,
   comboWord,
-  backgroundColor,
+  colors,
   ringColor,
   isImageLoaded,
   onSelect,
@@ -84,14 +85,16 @@ function CharacterCard({
   onReset,
   isSmallPreview = false,
   hideSounds = false,
-  actions,
+  showActions = true,
   children,
+  forceLoop = false,
 }: CharacterCardProps) {
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
   const showName = displayName.trim().length > 0;
   const pulseClass = getDropTargetPulseClass(soundIds, soundCatalogById);
   const soundNames = soundIds.map((soundId) => soundCatalogById.get(soundId)?.name ?? soundId);
+  const isLooping = (soundIds.length > 0 || forceLoop) && colors.length > 1;
 
   if (isSmallPreview) {
     return (
@@ -99,7 +102,7 @@ function CharacterCard({
         type="button"
         className={`${styles.smallPreview} ${isActive ? styles.smallPreviewActive : ''}`}
         onClick={onSelect}
-        style={{ '--preview-color': backgroundColor } as CSSProperties}
+        style={{ '--preview-color': colors[0] } as CSSProperties}
       >
         <img src={displayImage} alt={displayName} className={styles.smallPreviewImage} />
         <span className={styles.smallPreviewName}>{displayName}</span>
@@ -109,10 +112,13 @@ function CharacterCard({
 
   return (
     <div className={styles.characterCard}>
+      {showName && <p className={styles.characterName}>{displayName.toUpperCase()}'S MIX</p>}
       <div
         className={`${styles.dropTarget} ${pulseClass} ${isDropActive ? styles.dropTargetActive : ''} ${
           isActive ? styles.dropTargetSelected : ''
-        } ${isGlowBurst && isActive ? styles.dropTargetGlow : ''}`}
+        } ${isGlowBurst && isActive ? styles.dropTargetGlow : ''} ${isLooping ? styles.dropTargetHasLoop : ''} ${
+          forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''
+        }`}
         data-character-id={character.id}
         onClick={onSelect}
         onDragOver={onDragOver}
@@ -120,13 +126,22 @@ function CharacterCard({
         onDrop={onDrop}
         style={
           {
-            '--character-bg': backgroundColor,
-            '--character-primary': backgroundColor,
-            '--character-secondary': backgroundColor,
+            '--character-bg': colors[0],
+            '--character-bg-1': colors[0],
+            '--character-bg-2': colors[1] || colors[0],
+            '--character-bg-3': colors[2] || colors[1] || colors[0],
+            '--character-primary': colors[0],
+            '--character-secondary': colors[0],
             '--ring-color': ringColor,
+            color: colors[0],
           } as CSSProperties
         }
       >
+        <div
+          className={`${styles.backgroundLoop} ${isLooping ? styles.backgroundLoopActive : ''} ${
+            forceLoop ? styles.backgroundLoopFast : ''
+          }`}
+        />
         {comboWord && isActive && (
           <div className={styles.comboWord} role="status" aria-live="polite">
             {comboWord}
@@ -148,37 +163,31 @@ function CharacterCard({
           </div>
         )}
       </div>
-      {showName && <p className={styles.characterName}>{displayName}</p>}
       {!hideSounds && (
         <div className={styles.characterSoundList}>
-          {soundNames.length === 0 ? (
-            <span className={styles.characterSoundTag}>No sounds</span>
-          ) : (
-            soundNames.map((name) => (
-              <span key={`${character.id}-${name}`} className={styles.characterSoundTag}>
-                {name}
+          {Array.from({ length: 3 }).map((_, index) => {
+            const soundName = soundNames[index];
+            return (
+              <span
+                key={`${character.id}-slot-${index}`}
+                className={`${styles.characterSoundTag} ${!soundName ? styles.characterSoundTagEmpty : ''}`}
+              >
+                {soundName || 'add sound'}
               </span>
-            ))
-          )}
+            );
+          })}
         </div>
       )}
-      <div className={styles.characterActions}>
-        {actions || (
-          <>
-            <button type="button" className={styles.characterActionButton} onClick={onEdit} aria-label="Edit character">
-              <FontAwesomeIcon icon={faPen} />
-            </button>
-            <button
-              type="button"
-              className={styles.characterActionButton}
-              onClick={onReset}
-              aria-label="Reset character"
-            >
-              <FontAwesomeIcon icon={faRotateLeft} />
-            </button>
-          </>
-        )}
-      </div>
+      {showActions && (
+        <div className={styles.characterActions}>
+          <button type="button" className={styles.characterActionButton} onClick={onEdit} aria-label="Edit character">
+            <FontAwesomeIcon icon={faPen} />
+          </button>
+          <button type="button" className={styles.characterActionButton} onClick={onReset} aria-label="Reset character">
+            <FontAwesomeIcon icon={faRotateLeft} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

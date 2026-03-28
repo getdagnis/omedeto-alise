@@ -15,7 +15,6 @@ import {
 
 const VISIBLE_SOUND_COUNT = 20;
 const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
-const CHARACTER_CUSTOM_COOKIE = 'gumi-alise-character-custom';
 const DEFAULT_GLITCH_MODE: 'stable' | 'glitch' = 'stable';
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const BG_DESKTOP_SUFFIX = '1920';
@@ -52,7 +51,7 @@ const COMBO_WORDS = [
 const CHEER_SOUND_PATHS = ['/hanako/applause.mp3', '/hanako/choir.mp3', '/hanako/laugh.mp3'] as const;
 
 const CHARACTER_COLOR_OPTIONS = [
-  { id: 'auto', label: 'Auto (Sound)', value: 'auto' },
+  { id: 'auto', label: 'Default (Sound)', value: 'auto' },
   ...CHARACTER_COLOR_TOKENS.map((token, index) => ({
     id: `tokyo-${index + 1}`,
     label: `Tokyo ${index + 1}`,
@@ -139,29 +138,26 @@ const getIsMobileVerticalDevice = () => {
 
 type CharacterCustomization = {
   name?: string;
-  colorMode?: 'auto' | string;
+  colorModes?: string[];
   image?: string;
 };
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
 
-const parseCharacterCustomCookie = (): CharacterCustomizationMap => {
-  if (typeof document === 'undefined') {
+const CHARACTER_CUSTOM_STORAGE_KEY = 'gumi-alise-character-custom-v2';
+
+const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
+  if (typeof window === 'undefined') {
     return {};
   }
-
-  const cookieEntry = document.cookie
-    .split('; ')
-    .find((entry) => entry.startsWith(`${CHARACTER_CUSTOM_COOKIE}=`));
-
-  if (!cookieEntry) {
-    return {};
-  }
-
-  const rawValue = cookieEntry.split('=').slice(1).join('=');
 
   try {
-    const parsed = JSON.parse(decodeURIComponent(rawValue));
+    const stored = window.localStorage.getItem(CHARACTER_CUSTOM_STORAGE_KEY);
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored);
     if (!parsed || typeof parsed !== 'object') {
       return {};
     }
@@ -178,8 +174,8 @@ const parseCharacterCustomCookie = (): CharacterCustomizationMap => {
       if (typeof typed.name === 'string') {
         next.name = typed.name.slice(0, 32);
       }
-      if (typeof typed.colorMode === 'string') {
-        next.colorMode = typed.colorMode;
+      if (Array.isArray(typed.colorModes)) {
+        next.colorModes = typed.colorModes.filter((c) => typeof c === 'string').slice(0, 3);
       }
       if (typeof typed.image === 'string') {
         next.image = typed.image;
@@ -194,16 +190,32 @@ const parseCharacterCustomCookie = (): CharacterCustomizationMap => {
   }
 };
 
-const persistCharacterCustomCookie = (customMap: CharacterCustomizationMap) => {
-  if (typeof document === 'undefined') {
+const persistCharacterCustomStorage = (customMap: CharacterCustomizationMap) => {
+  if (typeof window === 'undefined') {
     return;
   }
 
-  const encoded = encodeURIComponent(JSON.stringify(customMap));
-  document.cookie = `${CHARACTER_CUSTOM_COOKIE}=${encoded}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  try {
+    window.localStorage.setItem(CHARACTER_CUSTOM_STORAGE_KEY, JSON.stringify(customMap));
+  } catch {
+    // Ignore quota errors
+  }
 };
 
 function App() {
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = useCallback((path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  }, []);
+
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [isMobileVerticalDevice, setIsMobileVerticalDevice] = useState(() => getIsMobileVerticalDevice());
   const [isBackgroundRotationReady, setIsBackgroundRotationReady] = useState(false);
@@ -212,9 +224,14 @@ function App() {
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
   const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
-    parseCharacterCustomCookie(),
+    parseCharacterCustomStorage(),
   );
-  const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
+
+  const editingCharacterId = useMemo(() => {
+    const match = currentPath.match(/^\/(.+)\/edit$/);
+    return match ? match[1] : null;
+  }, [currentPath]);
+
   const [isGlowBurst, setIsGlowBurst] = useState(false);
   const [isUltraMode, setIsUltraMode] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
@@ -242,11 +259,15 @@ function App() {
     soundboardColor: activeCharacter?.soundboardColor ?? '#29063acc',
   };
   const activePanelColor = (() => {
-    if (activeCustomization.colorMode && activeCustomization.colorMode !== 'auto') {
-      return `var(${activeCustomization.colorMode})`;
+    const colorModes = activeCustomization.colorModes ?? [];
+    if (colorModes.length > 0) {
+      const first = colorModes[0];
+      if (first !== 'auto') {
+        return `var(${first})`;
+      }
     }
 
-    if (activeCustomization.colorMode === 'auto' && activeSoundIds.length > 0) {
+    if (activeSoundIds.length > 0) {
       const token = soundCatalogById.get(activeSoundIds[activeSoundIds.length - 1])?.colorToken;
       if (token) {
         return `var(${token})`;
@@ -384,7 +405,7 @@ function App() {
         }
 
         const next = { ...previous };
-        let order = [...activeSoundOrderRef.current];
+        const order = [...activeSoundOrderRef.current];
 
         const removeEntry = (removeCharacterId: string, removeSoundId: string) => {
           const removeKey = buildAudioKey(removeCharacterId, removeSoundId);
@@ -405,9 +426,12 @@ function App() {
             }
           }
 
-          order = order.filter(
-            (entry) => !(entry.characterId === removeCharacterId && entry.soundId === removeSoundId),
+          const idx = order.findIndex(
+            (entry) => entry.characterId === removeCharacterId && entry.soundId === removeSoundId,
           );
+          if (idx !== -1) {
+            order.splice(idx, 1);
+          }
         };
 
         while (order.length >= MAX_SOUNDS_TOTAL) {
@@ -572,14 +596,29 @@ function App() {
     setDropTargetId(null);
   };
 
-  const updateCharacterCustomization = useCallback((characterId: string, patch: CharacterCustomization) => {
-    setCharacterCustomizations((previous) => {
-      const current = previous[characterId] ?? {};
-      const next = { ...previous, [characterId]: { ...current, ...patch } };
-      persistCharacterCustomCookie(next);
-      return next;
-    });
+  const persistTimeoutRef = useRef<number | null>(null);
+
+  const persistCharacterCustomStorageDebounced = useCallback((customMap: CharacterCustomizationMap) => {
+    if (persistTimeoutRef.current) {
+      window.clearTimeout(persistTimeoutRef.current);
+    }
+    persistTimeoutRef.current = window.setTimeout(() => {
+      persistCharacterCustomStorage(customMap);
+      persistTimeoutRef.current = null;
+    }, 500);
   }, []);
+
+  const updateCharacterCustomization = useCallback(
+    (characterId: string, patch: CharacterCustomization) => {
+      setCharacterCustomizations((previous) => {
+        const current = previous[characterId] ?? {};
+        const next = { ...previous, [characterId]: { ...current, ...patch } };
+        persistCharacterCustomStorageDebounced(next);
+        return next;
+      });
+    },
+    [persistCharacterCustomStorageDebounced],
+  );
 
   const handleSelectCharacter = useCallback(
     (characterId: string) => {
@@ -795,13 +834,12 @@ function App() {
             }}
             onDropSound={(event, characterId) => handleDrop(event, characterId)}
             onImageLoad={handleCharacterImageLoad}
-            onEditCharacter={(characterId) =>
-              setEditingCharacterId((previous) => (previous === characterId ? null : characterId))
-            }
+            onEditCharacter={(characterId) => navigate(`/${characterId}/edit`)}
             onResetCharacter={resetCharacter}
           />
 
           <SoundPanel
+            activeCharacterName={activeCustomization.name?.trim() || activeCharacter.name}
             activeSoundIds={activeSoundIds}
             totalActiveSounds={totalActiveSounds}
             maxSoundsTotal={MAX_SOUNDS_TOTAL}
@@ -831,8 +869,8 @@ function App() {
           soundCatalogById={soundCatalogById}
           colorOptions={CHARACTER_COLOR_OPTIONS}
           imageOptions={CHARACTER_IMAGE_OPTIONS}
-          onClose={() => setEditingCharacterId(null)}
-          onSelectCharacter={(id) => setEditingCharacterId(id)}
+          onClose={() => navigate('/')}
+          onSelectCharacter={(id) => navigate(`/${id}/edit`)}
           onUpdateCustomization={(id, patch) => {
             updateCharacterCustomization(id, patch);
           }}

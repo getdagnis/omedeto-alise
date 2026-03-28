@@ -7,7 +7,7 @@ import CharacterCard from './CharacterCard';
 
 type CharacterCustomization = {
   name?: string;
-  colorMode?: 'auto' | string;
+  colorModes?: string[];
   image?: string;
 };
 
@@ -59,7 +59,6 @@ function EditCharacterModal({
   const [draftCustomization, setDraftCustomization] = useState<CharacterCustomization>({});
 
   const character = characters.find((c) => c.id === editingCharacterId);
-  const currentCustomization = character ? customizations[character.id] ?? {} : {};
 
   useEffect(() => {
     if (isOpen && character) {
@@ -75,22 +74,57 @@ function EditCharacterModal({
     setDraftCustomization((previous) => ({ ...previous, ...patch }));
   };
 
-  const handleSave = () => {
-    onUpdateCustomization(character.id, draftCustomization);
+  const handleToggleColor = (colorValue: string) => {
+    const currentColors = draftCustomization.colorModes ?? [];
+
+    if (colorValue === 'auto') {
+      handleUpdateDraft({ colorModes: ['auto'] });
+      return;
+    }
+
+    // Remove 'auto' if selecting a specific color
+    const filteredColors = currentColors.filter((c) => c !== 'auto');
+
+    if (filteredColors.includes(colorValue)) {
+      const nextColors = filteredColors.filter((c) => c !== colorValue);
+      handleUpdateDraft({ colorModes: nextColors.length > 0 ? nextColors : ['auto'] });
+    } else {
+      handleUpdateDraft({
+        colorModes: [...filteredColors, colorValue].slice(-3),
+      });
+    }
   };
 
-  const handleUndo = () => {
-    setDraftCustomization(currentCustomization);
+  const handleOk = () => {
+    onUpdateCustomization(character.id, draftCustomization);
+    onClose();
+  };
+
+  const handleCancel = () => {
+    onClose();
+  };
+
+  const handleUpdateName = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    // Limit to 15 characters
+    if (value.length > 15) {
+      return;
+    }
+    // Only allow latin letters, spaces, and underscores
+    if (value.length > 0 && !/^[a-zA-Z _]*$/.test(value)) {
+      return;
+    }
+    handleUpdateDraft({ name: value });
   };
 
   return (
     <>
-      <div className={styles.backdrop} onClick={onClose} />
+      <div className={styles.backdrop} onClick={handleCancel} />
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Edit character">
         <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
           <header className={styles.modalHeader}>
             <h2 className={styles.modalTitle}>Character Settings</h2>
-            <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close edit panel">
+            <button type="button" className={styles.closeButton} onClick={handleCancel} aria-label="Close edit panel">
               <FontAwesomeIcon icon={faXmark} />
             </button>
           </header>
@@ -101,12 +135,17 @@ function EditCharacterModal({
               <h3 className={styles.columnTitle}>Preview</h3>
               <div className={styles.previewContainer}>
                 {(() => {
-                  const colorMode = draftCustomization.colorMode ?? 'auto';
+                  const effectiveColorModes =
+                    draftCustomization.colorModes && draftCustomization.colorModes.length > 0
+                      ? draftCustomization.colorModes
+                      : ['auto'];
+
                   const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
                   const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
                   const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
-                  const backgroundColor = colorMode !== 'auto' ? `var(${colorMode})` : autoBackground;
+
+                  const colors = effectiveColorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
 
                   return (
                     <CharacterCard
@@ -118,20 +157,12 @@ function EditCharacterModal({
                       isDropActive={false}
                       isGlowBurst={false}
                       comboWord={null}
-                      backgroundColor={backgroundColor}
+                      colors={colors}
                       ringColor="rgba(255, 255, 255, 0.95)"
                       isImageLoaded={true}
                       hideSounds={true}
-                      actions={
-                        <>
-                          <button type="button" className={styles.saveButton} onClick={handleSave}>
-                            Save
-                          </button>
-                          <button type="button" className={styles.undoButton} onClick={handleUndo}>
-                            Undo
-                          </button>
-                        </>
-                      }
+                      forceLoop={true}
+                      showActions={false}
                     />
                   );
                 })()}
@@ -147,33 +178,45 @@ function EditCharacterModal({
                   type="text"
                   value={draftCustomization.name ?? ''}
                   placeholder={character.name}
-                  onChange={(event) => handleUpdateDraft({ name: event.target.value })}
+                  onChange={handleUpdateName}
                 />
               </label>
 
               <div className={styles.field}>
-                <span className={styles.fieldLabel}>Color</span>
+                <span className={styles.fieldLabel}>Colors (Up to 3)</span>
                 <div className={styles.colorGrid}>
                   {colorOptions.map((option) => {
-                    const isSelected = (draftCustomization.colorMode ?? 'auto') === option.value;
+                    const effectiveColorModes =
+                      draftCustomization.colorModes && draftCustomization.colorModes.length > 0
+                        ? draftCustomization.colorModes
+                        : ['auto'];
+
+                    const selectedIndex = effectiveColorModes.indexOf(option.value);
+                    const isSelected = selectedIndex !== -1;
+                    const isMaxReached =
+                      !isSelected && effectiveColorModes.length >= 3 && !effectiveColorModes.includes('auto');
+                    const isDefaultDisabled = !isSelected && !effectiveColorModes.includes('auto');
+
+                    const isDisabled = option.value === 'auto' ? isDefaultDisabled : isMaxReached;
+
                     const swatchStyle =
                       option.value === 'auto' ? AUTO_SWATCH_STYLE : { background: `var(${option.value})` };
 
                     return (
-                      <label
+                      <button
                         key={option.id}
-                        className={`${styles.colorOption} ${isSelected ? styles.colorOptionActive : ''}`}
+                        type="button"
+                        className={`${styles.colorOption} ${isSelected ? styles.colorOptionActive : ''} ${
+                          isDisabled ? styles.colorOptionDisabled : ''
+                        }`}
+                        onClick={() => handleToggleColor(option.value)}
                       >
-                        <input
-                          type="radio"
-                          name="character-color"
-                          value={option.value}
-                          checked={isSelected}
-                          onChange={() => handleUpdateDraft({ colorMode: option.value })}
-                        />
                         <span className={styles.colorSwatch} style={swatchStyle} />
                         <span>{option.label}</span>
-                      </label>
+                        {isSelected && option.value !== 'auto' && (
+                          <span className={styles.colorBadge}>{selectedIndex + 1}</span>
+                        )}
+                      </button>
                     );
                   })}
                 </div>
@@ -211,8 +254,11 @@ function EditCharacterModal({
                   const lastSoundId = cSounds[cSounds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
                   const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
-                  const cColorMode = cCustom.colorMode ?? 'auto';
-                  const cBackground = cColorMode !== 'auto' ? `var(${cColorMode})` : autoBackground;
+
+                  const cColors =
+                    cCustom.colorModes && cCustom.colorModes.length > 0
+                      ? cCustom.colorModes.map((color) => (color === 'auto' ? autoBackground : `var(${color})`))
+                      : [c.primaryColor || autoBackground];
 
                   return (
                     <CharacterCard
@@ -225,7 +271,7 @@ function EditCharacterModal({
                       isDropActive={false}
                       isGlowBurst={false}
                       comboWord={null}
-                      backgroundColor={cBackground}
+                      colors={cColors}
                       ringColor="transparent"
                       isImageLoaded={true}
                       onSelect={() => onSelectCharacter(c.id)}
@@ -233,6 +279,15 @@ function EditCharacterModal({
                     />
                   );
                 })}
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className={styles.cancelButton} onClick={handleCancel}>
+                  cancel
+                </button>
+                <button type="button" className={styles.okButton} onClick={handleOk}>
+                  ok
+                </button>
               </div>
             </nav>
           </div>
