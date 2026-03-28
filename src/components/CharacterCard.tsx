@@ -183,9 +183,11 @@ function CharacterCard({
           <button type="button" className={styles.characterActionButton} onClick={onEdit} aria-label="Edit character">
             <FontAwesomeIcon icon={faPen} />
           </button>
-          <button type="button" className={styles.characterActionButton} onClick={onReset} aria-label="Reset character">
-            <FontAwesomeIcon icon={faRotateLeft} />
-          </button>
+          {soundIds.length > 0 && (
+            <button type="button" className={styles.characterActionButton} onClick={onReset} aria-label="Reset character">
+              <FontAwesomeIcon icon={faRotateLeft} />
+            </button>
+          )}
         </div>
       )}
     </div>

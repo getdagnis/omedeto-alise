@@ -1,5 +1,4 @@
 import type { DragEvent } from 'react';
-import React from 'react';
 import styles from './CharacterGrid.module.sass';
 import CharacterCard from './CharacterCard';
 import type { CharacterOption, SoundOption } from '../config';

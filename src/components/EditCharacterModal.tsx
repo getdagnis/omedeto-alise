@@ -14,15 +14,15 @@ type CharacterCustomization = {
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
 
 type CharacterColorOption = {
-  id: string;
-  label: string;
-  value: string;
+  readonly id: string;
+  readonly label: string;
+  readonly value: string;
 };
 
 type CharacterImageOption = {
-  id: string;
-  label: string;
-  src: string;
+  readonly id: string;
+  readonly label: string;
+  readonly src: string;
 };
 
 type EditCharacterModalProps = {
@@ -32,8 +32,8 @@ type EditCharacterModalProps = {
   customizations: CharacterCustomizationMap;
   activeSoundsByCharacter: Record<string, string[]>;
   soundCatalogById: Map<string, SoundOption>;
-  colorOptions: CharacterColorOption[];
-  imageOptions: CharacterImageOption[];
+  colorOptions: readonly CharacterColorOption[];
+  imageOptions: readonly CharacterImageOption[];
   onClose: () => void;
   onSelectCharacter: (id: string) => void;
   onUpdateCustomization: (id: string, patch: CharacterCustomization) => void;
@@ -110,8 +110,8 @@ function EditCharacterModal({
     if (value.length > 15) {
       return;
     }
-    // Only allow latin letters, spaces, and underscores
-    if (value.length > 0 && !/^[a-zA-Z _]*$/.test(value)) {
+    // Only allow latin letters, numbers, spaces, and underscores
+    if (value.length > 0 && !/^[a-zA-Z0-9 _]*$/.test(value)) {
       return;
     }
     handleUpdateDraft({ name: value });

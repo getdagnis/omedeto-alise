@@ -1,5 +1,4 @@
 import type { DragEvent } from 'react';
-import React from 'react';
 import styles from './SoundPanel.module.sass';
 import type { SoundOption } from '../config';
 
