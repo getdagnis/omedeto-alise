@@ -143,7 +143,9 @@ function EditCharacterModal({
                   const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
                   const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
+                  const autoBackground = lastSoundColorToken
+                    ? `var(${lastSoundColorToken})`
+                    : 'rgba(255, 255, 255, 0.08)';
 
                   const colors = effectiveColorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
 
@@ -253,7 +255,9 @@ function EditCharacterModal({
                   const cSounds = activeSoundsByCharacter[c.id] ?? [];
                   const lastSoundId = cSounds[cSounds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
+                  const autoBackground = lastSoundColorToken
+                    ? `var(${lastSoundColorToken})`
+                    : 'rgba(255, 255, 255, 0.08)';
 
                   const cColors =
                     cCustom.colorModes && cCustom.colorModes.length > 0
@@ -283,10 +287,10 @@ function EditCharacterModal({
 
               <div className={styles.modalActions}>
                 <button type="button" className={styles.cancelButton} onClick={handleCancel}>
-                  cancel
+                  CANCEL
                 </button>
                 <button type="button" className={styles.okButton} onClick={handleOk}>
-                  ok
+                  OK
                 </button>
               </div>
             </nav>

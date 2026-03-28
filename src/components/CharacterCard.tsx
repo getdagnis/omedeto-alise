@@ -1,7 +1,7 @@
 import type { CSSProperties, DragEvent } from 'react';
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faRotateLeft, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons';
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
 
@@ -25,6 +25,7 @@ type CharacterCardProps = {
   colors: string[];
   ringColor: string;
   isImageLoaded: boolean;
+  isMuted?: boolean;
   onSelect?: () => void;
   onDragOver?: (event: DragEvent<HTMLDivElement>) => void;
   onDragLeave?: () => void;
@@ -32,6 +33,7 @@ type CharacterCardProps = {
   onImageLoad?: () => void;
   onEdit?: () => void;
   onReset?: () => void;
+  onToggleMute?: () => void;
   isSmallPreview?: boolean;
   hideSounds?: boolean;
   showActions?: boolean;
@@ -76,6 +78,7 @@ function CharacterCard({
   colors,
   ringColor,
   isImageLoaded,
+  isMuted = false,
   onSelect,
   onDragOver,
   onDragLeave,
@@ -83,6 +86,7 @@ function CharacterCard({
   onImageLoad,
   onEdit,
   onReset,
+  onToggleMute,
   isSmallPreview = false,
   hideSounds = false,
   showActions = true,
@@ -118,7 +122,7 @@ function CharacterCard({
           isActive ? styles.dropTargetSelected : ''
         } ${isGlowBurst && isActive ? styles.dropTargetGlow : ''} ${isLooping ? styles.dropTargetHasLoop : ''} ${
           forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''
-        }`}
+        } ${isMuted ? styles.dropTargetMuted : ''}`}
         data-character-id={character.id}
         onClick={onSelect}
         onDragOver={onDragOver}
@@ -151,15 +155,13 @@ function CharacterCard({
           children
         ) : (
           <div className={styles.characterImageWrap}>
-            {!isImageLoaded && (
-              <img className={styles.characterPlaceholder} src={CHARACTER_PLACEHOLDER_PATH} alt="" aria-hidden="true" />
-            )}
             <img
               className={`${styles.characterImage} ${!isImageLoaded ? styles.characterImageHidden : ''}`}
               src={displayImage}
               alt={`${displayName} character`}
               onLoad={onImageLoad}
             />
+            <img className={styles.characterPlaceholder} src={CHARACTER_PLACEHOLDER_PATH} alt="" aria-hidden="true" />
           </div>
         )}
       </div>
@@ -172,7 +174,7 @@ function CharacterCard({
                 key={`${character.id}-slot-${index}`}
                 className={`${styles.characterSoundTag} ${!soundName ? styles.characterSoundTagEmpty : ''}`}
               >
-                {soundName || 'add sound'}
+                {soundName || ''}
               </span>
             );
           })}
@@ -184,9 +186,24 @@ function CharacterCard({
             <FontAwesomeIcon icon={faPen} />
           </button>
           {soundIds.length > 0 && (
-            <button type="button" className={styles.characterActionButton} onClick={onReset} aria-label="Reset character">
-              <FontAwesomeIcon icon={faRotateLeft} />
-            </button>
+            <>
+              <button
+                type="button"
+                className={styles.characterActionButton}
+                onClick={onToggleMute}
+                aria-label={isMuted ? 'Unmute character' : 'Mute character'}
+              >
+                <FontAwesomeIcon icon={isMuted ? faVolumeXmark : faVolumeHigh} />
+              </button>
+              <button
+                type="button"
+                className={styles.characterActionButton}
+                onClick={onReset}
+                aria-label="Reset character"
+              >
+                <FontAwesomeIcon icon={faRotateLeft} />
+              </button>
+            </>
           )}
         </div>
       )}

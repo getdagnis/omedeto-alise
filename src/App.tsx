@@ -86,7 +86,6 @@ const getRandomSounds = (sounds: SoundOption[], count: number) => {
     selectedIndexes.add(Math.floor(Math.random() * sounds.length));
   }
 
-  // Preserve original array order while still selecting random sounds.
   return sounds.filter((_, index) => selectedIndexes.has(index));
 };
 
@@ -226,6 +225,7 @@ function App() {
   const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
     parseCharacterCustomStorage(),
   );
+  const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
 
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
@@ -379,6 +379,27 @@ function App() {
 
   const buildAudioKey = useCallback((characterId: string, soundId: string) => `${characterId}:${soundId}`, []);
 
+  const toggleMuteCharacter = useCallback((characterId: string) => {
+    setMutedCharacterIds((previous) => {
+      const next = new Set(previous);
+      const isMuting = !next.has(characterId);
+
+      if (isMuting) {
+        next.add(characterId);
+      } else {
+        next.delete(characterId);
+      }
+
+      Object.entries(audioRefs.current).forEach(([key, audio]) => {
+        if (key.startsWith(`${characterId}:`)) {
+          audio.volume = isMuting ? 0 : 1;
+        }
+      });
+
+      return next;
+    });
+  }, []);
+
   const enableSound = useCallback(
     (characterId: string, soundId: string) => {
       const sound = soundCatalogById.get(soundId);
@@ -388,12 +409,16 @@ function App() {
 
       const audioKey = buildAudioKey(characterId, soundId);
       const existingAudio = audioRefs.current[audioKey];
+      const isMuted = mutedCharacterIds.has(characterId);
+
       if (existingAudio) {
         existingAudio.currentTime = 0;
+        existingAudio.volume = isMuted ? 0 : 1;
         void existingAudio.play().catch(() => undefined);
       } else {
         const nextAudio = new Audio(sound.path);
         nextAudio.loop = true;
+        nextAudio.volume = isMuted ? 0 : 1;
         void nextAudio.play().catch(() => undefined);
         audioRefs.current[audioKey] = nextAudio;
       }
@@ -405,7 +430,7 @@ function App() {
         }
 
         const next = { ...previous };
-        const order = [...activeSoundOrderRef.current];
+        let order = [...activeSoundOrderRef.current];
 
         const removeEntry = (removeCharacterId: string, removeSoundId: string) => {
           const removeKey = buildAudioKey(removeCharacterId, removeSoundId);
@@ -426,12 +451,9 @@ function App() {
             }
           }
 
-          const idx = order.findIndex(
-            (entry) => entry.characterId === removeCharacterId && entry.soundId === removeSoundId,
+          order = order.filter(
+            (entry) => !(entry.characterId === removeCharacterId && entry.soundId === removeSoundId),
           );
-          if (idx !== -1) {
-            order.splice(idx, 1);
-          }
         };
 
         while (order.length >= MAX_SOUNDS_TOTAL) {
@@ -453,7 +475,7 @@ function App() {
         return next;
       });
     },
-    [buildAudioKey, soundCatalogById],
+    [buildAudioKey, soundCatalogById, mutedCharacterIds],
   );
 
   const disableSound = useCallback(
@@ -820,6 +842,7 @@ function App() {
             activeCharacterId={activeCharacterId}
             customizations={characterCustomizations}
             activeSoundsByCharacter={activeSoundsByCharacter}
+            mutedCharacterIds={mutedCharacterIds}
             soundCatalogById={soundCatalogById}
             dropTargetId={dropTargetId}
             loadedCharacterMap={loadedCharacterMap}
@@ -836,6 +859,7 @@ function App() {
             onImageLoad={handleCharacterImageLoad}
             onEditCharacter={(characterId) => navigate(`/${characterId}/edit`)}
             onResetCharacter={resetCharacter}
+            onToggleMuteCharacter={toggleMuteCharacter}
           />
 
           <SoundPanel

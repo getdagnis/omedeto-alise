@@ -16,6 +16,7 @@ type CharacterGridProps = {
   activeCharacterId: string;
   customizations: CharacterCustomizationMap;
   activeSoundsByCharacter: Record<string, string[]>;
+  mutedCharacterIds: Set<string>;
   soundCatalogById: Map<string, SoundOption>;
   dropTargetId: string | null;
   loadedCharacterMap: Record<string, boolean>;
@@ -28,6 +29,7 @@ type CharacterGridProps = {
   onImageLoad: (characterId: string) => void;
   onEditCharacter: (characterId: string) => void;
   onResetCharacter: (characterId: string) => void;
+  onToggleMuteCharacter: (characterId: string) => void;
 };
 
 const ACTIVE_RING_COLOR = 'rgba(255, 255, 255, 0.95)';
@@ -38,6 +40,7 @@ function CharacterGrid({
   activeCharacterId,
   customizations,
   activeSoundsByCharacter,
+  mutedCharacterIds,
   soundCatalogById,
   dropTargetId,
   loadedCharacterMap,
@@ -50,6 +53,7 @@ function CharacterGrid({
   onImageLoad,
   onEditCharacter,
   onResetCharacter,
+  onToggleMuteCharacter,
 }: CharacterGridProps) {
   return (
     <section className={styles.characterStage}>
@@ -60,6 +64,7 @@ function CharacterGrid({
           const isActiveCharacter = character.id === activeCharacterId;
           const isDropActive = dropTargetId === character.id;
           const isImageLoaded = Boolean(loadedCharacterMap[character.id]);
+          const isMuted = mutedCharacterIds.has(character.id);
 
           const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
           const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
@@ -91,6 +96,7 @@ function CharacterGrid({
               colors={colors}
               ringColor={ringColor}
               isImageLoaded={isImageLoaded}
+              isMuted={isMuted}
               onSelect={() => onSelectCharacter(character.id)}
               onDragOver={(event) => {
                 event.preventDefault();
@@ -101,6 +107,7 @@ function CharacterGrid({
               onImageLoad={() => onImageLoad(character.id)}
               onEdit={() => onEditCharacter(character.id)}
               onReset={() => onResetCharacter(character.id)}
+              onToggleMute={() => onToggleMuteCharacter(character.id)}
             />
           );
         })}
