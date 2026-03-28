@@ -152,10 +152,56 @@ const HANAKO_BASE_SOUNDS: BaseSoundOption[] = [
   { id: 'applause', name: 'Applause', path: '/hanako/applause.mp3', animation: 'slow' },
 ];
 
+export const ALL_SOUNDS = mapSoundColors([...GUMI_BASE_SOUNDS, ...HANAKO_BASE_SOUNDS]);
+
 export const SOUNDS = {
   gumi: mapSoundColors(GUMI_BASE_SOUNDS),
   hanako: mapSoundColors(HANAKO_BASE_SOUNDS),
+  all: ALL_SOUNDS,
 } as const;
+
+const PLACEHOLDER_SCHEMES: CharacterColorScheme[] = [
+  {
+    id: 'neon',
+    name: 'Neon Ash',
+    titleColor: '#f8f8ff',
+    primaryColor: '#5b5a68cc',
+    secondaryColor: '#9a9aaea1',
+    soundboardColor: '#2a2a33cc',
+  },
+  {
+    id: 'ember',
+    name: 'Ember Smoke',
+    titleColor: '#fff4ef',
+    primaryColor: '#c24f3fcc',
+    secondaryColor: '#f2b48ca1',
+    soundboardColor: '#3a1c1acc',
+  },
+  {
+    id: 'nebula',
+    name: 'Nebula Drift',
+    titleColor: '#f4f7ff',
+    primaryColor: '#3b4cc9cc',
+    secondaryColor: '#8db3ffa1',
+    soundboardColor: '#1b2142cc',
+  },
+  {
+    id: 'mint',
+    name: 'Mint Static',
+    titleColor: '#e9fff7',
+    primaryColor: '#2cbd93cc',
+    secondaryColor: '#7fffd4a1',
+    soundboardColor: '#103527cc',
+  },
+  {
+    id: 'rose',
+    name: 'Rose Quartz',
+    titleColor: '#fff6fb',
+    primaryColor: '#d36aa4cc',
+    secondaryColor: '#ffc0e1a1',
+    soundboardColor: '#3a1b2dcc',
+  },
+];
 
 export const CHARACTERS: CharacterOption[] = [
   {
@@ -209,7 +255,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#121426cc',
       },
     ],
-    sounds: SOUNDS.gumi,
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'gumi',
@@ -262,7 +308,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#3b2b10cc',
       },
     ],
-    sounds: SOUNDS.gumi,
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'hanako',
@@ -315,6 +361,42 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#260009cc',
       },
     ],
-    sounds: SOUNDS.hanako,
+    sounds: ALL_SOUNDS,
+  },
+  {
+    id: 'placeholder-1',
+    name: 'Mystery',
+    img: '/alise-1.svg',
+    mixLabel: 'Mystery Mix',
+    titleColor: PLACEHOLDER_SCHEMES[0].titleColor,
+    primaryColor: PLACEHOLDER_SCHEMES[0].primaryColor,
+    secondaryColor: PLACEHOLDER_SCHEMES[0].secondaryColor,
+    soundboardColor: PLACEHOLDER_SCHEMES[0].soundboardColor,
+    schemes: PLACEHOLDER_SCHEMES,
+    sounds: ALL_SOUNDS,
+  },
+  {
+    id: 'placeholder-2',
+    name: 'Coming Soon',
+    img: '/alise-1.svg',
+    mixLabel: 'Coming Soon Mix',
+    titleColor: PLACEHOLDER_SCHEMES[1].titleColor,
+    primaryColor: PLACEHOLDER_SCHEMES[1].primaryColor,
+    secondaryColor: PLACEHOLDER_SCHEMES[1].secondaryColor,
+    soundboardColor: PLACEHOLDER_SCHEMES[1].soundboardColor,
+    schemes: PLACEHOLDER_SCHEMES,
+    sounds: ALL_SOUNDS,
+  },
+  {
+    id: 'placeholder-3',
+    name: 'TBD',
+    img: '/alise-1.svg',
+    mixLabel: 'TBD Mix',
+    titleColor: PLACEHOLDER_SCHEMES[2].titleColor,
+    primaryColor: PLACEHOLDER_SCHEMES[2].primaryColor,
+    secondaryColor: PLACEHOLDER_SCHEMES[2].secondaryColor,
+    soundboardColor: PLACEHOLDER_SCHEMES[2].soundboardColor,
+    schemes: PLACEHOLDER_SCHEMES,
+    sounds: ALL_SOUNDS,
   },
 ];
