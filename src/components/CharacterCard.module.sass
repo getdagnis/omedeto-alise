@@ -1,0 +1,376 @@
+.characterCard
+  width: 100%
+  display: grid
+  justify-items: center
+  gap: 0.65rem
+
+.dropTarget
+  --ring-color: rgba(38, 30, 60, 0.85)
+  width: clamp(6.4rem, 20vw, 7.4rem)
+  height: clamp(6.4rem, 20vw, 7.4rem)
+  aspect-ratio: 1 / 1
+  position: relative
+  overflow: visible
+  border-radius: 999px
+  border: 0
+  background: radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.18), transparent 55%), var(--character-bg, rgba(255, 255, 255, 0.08))
+  display: grid
+  place-items: center
+  justify-items: center
+  padding: 0
+  box-sizing: border-box
+  transition: background-color 0.2s ease, box-shadow 0.2s ease
+  user-select: none
+  -webkit-user-select: none
+  cursor: pointer
+  margin-bottom: 0.15rem
+
+.dropTargetSelected
+  box-shadow: 0 0 0 2px var(--ring-color), var(--shadow-refresh)
+
+.dropTarget::before
+  content: ''
+  position: absolute
+  inset: 0
+  border-radius: 50%
+  border: 4px solid var(--ring-color)
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35), 0 0 0.9rem rgba(255, 255, 255, 0.18)
+  pointer-events: none
+  z-index: 1
+
+.dropTarget::after
+  content: ''
+  position: absolute
+  inset: -20%
+  border-radius: 50%
+  opacity: 0
+  pointer-events: none
+  transform: scale(0.95)
+  background: radial-gradient(circle at center, var(--color-mood-tokyo-8-opq) 0%, transparent 67%)
+  mix-blend-mode: screen
+  z-index: 0
+
+.dropTargetPulseSlow::after
+  background: radial-gradient(
+    circle at center,
+    var(--character-primary, var(--color-mood-tokyo-8)) 0%,
+    var(--character-secondary, var(--color-mood-tokyo-8-opq)) 44%,
+    transparent 70%
+  )
+  animation: dropTargetPulseSlow 0.667s ease-in-out infinite
+
+.dropTargetPulseFast::after
+  background: radial-gradient(circle at center, var(--character-primary, var(--color-mood-tokyo-3-opq)) 0%, transparent 67%)
+  animation: dropTargetPulseFast 0.375s ease infinite
+
+.dropTargetPulseBoth::after
+  background: radial-gradient(circle at center, var(--character-secondary, var(--color-mood-tokyo-11-opq)) 0%, transparent 67%)
+  animation: dropTargetPulseBoth 0.4375s ease infinite
+
+.dropTargetPulseSlow
+  animation: dropTargetBeatSlow 0.667s ease-in-out infinite
+
+.dropTargetPulseFast
+  animation: dropTargetBeatFast 0.375s ease-in-out infinite
+
+.dropTargetPulseBoth
+  animation: dropTargetBeatBoth 0.4375s ease-in-out infinite
+
+.dropTargetActive
+  box-shadow: 0 0 0 2px var(--ring-color), 0 0 1.6rem rgba(255, 255, 255, 0.25)
+
+.dropTargetGlow
+  animation: dropTargetGlow 2.2s ease-out
+
+.comboWord
+  position: absolute
+  top: 0.4rem
+  left: 50%
+  transform: translateX(-50%)
+  padding: 0.25rem 0.75rem
+  border-radius: 999px
+  background: rgba(8, 8, 18, 0.65)
+  color: var(--character-title, var(--color-drop-label))
+  font-family: var(--font-title)
+  font-size: 0.85rem
+  letter-spacing: 0.12em
+  text-transform: uppercase
+  pointer-events: none
+  z-index: 3
+  animation: comboWordPop 2.2s ease-out forwards
+
+.characterName
+  margin: 0.1rem 0 0
+  font-family: var(--font-title)
+  font-size: 0.85rem
+  letter-spacing: 0.08em
+  text-transform: uppercase
+  color: var(--character-title, var(--color-drop-label))
+  text-align: center
+  padding: 0.2rem 0.65rem
+  border-radius: 999px
+  border: 1px solid rgba(255, 255, 255, 0.18)
+  background: rgba(8, 8, 18, 0.6)
+  z-index: 3
+  position: relative
+
+.characterSoundList
+  min-height: 2.3rem
+  display: grid
+  gap: 0.25rem
+  justify-items: center
+  font-size: 0.7rem
+  font-weight: 600
+  color: var(--color-text-muted)
+  text-align: center
+  position: relative
+  z-index: 3
+
+.characterSoundTag
+  padding: 0.15rem 0.5rem
+  border-radius: 999px
+  border: 1px solid rgba(255, 255, 255, 0.12)
+  background: rgba(8, 8, 18, 0.55)
+  color: var(--character-title, var(--color-active-tag-text))
+  white-space: nowrap
+
+.characterActions
+  width: 100%
+  display: flex
+  justify-content: center
+  gap: 0.35rem
+  flex-wrap: wrap
+  position: relative
+  z-index: 3
+
+.characterActionButton
+  border: 1px solid rgba(255, 255, 255, 0.35)
+  border-radius: var(--radius-md)
+  background: rgba(8, 8, 18, 0.82)
+  color: #fff
+  font-family: var(--font-body)
+  font-size: 0.78rem
+  font-weight: 700
+  letter-spacing: 0.06em
+  padding: 0.3rem 0.65rem
+  cursor: pointer
+  box-shadow: var(--shadow-refresh)
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  min-width: 2.25rem
+  line-height: 1
+
+.characterActionButton:hover
+  background: rgba(18, 18, 28, 0.9)
+  transform: translateY(-2px)
+
+.characterActionButton:disabled
+  cursor: default
+  opacity: 0.6
+  transform: none
+  box-shadow: none
+
+.characterImageWrap
+  position: relative
+  width: 128%
+  height: 128%
+  display: grid
+  align-items: end
+  justify-items: center
+  line-height: 0
+  transform: translateY(8%)
+  z-index: 2
+
+.characterImage
+  display: block
+  width: auto
+  height: 100%
+  max-width: 100%
+  object-fit: contain
+  vertical-align: bottom
+  filter: drop-shadow(var(--shadow-character))
+  user-select: none
+  pointer-events: none
+  -webkit-user-drag: none
+
+.characterImageHidden
+  visibility: hidden
+
+.characterPlaceholder
+  position: absolute
+  inset: 0
+  margin: auto
+  width: auto
+  height: 100%
+  max-width: 100%
+  object-fit: contain
+  opacity: 0.2
+  transform-origin: center
+  pointer-events: none
+  filter: drop-shadow(var(--shadow-character))
+  animation: characterPlaceholderPulse 2.6s ease-in-out infinite
+
+@media (min-width: 40rem)
+  .dropTarget
+    width: clamp(6.8rem, 16vw, 8.2rem)
+    height: clamp(6.8rem, 16vw, 8.2rem)
+
+@media (min-width: 56rem)
+  .dropTarget
+    width: clamp(7.4rem, 10.4vw, 9.6rem)
+    height: clamp(7.4rem, 10.4vw, 9.6rem)
+
+  .comboWord
+    top: 0.55rem
+
+@keyframes comboWordPop
+  0%
+    opacity: 0
+    transform: translate(-50%, 6px) scale(0.9)
+
+  20%
+    opacity: 1
+    transform: translate(-50%, 0) scale(1)
+
+  80%
+    opacity: 1
+    transform: translate(-50%, -2px) scale(1)
+
+  100%
+    opacity: 0
+    transform: translate(-50%, -8px) scale(0.95)
+
+@keyframes dropTargetGlow
+  0%,
+  100%
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0)
+
+  40%
+    box-shadow: 0 0 1.6rem var(--character-primary, rgba(255, 255, 255, 0.45)), 0 0 2.8rem var(--character-secondary, rgba(255, 255, 255, 0.35))
+
+@keyframes characterPlaceholderPulse
+  0%,
+  100%
+    transform: scale(0.985)
+
+  50%
+    transform: scale(1.015)
+
+@keyframes dropTargetPulseSlow
+  0%,
+  100%
+    opacity: 0.08
+    transform: scale(0.95)
+
+  50%
+    opacity: 0.52
+    transform: scale(1.01)
+
+@keyframes dropTargetPulseFast
+  0%,
+  100%
+    opacity: 0.1
+    transform: scale(0.94)
+
+  50%
+    opacity: 0.66
+    transform: scale(1.02)
+
+@keyframes dropTargetPulseBoth
+  0%,
+  100%
+    opacity: 0.12
+    transform: scale(0.95)
+
+  40%
+    opacity: 0.74
+    transform: scale(1.04)
+
+  75%
+    opacity: 0.52
+    transform: scale(0.985)
+
+@keyframes dropTargetBeatSlow
+  0%,
+  100%
+    box-shadow: 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq)), 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq))
+
+  50%
+    box-shadow: 0 0 1.1rem var(--character-primary, var(--color-mood-tokyo-8)), 0 0 2.3rem var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0.8rem var(--character-secondary, var(--color-mood-tokyo-8-opq))
+
+@keyframes dropTargetBeatFast
+  0%,
+  100%
+    box-shadow: 0 0 0 var(--character-secondary, var(--color-mood-tokyo-3-opq)), 0 0 0 var(--character-secondary, var(--color-mood-tokyo-7-opq)), inset 0 0 0 var(--character-secondary, var(--color-mood-tokyo-1-opq))
+
+  25%
+    box-shadow: 0 0 1.2rem var(--character-primary, var(--color-mood-tokyo-3)), 0 0 2.1rem var(--character-secondary, var(--color-mood-tokyo-7-opq)), inset 0 0 0.8rem var(--character-secondary, var(--color-mood-tokyo-1-opq))
+
+  75%
+    box-shadow: 0 0 1.4rem var(--character-primary, var(--color-mood-tokyo-8)), 0 0 2.3rem var(--character-secondary, var(--color-mood-tokyo-6-opq)), inset 0 0 0.9rem var(--character-secondary, var(--color-mood-tokyo-11-opq))
+
+@keyframes dropTargetBeatBoth
+  0%,
+  50%,
+  100%
+    box-shadow: 0 0 0 var(--character-secondary, var(--color-mood-tokyo-4-opq)), 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0 var(--character-secondary, var(--color-mood-tokyo-10-opq))
+
+  25%, 55%
+    box-shadow: 0 0 1rem var(--character-primary, #d0f1f4e8), 0 0 2.2rem var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0.85rem var(--character-secondary, var(--color-mood-tokyo-10-opq))
+
+  70%
+    box-shadow: 0 0 1.55rem var(--character-primary, var(--color-mood-tokyo-3)), 0 0 2.6rem var(--character-secondary, var(--color-mood-tokyo-7-opq)), inset 0 0 0.95rem var(--character-secondary, var(--color-mood-tokyo-11-opq))
+
+.smallPreview
+  width: 100%
+  display: flex
+  align-items: center
+  gap: 0.6rem
+  padding: 0.45rem 0.6rem
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  border-radius: var(--radius-sm)
+  background: rgba(8, 8, 18, 0.45)
+  cursor: pointer
+  transition: all 0.2s ease
+  color: var(--color-text-strong)
+  text-align: left
+
+.smallPreview:hover
+  background: rgba(25, 25, 45, 0.65)
+  border-color: rgba(255, 255, 255, 0.3)
+
+.smallPreviewActive
+  background: rgba(45, 45, 75, 0.8)
+  border-color: var(--preview-color, rgba(255, 255, 255, 0.6))
+  box-shadow: 0 0 0.8rem var(--preview-color, rgba(255, 255, 255, 0.15))
+
+.smallPreviewImage
+  width: 2.2rem
+  height: 2.2rem
+  object-fit: cover
+  border-radius: 999px
+  background: var(--preview-color, rgba(255, 255, 255, 0.1))
+  border: 1px solid rgba(255, 255, 255, 0.2)
+
+.smallPreviewName
+  font-family: var(--font-title)
+  font-size: 0.75rem
+  letter-spacing: 0.05em
+  text-transform: uppercase
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+@media (prefers-reduced-motion: reduce)
+  .dropTargetPulseSlow::after,
+  .dropTargetPulseFast::after,
+  .dropTargetPulseBoth::after
+    animation: none
+
+  .dropTargetGlow
+    animation: none
+
+  .comboWord
+    animation: none

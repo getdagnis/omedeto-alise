@@ -1,0 +1,103 @@
+import type { DragEvent } from 'react';
+import React from 'react';
+import styles from './CharacterGrid.module.sass';
+import CharacterCard from './CharacterCard';
+import type { CharacterOption, SoundOption } from '../config';
+
+type CharacterCustomization = {
+  name?: string;
+  colorMode?: 'auto' | string;
+  image?: string;
+};
+
+type CharacterCustomizationMap = Record<string, CharacterCustomization>;
+
+type CharacterGridProps = {
+  characters: CharacterOption[];
+  activeCharacterId: string;
+  customizations: CharacterCustomizationMap;
+  activeSoundsByCharacter: Record<string, string[]>;
+  soundCatalogById: Map<string, SoundOption>;
+  dropTargetId: string | null;
+  loadedCharacterMap: Record<string, boolean>;
+  isGlowBurst: boolean;
+  comboWord: string | null;
+  onSelectCharacter: (characterId: string) => void;
+  onDragOverCharacter: (event: DragEvent<HTMLDivElement>, characterId: string) => void;
+  onDragLeaveCharacter: (characterId: string) => void;
+  onDropSound: (event: DragEvent<HTMLDivElement>, characterId: string) => void;
+  onImageLoad: (characterId: string) => void;
+  onEditCharacter: (characterId: string) => void;
+  onResetCharacter: (characterId: string) => void;
+};
+
+const ACTIVE_RING_COLOR = 'rgba(255, 255, 255, 0.95)';
+const INACTIVE_RING_COLOR = 'rgba(38, 30, 60, 0.85)';
+
+function CharacterGrid({
+  characters,
+  activeCharacterId,
+  customizations,
+  activeSoundsByCharacter,
+  soundCatalogById,
+  dropTargetId,
+  loadedCharacterMap,
+  isGlowBurst,
+  comboWord,
+  onSelectCharacter,
+  onDragOverCharacter,
+  onDragLeaveCharacter,
+  onDropSound,
+  onImageLoad,
+  onEditCharacter,
+  onResetCharacter,
+}: CharacterGridProps) {
+  return (
+    <section className={styles.characterStage}>
+      <div className={styles.characterGrid}>
+        {characters.map((character) => {
+          const customization = customizations[character.id] ?? {};
+          const colorMode = customization.colorMode ?? 'auto';
+          const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
+          const isActiveCharacter = character.id === activeCharacterId;
+          const isDropActive = dropTargetId === character.id;
+          const isImageLoaded = Boolean(loadedCharacterMap[character.id]);
+          const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
+          const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
+          const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
+          const backgroundColor = colorMode !== 'auto' ? `var(${colorMode})` : autoBackground;
+          const ringColor = isActiveCharacter ? ACTIVE_RING_COLOR : INACTIVE_RING_COLOR;
+
+          return (
+            <CharacterCard
+              key={character.id}
+              character={character}
+              customization={customization}
+              soundIds={characterSoundIds}
+              soundCatalogById={soundCatalogById}
+              isActive={isActiveCharacter}
+              isDropActive={isDropActive}
+              isGlowBurst={isGlowBurst}
+              comboWord={comboWord}
+              backgroundColor={backgroundColor}
+              ringColor={ringColor}
+              isImageLoaded={isImageLoaded}
+              onSelect={() => onSelectCharacter(character.id)}
+              onDragOver={(event) => {
+                event.preventDefault();
+                onDragOverCharacter(event, character.id);
+              }}
+              onDragLeave={() => onDragLeaveCharacter(character.id)}
+              onDrop={(event) => onDropSound(event, character.id)}
+              onImageLoad={() => onImageLoad(character.id)}
+              onEdit={() => onEditCharacter(character.id)}
+              onReset={() => onResetCharacter(character.id)}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export default CharacterGrid;

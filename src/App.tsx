@@ -1,21 +1,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, DragEvent, TouchEvent } from 'react';
 import styles from './App.module.sass';
-import { ALL_SOUNDS, BACKGROUND_IMAGE_KEYS, CHARACTERS, type SoundOption } from './config';
+import CharacterGrid from './components/CharacterGrid';
+import SoundPanel from './components/SoundPanel';
+import EditCharacterModal from './components/EditCharacterModal';
+import {
+  ALL_SOUNDS,
+  BACKGROUND_IMAGE_KEYS,
+  CHARACTER_COLOR_TOKENS,
+  CHARACTER_IMAGE_OPTIONS,
+  CHARACTERS,
+  type SoundOption,
+} from './config';
 
 const VISIBLE_SOUND_COUNT = 20;
 const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
-const CHARACTER_SCHEME_COOKIE = 'gumi-alise-character-schemes';
+const CHARACTER_CUSTOM_COOKIE = 'gumi-alise-character-custom';
 const DEFAULT_GLITCH_MODE: 'stable' | 'glitch' = 'stable';
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const BG_DESKTOP_SUFFIX = '1920';
 const BG_MOBILE_SUFFIX = 'mob';
-const GLOW_METER_MAX = 100;
-const GLOW_METER_BASE_GAIN = 6;
-const GLOW_METER_MATCH_GAIN = 12;
 const GLOW_BURST_MS = 2200;
 const ULTRA_MODE_MS = 10000;
 const CHEER_DURATION_MS = 5000;
+const MAX_SOUNDS_PER_CHARACTER = 3;
+const MAX_SOUNDS_TOTAL = 12;
 
 const COMBO_WORDS = [
   {
@@ -41,6 +50,15 @@ const COMBO_WORDS = [
 ] as const;
 
 const CHEER_SOUND_PATHS = ['/hanako/applause.mp3', '/hanako/choir.mp3', '/hanako/laugh.mp3'] as const;
+
+const CHARACTER_COLOR_OPTIONS = [
+  { id: 'auto', label: 'Auto (Sound)', value: 'auto' },
+  ...CHARACTER_COLOR_TOKENS.map((token, index) => ({
+    id: `tokyo-${index + 1}`,
+    label: `Tokyo ${index + 1}`,
+    value: token,
+  })),
+] as const;
 
 const getStoredGlitchMode = (): 'stable' | 'glitch' => {
   if (typeof window === 'undefined') {
@@ -119,17 +137,22 @@ const getIsMobileVerticalDevice = () => {
   return isPortrait && hasCoarsePointer;
 };
 
-type CharacterSchemeMap = Record<string, number>;
-type TempoKey = 'slow' | 'fast';
+type CharacterCustomization = {
+  name?: string;
+  colorMode?: 'auto' | string;
+  image?: string;
+};
 
-const parseCharacterSchemeCookie = (): CharacterSchemeMap => {
+type CharacterCustomizationMap = Record<string, CharacterCustomization>;
+
+const parseCharacterCustomCookie = (): CharacterCustomizationMap => {
   if (typeof document === 'undefined') {
     return {};
   }
 
   const cookieEntry = document.cookie
     .split('; ')
-    .find((entry) => entry.startsWith(`${CHARACTER_SCHEME_COOKIE}=`));
+    .find((entry) => entry.startsWith(`${CHARACTER_CUSTOM_COOKIE}=`));
 
   if (!cookieEntry) {
     return {};
@@ -143,11 +166,26 @@ const parseCharacterSchemeCookie = (): CharacterSchemeMap => {
       return {};
     }
 
-    const sanitized: CharacterSchemeMap = {};
+    const sanitized: CharacterCustomizationMap = {};
     Object.entries(parsed as Record<string, unknown>).forEach(([key, value]) => {
-      if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
-        sanitized[key] = value;
+      if (!value || typeof value !== 'object') {
+        return;
       }
+
+      const typed = value as CharacterCustomization;
+      const next: CharacterCustomization = {};
+
+      if (typeof typed.name === 'string') {
+        next.name = typed.name.slice(0, 32);
+      }
+      if (typeof typed.colorMode === 'string') {
+        next.colorMode = typed.colorMode;
+      }
+      if (typeof typed.image === 'string') {
+        next.image = typed.image;
+      }
+
+      sanitized[key] = next;
     });
 
     return sanitized;
@@ -156,13 +194,13 @@ const parseCharacterSchemeCookie = (): CharacterSchemeMap => {
   }
 };
 
-const persistCharacterSchemeCookie = (schemeMap: CharacterSchemeMap) => {
+const persistCharacterCustomCookie = (customMap: CharacterCustomizationMap) => {
   if (typeof document === 'undefined') {
     return;
   }
 
-  const encoded = encodeURIComponent(JSON.stringify(schemeMap));
-  document.cookie = `${CHARACTER_SCHEME_COOKIE}=${encoded}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  const encoded = encodeURIComponent(JSON.stringify(customMap));
+  document.cookie = `${CHARACTER_CUSTOM_COOKIE}=${encoded}; Path=/; Max-Age=31536000; SameSite=Lax`;
 };
 
 function App() {
@@ -173,8 +211,10 @@ function App() {
   const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({});
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
-  const [characterSchemeMap, setCharacterSchemeMap] = useState<CharacterSchemeMap>(() => parseCharacterSchemeCookie());
-  const [glowMeter, setGlowMeter] = useState(0);
+  const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
+    parseCharacterCustomCookie(),
+  );
+  const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
   const [isGlowBurst, setIsGlowBurst] = useState(false);
   const [isUltraMode, setIsUltraMode] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
@@ -189,33 +229,49 @@ function App() {
   );
 
   const activeCharacter = CHARACTERS.find((character) => character.id === activeCharacterId) ?? defaultCharacter;
-  const activeSchemeIndex = useMemo(() => {
-    if (!activeCharacter) {
-      return 0;
-    }
-
-    const storedIndex = characterSchemeMap[activeCharacter.id];
-    if (
-      typeof storedIndex === 'number' &&
-      Number.isInteger(storedIndex) &&
-      storedIndex >= 0 &&
-      storedIndex < activeCharacter.schemes.length
-    ) {
-      return storedIndex;
-    }
-
-    return 0;
-  }, [activeCharacter, characterSchemeMap]);
-  const activeScheme = activeCharacter?.schemes[activeSchemeIndex] ?? {
+  const activeSoundIds = useMemo(
+    () => (activeCharacter ? activeSoundsByCharacter[activeCharacter.id] ?? [] : []),
+    [activeCharacter, activeSoundsByCharacter],
+  );
+  const soundCatalogById = useMemo(() => new Map(ALL_SOUNDS.map((sound) => [sound.id, sound] as const)), []);
+  const activeCustomization = activeCharacter ? characterCustomizations[activeCharacter.id] ?? {} : {};
+  const activeBaseScheme = activeCharacter?.schemes?.[0] ?? {
     titleColor: activeCharacter?.titleColor ?? 'white',
     primaryColor: activeCharacter?.primaryColor ?? '#600b87cc',
     secondaryColor: activeCharacter?.secondaryColor ?? '#ff0040a1',
     soundboardColor: activeCharacter?.soundboardColor ?? '#29063acc',
   };
-  const activeSoundIds = activeCharacter ? activeSoundsByCharacter[activeCharacter.id] ?? [] : [];
-  const isUltraReady = glowMeter >= GLOW_METER_MAX;
-  const glowPercent = Math.round((glowMeter / GLOW_METER_MAX) * 100);
-  const ultraLabel = isUltraMode ? 'Ultra Active' : isUltraReady ? 'Ultra Mode' : `Ultra ${glowPercent}%`;
+  const activePanelColor = (() => {
+    if (activeCustomization.colorMode && activeCustomization.colorMode !== 'auto') {
+      return `var(${activeCustomization.colorMode})`;
+    }
+
+    if (activeCustomization.colorMode === 'auto' && activeSoundIds.length > 0) {
+      const token = soundCatalogById.get(activeSoundIds[activeSoundIds.length - 1])?.colorToken;
+      if (token) {
+        return `var(${token})`;
+      }
+    }
+
+    return activeBaseScheme.primaryColor;
+  })();
+  const activeScheme = {
+    titleColor: activeBaseScheme.titleColor,
+    primaryColor: activePanelColor,
+    secondaryColor: activePanelColor,
+    soundboardColor: activeBaseScheme.soundboardColor,
+  };
+  const totalActiveSounds = useMemo(
+    () => Object.values(activeSoundsByCharacter).reduce((sum, ids) => sum + ids.length, 0),
+    [activeSoundsByCharacter],
+  );
+  const glowPercent = Math.min(100, Math.round((totalActiveSounds / MAX_SOUNDS_TOTAL) * 100));
+  const isUltraReady = totalActiveSounds >= MAX_SOUNDS_TOTAL;
+  const ultraLabel = isUltraMode
+    ? 'Ultra Active'
+    : isUltraReady
+      ? 'Ultra Ready'
+      : `Ultra ${totalActiveSounds}/${MAX_SOUNDS_TOTAL}`;
   const isCheerVisible = activeSoundIds.length >= 3;
   const activeBackgroundSuffix = isMobileVerticalDevice ? BG_MOBILE_SUFFIX : BG_DESKTOP_SUFFIX;
   const activeBackgroundImage = useMemo(() => {
@@ -223,10 +279,9 @@ function App() {
     return buildBackgroundImagePath(activeBackgroundKey, activeBackgroundSuffix);
   }, [activeBackgroundSuffix, backgroundIndex]);
 
-  const soundCatalogById = useMemo(() => new Map(ALL_SOUNDS.map((sound) => [sound.id, sound] as const)), []);
-
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
-  const lastTempoRef = useRef<TempoKey | null>(null);
+  const activeSoundOrderRef = useRef<Array<{ characterId: string; soundId: string }>>([]);
+  const totalActiveSoundsRef = useRef(0);
   const glowBurstTimeoutRef = useRef<number | null>(null);
   const ultraModeTimeoutRef = useRef<number | null>(null);
   const cheerAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -240,6 +295,7 @@ function App() {
       audio.currentTime = 0;
     });
     audioRefs.current = {};
+    activeSoundOrderRef.current = [];
   }, []);
 
   const triggerGlowBurst = useCallback(() => {
@@ -252,31 +308,6 @@ function App() {
       setIsGlowBurst(false);
     }, GLOW_BURST_MS);
   }, []);
-
-  const bumpGlowMeter = useCallback(
-    (sound: SoundOption) => {
-      setGlowMeter((previous) => {
-        if (previous >= GLOW_METER_MAX) {
-          return previous;
-        }
-
-        const lastTempo = lastTempoRef.current;
-        const nextTempo: TempoKey = sound.animation === 'both' ? lastTempo ?? 'slow' : sound.animation;
-        const isMatch = lastTempo ? nextTempo === lastTempo : false;
-        lastTempoRef.current = nextTempo;
-
-        const gain = isMatch ? GLOW_METER_MATCH_GAIN : GLOW_METER_BASE_GAIN;
-        const next = Math.min(GLOW_METER_MAX, previous + gain);
-
-        if (next >= GLOW_METER_MAX && previous < GLOW_METER_MAX) {
-          triggerGlowBurst();
-        }
-
-        return next;
-      });
-    },
-    [triggerGlowBurst],
-  );
 
   const stopCheerAudio = useCallback(() => {
     if (cheerTimeoutRef.current) {
@@ -311,7 +342,7 @@ function App() {
   }, [isCheerActive, stopCheerAudio]);
 
   const activateUltraMode = useCallback(() => {
-    if (isUltraMode || glowMeter < GLOW_METER_MAX) {
+    if (isUltraMode || totalActiveSounds < MAX_SOUNDS_TOTAL) {
       return;
     }
 
@@ -320,17 +351,15 @@ function App() {
     }
 
     setIsUltraMode(true);
-    setGlowMeter(0);
-    lastTempoRef.current = null;
     ultraModeTimeoutRef.current = window.setTimeout(() => {
       setIsUltraMode(false);
     }, ULTRA_MODE_MS);
-  }, [glowMeter, isUltraMode]);
+  }, [isUltraMode, totalActiveSounds]);
 
   const buildAudioKey = useCallback((characterId: string, soundId: string) => `${characterId}:${soundId}`, []);
 
   const enableSound = useCallback(
-    (characterId: string, soundId: string, forceBump = false) => {
+    (characterId: string, soundId: string) => {
       const sound = soundCatalogById.get(soundId);
       if (!sound) {
         return;
@@ -353,14 +382,54 @@ function App() {
         if (current.includes(soundId)) {
           return previous;
         }
-        return { ...previous, [characterId]: [...current, soundId] };
-      });
 
-      if (forceBump || characterId === activeCharacterId) {
-        bumpGlowMeter(sound);
-      }
+        const next = { ...previous };
+        let order = [...activeSoundOrderRef.current];
+
+        const removeEntry = (removeCharacterId: string, removeSoundId: string) => {
+          const removeKey = buildAudioKey(removeCharacterId, removeSoundId);
+          const removeAudio = audioRefs.current[removeKey];
+          if (removeAudio) {
+            removeAudio.pause();
+            removeAudio.currentTime = 0;
+            delete audioRefs.current[removeKey];
+          }
+
+          const list = next[removeCharacterId] ?? [];
+          if (list.includes(removeSoundId)) {
+            const updatedList = list.filter((id) => id !== removeSoundId);
+            if (updatedList.length > 0) {
+              next[removeCharacterId] = updatedList;
+            } else {
+              delete next[removeCharacterId];
+            }
+          }
+
+          order = order.filter(
+            (entry) => !(entry.characterId === removeCharacterId && entry.soundId === removeSoundId),
+          );
+        };
+
+        while (order.length >= MAX_SOUNDS_TOTAL) {
+          const oldest = order[0];
+          if (!oldest) {
+            break;
+          }
+          removeEntry(oldest.characterId, oldest.soundId);
+        }
+
+        const updatedCurrent = next[characterId] ?? [];
+        if (updatedCurrent.length >= MAX_SOUNDS_PER_CHARACTER) {
+          removeEntry(characterId, updatedCurrent[0]);
+        }
+
+        next[characterId] = [...(next[characterId] ?? []), soundId];
+        order.push({ characterId, soundId });
+        activeSoundOrderRef.current = order;
+        return next;
+      });
     },
-    [activeCharacterId, buildAudioKey, bumpGlowMeter, soundCatalogById],
+    [buildAudioKey, soundCatalogById],
   );
 
   const disableSound = useCallback(
@@ -381,8 +450,45 @@ function App() {
         const nextSounds = current.filter((id) => id !== soundId);
         return { ...previous, [characterId]: nextSounds };
       });
+
+      activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
+        (entry) => !(entry.characterId === characterId && entry.soundId === soundId),
+      );
     },
     [buildAudioKey],
+  );
+
+  const resetCharacter = useCallback(
+    (characterId: string) => {
+      setActiveSoundsByCharacter((previous) => {
+        const current = previous[characterId] ?? [];
+        if (current.length === 0) {
+          return previous;
+        }
+
+        current.forEach((soundId) => {
+          const audioKey = buildAudioKey(characterId, soundId);
+          const audio = audioRefs.current[audioKey];
+          if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+            delete audioRefs.current[audioKey];
+          }
+        });
+
+        return { ...previous, [characterId]: [] };
+      });
+
+      activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
+        (entry) => entry.characterId !== characterId,
+      );
+
+      if (characterId === activeCharacterId) {
+        activeComboIdRef.current = null;
+        setComboWord(null);
+      }
+    },
+    [activeCharacterId, buildAudioKey],
   );
 
   const toggleSound = useCallback(
@@ -420,7 +526,7 @@ function App() {
 
     if (characterId !== activeCharacterId) {
       handleSelectCharacter(characterId);
-      enableSound(characterId, soundId, true);
+      enableSound(characterId, soundId);
       return;
     }
 
@@ -456,7 +562,7 @@ function App() {
     if (targetId) {
       if (targetId !== activeCharacterId) {
         handleSelectCharacter(targetId);
-        enableSound(targetId, touchDraggedSound, true);
+        enableSound(targetId, touchDraggedSound);
       } else {
         enableSound(targetId, touchDraggedSound);
       }
@@ -466,10 +572,11 @@ function App() {
     setDropTargetId(null);
   };
 
-  const setCharacterScheme = useCallback((characterId: string, schemeIndex: number) => {
-    setCharacterSchemeMap((previous) => {
-      const next = { ...previous, [characterId]: schemeIndex };
-      persistCharacterSchemeCookie(next);
+  const updateCharacterCustomization = useCallback((characterId: string, patch: CharacterCustomization) => {
+    setCharacterCustomizations((previous) => {
+      const current = previous[characterId] ?? {};
+      const next = { ...previous, [characterId]: { ...current, ...patch } };
+      persistCharacterCustomCookie(next);
       return next;
     });
   }, []);
@@ -481,12 +588,10 @@ function App() {
       }
 
       setActiveCharacterId(characterId);
-      setGlowMeter(0);
       setIsGlowBurst(false);
       setIsUltraMode(false);
       setComboWord(null);
       activeComboIdRef.current = null;
-      lastTempoRef.current = null;
       stopCheerAudio();
     },
     [activeCharacterId, stopCheerAudio],
@@ -501,44 +606,14 @@ function App() {
     });
   }, []);
 
-  const getDropTargetPulseClass = useCallback(
-    (soundIds: string[]) => {
-      if (soundIds.length === 0) {
-        return '';
-      }
-
-      const hasFastAnimation = soundIds.some((soundId) => {
-        const animation = soundCatalogById.get(soundId)?.animation;
-        return animation === 'fast' || animation === 'both';
-      });
-      const hasSlowAnimation = soundIds.some((soundId) => {
-        const animation = soundCatalogById.get(soundId)?.animation;
-        return animation === 'slow' || animation === 'both';
-      });
-
-      if (hasFastAnimation && hasSlowAnimation) {
-        return styles.dropTargetPulseBoth;
-      }
-
-      if (hasFastAnimation) {
-        return styles.dropTargetPulseFast;
-      }
-
-      return styles.dropTargetPulseSlow;
-    },
-    [soundCatalogById],
-  );
-
   const resetBoard = useCallback(() => {
     stopAllAudio();
     stopCheerAudio();
     setTouchDraggedSound(null);
     setDropTargetId(null);
     setActiveSoundsByCharacter({});
-    setGlowMeter(0);
     setIsGlowBurst(false);
     setIsUltraMode(false);
-    lastTempoRef.current = null;
     activeComboIdRef.current = null;
     setComboWord(null);
     setVisibleSounds(getRandomSounds(ALL_SOUNDS, VISIBLE_SOUND_COUNT));
@@ -591,9 +666,7 @@ function App() {
     void Promise.all([
       preloadImage('/bg1-1920.jpg'),
       preloadImage('/bg1-mob.jpg'),
-      preloadImage('/alise-1.png'),
-      preloadImage('/gumi-1.png'),
-      preloadImage('/hanako-1.png'),
+      ...CHARACTER_IMAGE_OPTIONS.map((option) => preloadImage(option.src)),
       preloadImage(CHARACTER_PLACEHOLDER_PATH),
     ]);
   }, []);
@@ -630,10 +703,11 @@ function App() {
   }, [renderMode]);
 
   useEffect(() => {
-    if (activeSoundIds.length === 0) {
-      lastTempoRef.current = null;
+    if (totalActiveSounds >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) {
+      triggerGlowBurst();
     }
-  }, [activeSoundIds.length]);
+    totalActiveSoundsRef.current = totalActiveSounds;
+  }, [totalActiveSounds, triggerGlowBurst]);
 
   useEffect(() => {
     const activeSet = new Set(activeSoundIds);
@@ -702,222 +776,67 @@ function App() {
             <p className={styles.titleName}>ALISE!</p>
           </header>
 
-          <section className={styles.characterStage}>
-            <div className={styles.characterStageLayout}>
-              <div className={styles.characterControlDock}>
-                <div className={styles.characterSelector} role="group" aria-label="Character selection">
-                  {CHARACTERS.map((character) => {
-                    const isActive = character.id === activeCharacterId;
+          <CharacterGrid
+            characters={CHARACTERS}
+            activeCharacterId={activeCharacterId}
+            customizations={characterCustomizations}
+            activeSoundsByCharacter={activeSoundsByCharacter}
+            soundCatalogById={soundCatalogById}
+            dropTargetId={dropTargetId}
+            loadedCharacterMap={loadedCharacterMap}
+            isGlowBurst={isGlowBurst}
+            comboWord={comboWord}
+            onSelectCharacter={handleSelectCharacter}
+            onDragOverCharacter={(_, characterId) => setDropTargetId(characterId)}
+            onDragLeaveCharacter={(characterId) => {
+              if (dropTargetId === characterId) {
+                setDropTargetId(null);
+              }
+            }}
+            onDropSound={(event, characterId) => handleDrop(event, characterId)}
+            onImageLoad={handleCharacterImageLoad}
+            onEditCharacter={(characterId) =>
+              setEditingCharacterId((previous) => (previous === characterId ? null : characterId))
+            }
+            onResetCharacter={resetCharacter}
+          />
 
-                    return (
-                      <button
-                        key={character.id}
-                        type="button"
-                        className={`${styles.characterSelectButton} ${
-                          isActive ? styles.characterSelectButtonActive : ''
-                        }`}
-                        onClick={() => handleSelectCharacter(character.id)}
-                        aria-pressed={isActive}
-                        aria-label={`Select ${character.name}`}
-                        title={character.name}
-                      >
-                        <img className={styles.characterSelectIcon} src={character.img} alt="" aria-hidden="true" />
-                      </button>
-                    );
-                  })}
-                </div>
-                {activeCharacter && (
-                  <div
-                    className={styles.characterSchemeList}
-                    role="group"
-                    aria-label={`${activeCharacter.name} color schemes`}
-                  >
-                    {activeCharacter.schemes.map((scheme, index) => {
-                      const isActiveScheme = index === activeSchemeIndex;
-
-                      return (
-                        <button
-                          key={`${activeCharacter.id}-${scheme.id}`}
-                          type="button"
-                          className={`${styles.characterSchemeButton} ${
-                            isActiveScheme ? styles.characterSchemeButtonActive : ''
-                          }`}
-                          onClick={() => setCharacterScheme(activeCharacter.id, index)}
-                          aria-pressed={isActiveScheme}
-                          aria-label={`${activeCharacter.name} scheme: ${scheme.name}`}
-                          title={scheme.name}
-                          style={
-                            {
-                              '--scheme-primary': scheme.primaryColor,
-                              '--scheme-secondary': scheme.secondaryColor,
-                              '--scheme-soundboard': scheme.soundboardColor,
-                            } as CSSProperties
-                          }
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              <div className={styles.characterGrid}>
-                {CHARACTERS.map((character) => {
-                  const storedSchemeIndex = characterSchemeMap[character.id];
-                  const schemeIndex =
-                    typeof storedSchemeIndex === 'number' &&
-                    Number.isInteger(storedSchemeIndex) &&
-                    storedSchemeIndex >= 0 &&
-                    storedSchemeIndex < character.schemes.length
-                      ? storedSchemeIndex
-                      : 0;
-                  const scheme = character.schemes[schemeIndex] ?? character.schemes[0];
-                  const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
-                  const pulseClass = getDropTargetPulseClass(characterSoundIds);
-                  const isActiveCharacter = character.id === activeCharacterId;
-                  const isDropActive = dropTargetId === character.id;
-                  const isImageLoaded = Boolean(loadedCharacterMap[character.id]);
-
-                  return (
-                    <div
-                      key={character.id}
-                      className={`${styles.dropTarget} ${pulseClass} ${
-                        isDropActive ? styles.dropTargetActive : ''
-                      } ${isActiveCharacter ? styles.dropTargetSelected : ''} ${
-                        isGlowBurst && isActiveCharacter ? styles.dropTargetGlow : ''
-                      }`}
-                      data-character-id={character.id}
-                      onClick={() => handleSelectCharacter(character.id)}
-                      onDragOver={(event) => {
-                        event.preventDefault();
-                        setDropTargetId(character.id);
-                      }}
-                      onDragLeave={() => {
-                        if (dropTargetId === character.id) {
-                          setDropTargetId(null);
-                        }
-                      }}
-                      onDrop={(event) => handleDrop(event, character.id)}
-                      style={
-                        {
-                          '--character-title': scheme?.titleColor ?? character.titleColor,
-                          '--character-primary': scheme?.primaryColor ?? character.primaryColor,
-                          '--character-secondary': scheme?.secondaryColor ?? character.secondaryColor,
-                          '--character-soundboard': scheme?.soundboardColor ?? character.soundboardColor,
-                        } as CSSProperties
-                      }
-                    >
-                      <p className={styles.dropLabel}>{character.mixLabel}</p>
-                      {comboWord && isActiveCharacter && (
-                        <div className={styles.comboWord} role="status" aria-live="polite">
-                          {comboWord}
-                        </div>
-                      )}
-                      <div className={styles.characterImageWrap}>
-                        {!isImageLoaded && (
-                          <img
-                            className={styles.characterPlaceholder}
-                            src={CHARACTER_PLACEHOLDER_PATH}
-                            alt=""
-                            aria-hidden="true"
-                          />
-                        )}
-                        <img
-                          className={`${styles.characterImage} ${!isImageLoaded ? styles.characterImageHidden : ''}`}
-                          src={character.img}
-                          alt={`${character.name} character`}
-                          onLoad={() => handleCharacterImageLoad(character.id)}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className={styles.gameRow}>
-              <div
-                className={`${styles.glowMeter} ${isUltraReady ? styles.glowMeterReady : ''}`}
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={glowPercent}
-                aria-label="Glow meter"
-              >
-                <div className={styles.glowMeterFill} style={{ width: `${glowPercent}%` }} />
-                <span className={styles.glowMeterLabel}>SYNC {glowPercent}%</span>
-              </div>
-              <button
-                type="button"
-                className={`${styles.ultraButton} ${isUltraReady ? styles.ultraButtonReady : ''} ${
-                  isUltraMode ? styles.ultraButtonActive : ''
-                }`}
-                onClick={activateUltraMode}
-                disabled={!isUltraReady || isUltraMode}
-                aria-pressed={isUltraMode}
-              >
-                {ultraLabel}
-              </button>
-              {isCheerVisible && (
-                <button
-                  type="button"
-                  className={`${styles.cheerButton} ${isCheerActive ? styles.cheerButtonActive : ''}`}
-                  onClick={playCheer}
-                  disabled={isCheerActive}
-                  aria-label="Trigger audience cheer"
-                >
-                  👏
-                </button>
-              )}
-            </div>
-
-            <p className={styles.activeSummary}>
-              {activeSoundIds.length === 0
-                ? 'No active sounds'
-                : `${activeSoundIds.length} active sound${activeSoundIds.length > 1 ? 's' : ''}`}
-            </p>
-            <div className={styles.activeTags}>
-              {activeSoundIds.map((soundId) => (
-                <button
-                  key={soundId}
-                  type="button"
-                  className={styles.activeTagButton}
-                  onClick={() => disableSound(activeCharacterId, soundId)}
-                  aria-label={`Disable ${soundCatalogById.get(soundId)?.name ?? soundId}`}
-                >
-                  {soundCatalogById.get(soundId)?.name ?? soundId}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <details className={styles.soundDropdown} open>
-            <summary>Tap or Drag</summary>
-            <p className={styles.dropdownHelper}>Tap to turn on, tap again to turn off!</p>
-            <div className={styles.soundGrid}>
-              {visibleSounds.map((sound) => {
-                const isActive = activeSoundIds.includes(sound.id);
-
-                return (
-                  <button
-                    key={sound.id}
-                    type="button"
-                    className={`${styles.soundChip} ${isActive ? styles.soundChipActive : ''} ${
-                      isUltraMode ? styles.soundChipUltra : ''
-                    }`}
-                    draggable
-                    onDragStart={(event) => handleDragStart(event, sound.id)}
-                    onTouchStart={() => handleTouchStart(sound.id)}
-                    onClick={() => toggleSound(sound.id)}
-                    style={{
-                      backgroundColor: isActive ? `var(${sound.colorToken})` : `var(${sound.colorToken}-opq)`,
-                    }}
-                  >
-                    {sound.name}
-                  </button>
-                );
-              })}
-            </div>
-          </details>
+          <SoundPanel
+            activeSoundIds={activeSoundIds}
+            totalActiveSounds={totalActiveSounds}
+            maxSoundsTotal={MAX_SOUNDS_TOTAL}
+            soundCatalogById={soundCatalogById}
+            visibleSounds={visibleSounds}
+            isUltraReady={isUltraReady}
+            isUltraMode={isUltraMode}
+            ultraLabel={ultraLabel}
+            glowPercent={glowPercent}
+            isCheerVisible={isCheerVisible}
+            isCheerActive={isCheerActive}
+            onActivateUltra={activateUltraMode}
+            onPlayCheer={playCheer}
+            onDisableSound={(soundId) => disableSound(activeCharacterId, soundId)}
+            onToggleSound={toggleSound}
+            onDragStart={handleDragStart}
+            onTouchStart={handleTouchStart}
+          />
         </section>
+
+        <EditCharacterModal
+          isOpen={Boolean(editingCharacterId)}
+          characters={CHARACTERS}
+          editingCharacterId={editingCharacterId}
+          customizations={characterCustomizations}
+          activeSoundsByCharacter={activeSoundsByCharacter}
+          soundCatalogById={soundCatalogById}
+          colorOptions={CHARACTER_COLOR_OPTIONS}
+          imageOptions={CHARACTER_IMAGE_OPTIONS}
+          onClose={() => setEditingCharacterId(null)}
+          onSelectCharacter={(id) => setEditingCharacterId(id)}
+          onUpdateCustomization={(id, patch) => {
+            updateCharacterCustomization(id, patch);
+          }}
+        />
 
         <button
           type="button"

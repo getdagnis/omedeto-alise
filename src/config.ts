@@ -57,6 +57,8 @@ const SOUND_COLOR_TOKENS = [
   '--color-mood-tokyo-20',
 ] as const;
 
+export const CHARACTER_COLOR_TOKENS = SOUND_COLOR_TOKENS.slice(0, 18);
+
 const mapSoundColors = (baseSounds: BaseSoundOption[]): SoundOption[] =>
   baseSounds.map((sound, index) => ({
     ...sound,
@@ -259,9 +261,9 @@ export const CHARACTERS: CharacterOption[] = [
   },
   {
     id: 'gumi',
-    name: 'GUMI',
-    img: '/gumi-1.png',
-    mixLabel: "Gumi's Mix!",
+    name: 'Mystery',
+    img: '/alise-1.svg',
+    mixLabel: "Mystery's Mix!",
     titleColor: 'white',
     primaryColor: '#5dc630cc',
     secondaryColor: '#234315a1',
@@ -312,9 +314,9 @@ export const CHARACTERS: CharacterOption[] = [
   },
   {
     id: 'hanako',
-    name: 'Hanako Kun',
-    img: '/hanako-1.png',
-    mixLabel: "Hanako's Mix!",
+    name: 'Secret',
+    img: '/alise-1.svg',
+    mixLabel: "Secret's Mix!",
     titleColor: 'white',
     primaryColor: '#e4003a',
     secondaryColor: '#990026aa',
@@ -365,9 +367,9 @@ export const CHARACTERS: CharacterOption[] = [
   },
   {
     id: 'placeholder-1',
-    name: 'Mystery',
+    name: 'Unknown',
     img: '/alise-1.svg',
-    mixLabel: 'Mystery Mix',
+    mixLabel: 'Unknown Mix',
     titleColor: PLACEHOLDER_SCHEMES[0].titleColor,
     primaryColor: PLACEHOLDER_SCHEMES[0].primaryColor,
     secondaryColor: PLACEHOLDER_SCHEMES[0].secondaryColor,
@@ -377,9 +379,9 @@ export const CHARACTERS: CharacterOption[] = [
   },
   {
     id: 'placeholder-2',
-    name: 'Coming Soon',
+    name: 'Invisible',
     img: '/alise-1.svg',
-    mixLabel: 'Coming Soon Mix',
+    mixLabel: 'Invisible Mix',
     titleColor: PLACEHOLDER_SCHEMES[1].titleColor,
     primaryColor: PLACEHOLDER_SCHEMES[1].primaryColor,
     secondaryColor: PLACEHOLDER_SCHEMES[1].secondaryColor,
@@ -389,9 +391,9 @@ export const CHARACTERS: CharacterOption[] = [
   },
   {
     id: 'placeholder-3',
-    name: 'TBD',
+    name: 'Hidden',
     img: '/alise-1.svg',
-    mixLabel: 'TBD Mix',
+    mixLabel: 'Hidden Mix',
     titleColor: PLACEHOLDER_SCHEMES[2].titleColor,
     primaryColor: PLACEHOLDER_SCHEMES[2].primaryColor,
     secondaryColor: PLACEHOLDER_SCHEMES[2].secondaryColor,
@@ -400,3 +402,10 @@ export const CHARACTERS: CharacterOption[] = [
     sounds: ALL_SOUNDS,
   },
 ];
+
+export const CHARACTER_IMAGE_OPTIONS = [
+  { id: 'alise', label: 'Alise', src: '/alise-1.png' },
+  { id: 'gumi', label: 'Gumi', src: '/gumi-1.png' },
+  { id: 'hanako', label: 'Hanako', src: '/hanako-1.png' },
+  { id: 'placeholder', label: 'Placeholder', src: '/alise-1.svg' },
+] as const;

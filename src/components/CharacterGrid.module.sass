@@ -1,0 +1,27 @@
+.characterStage
+  display: grid
+  justify-items: center
+  gap: 0.85rem
+  width: 100%
+
+.characterGrid
+  width: 100%
+  display: grid
+  gap: 1rem 1.1rem
+  grid-auto-flow: row
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr))
+  align-items: start
+  justify-content: center
+  align-content: start
+  overflow: visible
+  padding: 0.25rem 0.25rem 0.6rem
+
+@media (min-width: 40rem)
+  .characterGrid
+    grid-template-columns: repeat(auto-fit, minmax(8.2rem, 1fr))
+
+@media (min-width: 56rem)
+  .characterGrid
+    grid-template-columns: repeat(auto-fit, minmax(9.25rem, 1fr))
+    gap: 1.1rem 1.4rem
+    justify-content: center
