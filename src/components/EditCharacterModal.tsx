@@ -82,7 +82,6 @@ function EditCharacterModal({
       return;
     }
 
-    // Remove 'auto' if selecting a specific color
     const filteredColors = currentColors.filter((c) => c !== 'auto');
 
     if (filteredColors.includes(colorValue)) {
@@ -106,14 +105,8 @@ function EditCharacterModal({
 
   const handleUpdateName = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    // Limit to 15 characters
-    if (value.length > 15) {
-      return;
-    }
-    // Only allow latin letters, numbers, spaces, and underscores
-    if (value.length > 0 && !/^[a-zA-Z0-9 _]*$/.test(value)) {
-      return;
-    }
+    if (value.length > 15) return;
+    if (value.length > 0 && !/^[a-zA-Z0-9 _]*$/.test(value)) return;
     handleUpdateDraft({ name: value });
   };
 
@@ -123,7 +116,7 @@ function EditCharacterModal({
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Edit character">
         <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
           <header className={styles.modalHeader}>
-            <h2 className={styles.modalTitle}>Character Settings</h2>
+            <h2 className={styles.modalTitle}>CHARACTER SETTINGS</h2>
             <button type="button" className={styles.closeButton} onClick={handleCancel} aria-label="Close edit panel">
               <FontAwesomeIcon icon={faXmark} />
             </button>
@@ -132,7 +125,7 @@ function EditCharacterModal({
           <div className={styles.layoutColumns}>
             {/* Left Column: Live Preview */}
             <aside className={styles.columnPreview}>
-              <h3 className={styles.columnTitle}>Preview</h3>
+              <h3 className={styles.columnTitle}>PREVIEW</h3>
               <div className={styles.previewContainer}>
                 {(() => {
                   const effectiveColorModes =
@@ -143,9 +136,7 @@ function EditCharacterModal({
                   const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
                   const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-                  const autoBackground = lastSoundColorToken
-                    ? `var(${lastSoundColorToken})`
-                    : 'rgba(255, 255, 255, 0.08)';
+                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
 
                   const colors = effectiveColorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
 
@@ -174,7 +165,7 @@ function EditCharacterModal({
             {/* Middle Column: Controls */}
             <main className={styles.columnControls}>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>Name</span>
+                <span className={styles.fieldLabel}>NAME</span>
                 <input
                   className={styles.textInput}
                   type="text"
@@ -185,7 +176,7 @@ function EditCharacterModal({
               </label>
 
               <div className={styles.field}>
-                <span className={styles.fieldLabel}>Colors (Up to 3)</span>
+                <span className={styles.fieldLabel}>COLORS (UP TO 3)</span>
                 <div className={styles.colorGrid}>
                   {colorOptions.map((option) => {
                     const effectiveColorModes =
@@ -214,7 +205,7 @@ function EditCharacterModal({
                         onClick={() => handleToggleColor(option.value)}
                       >
                         <span className={styles.colorSwatch} style={swatchStyle} />
-                        <span>{option.label}</span>
+                        <span>{option.label.toUpperCase()}</span>
                         {isSelected && option.value !== 'auto' && (
                           <span className={styles.colorBadge}>{selectedIndex + 1}</span>
                         )}
@@ -225,7 +216,7 @@ function EditCharacterModal({
               </div>
 
               <div className={styles.field}>
-                <span className={styles.fieldLabel}>Image</span>
+                <span className={styles.fieldLabel}>IMAGE</span>
                 <div className={styles.imageGrid}>
                   {imageOptions.map((option) => {
                     const isSelected = (draftCustomization.image ?? character.img) === option.src;
@@ -238,7 +229,7 @@ function EditCharacterModal({
                         aria-pressed={isSelected}
                       >
                         <img src={option.src} alt={option.label} />
-                        <span>{option.label}</span>
+                        <span>{option.label.toUpperCase()}</span>
                       </button>
                     );
                   })}
@@ -248,16 +239,14 @@ function EditCharacterModal({
 
             {/* Right Column: Character Tabs */}
             <nav className={styles.columnTabs}>
-              <h3 className={styles.columnTitle}>Characters</h3>
+              <h3 className={styles.columnTitle}>CHARACTERS</h3>
               <div className={styles.tabsContainer}>
                 {characters.map((c) => {
                   const cCustom = customizations[c.id] ?? {};
                   const cSounds = activeSoundsByCharacter[c.id] ?? [];
                   const lastSoundId = cSounds[cSounds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-                  const autoBackground = lastSoundColorToken
-                    ? `var(${lastSoundColorToken})`
-                    : 'rgba(255, 255, 255, 0.08)';
+                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
 
                   const cColors =
                     cCustom.colorModes && cCustom.colorModes.length > 0

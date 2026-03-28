@@ -13,7 +13,7 @@ type CharacterCustomizationMap = Record<string, CharacterCustomization>;
 
 type CharacterGridProps = {
   characters: CharacterOption[];
-  activeCharacterId: string;
+  favoriteCharacterId: string;
   customizations: CharacterCustomizationMap;
   activeSoundsByCharacter: Record<string, string[]>;
   mutedCharacterIds: Set<string>;
@@ -23,6 +23,7 @@ type CharacterGridProps = {
   isGlowBurst: boolean;
   comboWord: string | null;
   onSelectCharacter: (characterId: string) => void;
+  onToggleFavorite: (characterId: string) => void;
   onDragOverCharacter: (event: DragEvent<HTMLDivElement>, characterId: string) => void;
   onDragLeaveCharacter: (characterId: string) => void;
   onDropSound: (event: DragEvent<HTMLDivElement>, characterId: string) => void;
@@ -30,6 +31,7 @@ type CharacterGridProps = {
   onEditCharacter: (characterId: string) => void;
   onResetCharacter: (characterId: string) => void;
   onToggleMuteCharacter: (characterId: string) => void;
+  onOpenSoundPicker: (characterId: string) => void;
 };
 
 const ACTIVE_RING_COLOR = 'rgba(255, 255, 255, 0.95)';
@@ -37,7 +39,7 @@ const INACTIVE_RING_COLOR = 'rgba(38, 30, 60, 0.85)';
 
 function CharacterGrid({
   characters,
-  activeCharacterId,
+  favoriteCharacterId,
   customizations,
   activeSoundsByCharacter,
   mutedCharacterIds,
@@ -47,13 +49,14 @@ function CharacterGrid({
   isGlowBurst,
   comboWord,
   onSelectCharacter,
+  onToggleFavorite,
   onDragOverCharacter,
   onDragLeaveCharacter,
   onDropSound,
   onImageLoad,
   onEditCharacter,
   onResetCharacter,
-  onToggleMuteCharacter,
+  onOpenSoundPicker,
 }: CharacterGridProps) {
   return (
     <section className={styles.characterStage}>
@@ -61,7 +64,7 @@ function CharacterGrid({
         {characters.map((character) => {
           const customization = customizations[character.id] ?? {};
           const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
-          const isActiveCharacter = character.id === activeCharacterId;
+          const isFavorite = character.id === favoriteCharacterId;
           const isDropActive = dropTargetId === character.id;
           const isImageLoaded = Boolean(loadedCharacterMap[character.id]);
           const isMuted = mutedCharacterIds.has(character.id);
@@ -80,7 +83,7 @@ function CharacterGrid({
             return [defaultColor];
           })();
 
-          const ringColor = isActiveCharacter ? ACTIVE_RING_COLOR : INACTIVE_RING_COLOR;
+          const ringColor = isFavorite ? ACTIVE_RING_COLOR : INACTIVE_RING_COLOR;
 
           return (
             <CharacterCard
@@ -89,7 +92,7 @@ function CharacterGrid({
               customization={customization}
               soundIds={characterSoundIds}
               soundCatalogById={soundCatalogById}
-              isActive={isActiveCharacter}
+              isActive={isFavorite}
               isDropActive={isDropActive}
               isGlowBurst={isGlowBurst}
               comboWord={comboWord}
@@ -98,6 +101,7 @@ function CharacterGrid({
               isImageLoaded={isImageLoaded}
               isMuted={isMuted}
               onSelect={() => onSelectCharacter(character.id)}
+              onToggleFavorite={() => onToggleFavorite(character.id)}
               onDragOver={(event) => {
                 event.preventDefault();
                 onDragOverCharacter(event, character.id);
@@ -107,7 +111,7 @@ function CharacterGrid({
               onImageLoad={() => onImageLoad(character.id)}
               onEdit={() => onEditCharacter(character.id)}
               onReset={() => onResetCharacter(character.id)}
-              onToggleMute={() => onToggleMuteCharacter(character.id)}
+              onOpenSoundPicker={() => onOpenSoundPicker(character.id)}
             />
           );
         })}

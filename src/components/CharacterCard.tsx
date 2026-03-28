@@ -1,7 +1,8 @@
 import type { CSSProperties, DragEvent } from 'react';
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faRotateLeft, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartSolid, faMusic, faPen, faRotateLeft, faVolumeXmark } from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
 
@@ -27,13 +28,14 @@ type CharacterCardProps = {
   isImageLoaded: boolean;
   isMuted?: boolean;
   onSelect?: () => void;
+  onToggleFavorite?: () => void;
   onDragOver?: (event: DragEvent<HTMLDivElement>) => void;
   onDragLeave?: () => void;
   onDrop?: (event: DragEvent<HTMLDivElement>) => void;
   onImageLoad?: () => void;
   onEdit?: () => void;
   onReset?: () => void;
-  onToggleMute?: () => void;
+  onOpenSoundPicker?: () => void;
   isSmallPreview?: boolean;
   hideSounds?: boolean;
   showActions?: boolean;
@@ -80,25 +82,45 @@ function CharacterCard({
   isImageLoaded,
   isMuted = false,
   onSelect,
+  onToggleFavorite,
   onDragOver,
   onDragLeave,
   onDrop,
   onImageLoad,
   onEdit,
   onReset,
-  onToggleMute,
+  onOpenSoundPicker,
   isSmallPreview = false,
   hideSounds = false,
   showActions = true,
   children,
   forceLoop = false,
 }: CharacterCardProps) {
+  const [isFlashing, setIsFlashing] = useState(false);
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
   const showName = displayName.trim().length > 0;
-  const pulseClass = getDropTargetPulseClass(soundIds, soundCatalogById);
   const soundNames = soundIds.map((soundId) => soundCatalogById.get(soundId)?.name ?? soundId);
   const isLooping = (soundIds.length > 0 || forceLoop) && colors.length > 1;
+
+  // Pulse only if playing and not muted
+  const soundsPlayingAndNotMuted = soundIds.length > 0 && !isMuted;
+  const pulseClass = soundsPlayingAndNotMuted ? getDropTargetPulseClass(soundIds, soundCatalogById) : '';
+
+  // Greyed out UNLESS:
+  // a) sounds are playing and not muted
+  // b) is favorited (passed as isActive here from CharacterGrid)
+  // c) forced loop (edit mode preview)
+  const isGreyedOut = !(soundsPlayingAndNotMuted || isActive || forceLoop);
+
+  const handleCharacterClick = () => {
+    if (soundIds.length === 0) {
+      setIsFlashing(true);
+      setTimeout(() => setIsFlashing(false), 1500);
+    } else if (onSelect) {
+      onSelect();
+    }
+  };
 
   if (isSmallPreview) {
     return (
@@ -122,9 +144,9 @@ function CharacterCard({
           isActive ? styles.dropTargetSelected : ''
         } ${isGlowBurst && isActive ? styles.dropTargetGlow : ''} ${isLooping ? styles.dropTargetHasLoop : ''} ${
           forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''
-        } ${isMuted ? styles.dropTargetMuted : ''}`}
+        } ${isGreyedOut ? styles.dropTargetMuted : ''}`}
         data-character-id={character.id}
-        onClick={onSelect}
+        onClick={handleCharacterClick}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -151,6 +173,29 @@ function CharacterCard({
             {comboWord}
           </div>
         )}
+        
+        {/* Favorite Heart Button */}
+        {showActions && (
+          <button 
+            type="button" 
+            className={`${styles.favoriteButton} ${isActive ? styles.favoriteButtonActive : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleFavorite) onToggleFavorite();
+            }}
+            aria-label={isActive ? "Remove from favorites" : "Add to favorites"}
+          >
+            <FontAwesomeIcon icon={isActive ? faHeartSolid : faHeartRegular} />
+          </button>
+        )}
+
+        {/* Muted Icon Overlay (Only if sounds are active) */}
+        {isMuted && soundIds.length > 0 && (
+          <div className={styles.mutedOverlay}>
+            <FontAwesomeIcon icon={faVolumeXmark} />
+          </div>
+        )}
+
         {children !== undefined ? (
           children
         ) : (
@@ -185,25 +230,29 @@ function CharacterCard({
           <button type="button" className={styles.characterActionButton} onClick={onEdit} aria-label="Edit character">
             <FontAwesomeIcon icon={faPen} />
           </button>
+          <button
+            type="button"
+            className={`${styles.characterActionButton} ${isFlashing ? styles.actionButtonFlash : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpenSoundPicker) onOpenSoundPicker();
+            }}
+            aria-label="Add sounds"
+          >
+            <FontAwesomeIcon icon={faMusic} />
+          </button>
           {soundIds.length > 0 && (
-            <>
-              <button
-                type="button"
-                className={styles.characterActionButton}
-                onClick={onToggleMute}
-                aria-label={isMuted ? 'Unmute character' : 'Mute character'}
-              >
-                <FontAwesomeIcon icon={isMuted ? faVolumeXmark : faVolumeHigh} />
-              </button>
-              <button
-                type="button"
-                className={styles.characterActionButton}
-                onClick={onReset}
-                aria-label="Reset character"
-              >
-                <FontAwesomeIcon icon={faRotateLeft} />
-              </button>
-            </>
+            <button
+              type="button"
+              className={styles.characterActionButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onReset) onReset();
+              }}
+              aria-label="Reset character"
+            >
+              <FontAwesomeIcon icon={faRotateLeft} />
+            </button>
           )}
         </div>
       )}

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, DragEvent, TouchEvent } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMusic, faPen, faXmark } from '@fortawesome/free-solid-svg-icons';
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
-import SoundPanel from './components/SoundPanel';
 import EditCharacterModal from './components/EditCharacterModal';
 import {
   ALL_SOUNDS,
@@ -10,10 +11,8 @@ import {
   CHARACTER_COLOR_TOKENS,
   CHARACTER_IMAGE_OPTIONS,
   CHARACTERS,
-  type SoundOption,
 } from './config';
 
-const VISIBLE_SOUND_COUNT = 20;
 const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
 const DEFAULT_GLITCH_MODE: 'stable' | 'glitch' = 'stable';
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
@@ -21,7 +20,6 @@ const BG_DESKTOP_SUFFIX = '1920';
 const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
 const ULTRA_MODE_MS = 10000;
-const CHEER_DURATION_MS = 5000;
 const MAX_SOUNDS_PER_CHARACTER = 3;
 const MAX_SOUNDS_TOTAL = 12;
 
@@ -48,17 +46,6 @@ const COMBO_WORDS = [
   },
 ] as const;
 
-const CHEER_SOUND_PATHS = ['/hanako/applause.mp3', '/hanako/choir.mp3', '/hanako/laugh.mp3'] as const;
-
-const CHARACTER_COLOR_OPTIONS = [
-  { id: 'auto', label: 'Default (Sound)', value: 'auto' },
-  ...CHARACTER_COLOR_TOKENS.map((token, index) => ({
-    id: `tokyo-${index + 1}`,
-    label: `Tokyo ${index + 1}`,
-    value: token,
-  })),
-] as const;
-
 const getStoredGlitchMode = (): 'stable' | 'glitch' => {
   if (typeof window === 'undefined') {
     return DEFAULT_GLITCH_MODE;
@@ -73,20 +60,6 @@ const getStoredGlitchMode = (): 'stable' | 'glitch' => {
   } catch {
     return DEFAULT_GLITCH_MODE;
   }
-};
-
-const getRandomSounds = (sounds: SoundOption[], count: number) => {
-  if (sounds.length <= count) {
-    return [...sounds];
-  }
-
-  const selectedIndexes = new Set<number>();
-
-  while (selectedIndexes.size < count) {
-    selectedIndexes.add(Math.floor(Math.random() * sounds.length));
-  }
-
-  return sounds.filter((_, index) => selectedIndexes.has(index));
 };
 
 const createGlitchOverlayVars = (): CSSProperties => {
@@ -201,6 +174,15 @@ const persistCharacterCustomStorage = (customMap: CharacterCustomizationMap) => 
   }
 };
 
+const CHARACTER_COLOR_OPTIONS = [
+  { id: 'auto', label: 'Default (Sound)', value: 'auto' },
+  ...CHARACTER_COLOR_TOKENS.map((token, index) => ({
+    id: `tokyo-${index + 1}`,
+    label: `Tokyo ${index + 1}`,
+    value: token,
+  })),
+] as const;
+
 function App() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
 
@@ -218,7 +200,9 @@ function App() {
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [isMobileVerticalDevice, setIsMobileVerticalDevice] = useState(() => getIsMobileVerticalDevice());
   const [isBackgroundRotationReady, setIsBackgroundRotationReady] = useState(false);
-  const [activeCharacterId, setActiveCharacterId] = useState(() => CHARACTERS[0]?.id ?? '');
+
+  const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
+
   const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({});
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
@@ -226,6 +210,7 @@ function App() {
     parseCharacterCustomStorage(),
   );
   const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
+  const [pickingSoundsCharacterId, setPickingSoundsCharacterId] = useState<string | null>(null);
 
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
@@ -233,80 +218,19 @@ function App() {
   }, [currentPath]);
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
-  const [isUltraMode, setIsUltraMode] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
-  const [isCheerActive, setIsCheerActive] = useState(false);
   const [renderMode, setRenderMode] = useState<'stable' | 'glitch'>(() => getStoredGlitchMode());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [glitchOverlayVars, setGlitchOverlayVars] = useState<CSSProperties>(() => createGlitchOverlayVars());
   const [touchDraggedSound, setTouchDraggedSound] = useState<string | null>(null);
-  const defaultCharacter = CHARACTERS[0];
-  const [visibleSounds, setVisibleSounds] = useState<SoundOption[]>(() =>
-    getRandomSounds(ALL_SOUNDS, VISIBLE_SOUND_COUNT),
-  );
 
-  const activeCharacter = CHARACTERS.find((character) => character.id === activeCharacterId) ?? defaultCharacter;
-  const activeSoundIds = useMemo(
-    () => (activeCharacter ? activeSoundsByCharacter[activeCharacter.id] ?? [] : []),
-    [activeCharacter, activeSoundsByCharacter],
-  );
   const soundCatalogById = useMemo(() => new Map(ALL_SOUNDS.map((sound) => [sound.id, sound] as const)), []);
-  const activeCustomization = activeCharacter ? characterCustomizations[activeCharacter.id] ?? {} : {};
-  const activeBaseScheme = activeCharacter?.schemes?.[0] ?? {
-    titleColor: activeCharacter?.titleColor ?? 'white',
-    primaryColor: activeCharacter?.primaryColor ?? '#600b87cc',
-    secondaryColor: activeCharacter?.secondaryColor ?? '#ff0040a1',
-    soundboardColor: activeCharacter?.soundboardColor ?? '#29063acc',
-  };
-  const activePanelColor = (() => {
-    const colorModes = activeCustomization.colorModes ?? [];
-    if (colorModes.length > 0) {
-      const first = colorModes[0];
-      if (first !== 'auto') {
-        return `var(${first})`;
-      }
-    }
-
-    if (activeSoundIds.length > 0) {
-      const token = soundCatalogById.get(activeSoundIds[activeSoundIds.length - 1])?.colorToken;
-      if (token) {
-        return `var(${token})`;
-      }
-    }
-
-    return activeBaseScheme.primaryColor;
-  })();
-  const activeScheme = {
-    titleColor: activeBaseScheme.titleColor,
-    primaryColor: activePanelColor,
-    secondaryColor: activePanelColor,
-    soundboardColor: activeBaseScheme.soundboardColor,
-  };
-  const totalActiveSounds = useMemo(
-    () => Object.values(activeSoundsByCharacter).reduce((sum, ids) => sum + ids.length, 0),
-    [activeSoundsByCharacter],
-  );
-  const glowPercent = Math.min(100, Math.round((totalActiveSounds / MAX_SOUNDS_TOTAL) * 100));
-  const isUltraReady = totalActiveSounds >= MAX_SOUNDS_TOTAL;
-  const ultraLabel = isUltraMode
-    ? 'Ultra Active'
-    : isUltraReady
-      ? 'Ultra Ready'
-      : `Ultra ${totalActiveSounds}/${MAX_SOUNDS_TOTAL}`;
-  const isCheerVisible = activeSoundIds.length >= 3;
-  const activeBackgroundSuffix = isMobileVerticalDevice ? BG_MOBILE_SUFFIX : BG_DESKTOP_SUFFIX;
-  const activeBackgroundImage = useMemo(() => {
-    const activeBackgroundKey = BACKGROUND_IMAGE_KEYS[backgroundIndex] ?? BACKGROUND_IMAGE_KEYS[0];
-    return buildBackgroundImagePath(activeBackgroundKey, activeBackgroundSuffix);
-  }, [activeBackgroundSuffix, backgroundIndex]);
 
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const activeSoundOrderRef = useRef<Array<{ characterId: string; soundId: string }>>([]);
   const totalActiveSoundsRef = useRef(0);
   const glowBurstTimeoutRef = useRef<number | null>(null);
   const ultraModeTimeoutRef = useRef<number | null>(null);
-  const cheerAudioRef = useRef<HTMLAudioElement | null>(null);
-  const cheerTimeoutRef = useRef<number | null>(null);
   const comboTimeoutRef = useRef<number | null>(null);
   const activeComboIdRef = useRef<string | null>(null);
 
@@ -331,51 +255,8 @@ function App() {
   }, []);
 
   const stopCheerAudio = useCallback(() => {
-    if (cheerTimeoutRef.current) {
-      window.clearTimeout(cheerTimeoutRef.current);
-      cheerTimeoutRef.current = null;
-    }
-
-    if (cheerAudioRef.current) {
-      cheerAudioRef.current.pause();
-      cheerAudioRef.current.currentTime = 0;
-      cheerAudioRef.current = null;
-    }
-
-    setIsCheerActive(false);
+    // Cheer audio is currently not used but kept for logic stability
   }, []);
-
-  const playCheer = useCallback(() => {
-    if (isCheerActive) {
-      return;
-    }
-
-    stopCheerAudio();
-    const nextPath = CHEER_SOUND_PATHS[Math.floor(Math.random() * CHEER_SOUND_PATHS.length)];
-    const audio = new Audio(nextPath);
-    audio.volume = 0.9;
-    void audio.play().catch(() => undefined);
-    cheerAudioRef.current = audio;
-    setIsCheerActive(true);
-    cheerTimeoutRef.current = window.setTimeout(() => {
-      stopCheerAudio();
-    }, CHEER_DURATION_MS);
-  }, [isCheerActive, stopCheerAudio]);
-
-  const activateUltraMode = useCallback(() => {
-    if (isUltraMode || totalActiveSounds < MAX_SOUNDS_TOTAL) {
-      return;
-    }
-
-    if (ultraModeTimeoutRef.current) {
-      window.clearTimeout(ultraModeTimeoutRef.current);
-    }
-
-    setIsUltraMode(true);
-    ultraModeTimeoutRef.current = window.setTimeout(() => {
-      setIsUltraMode(false);
-    }, ULTRA_MODE_MS);
-  }, [isUltraMode, totalActiveSounds]);
 
   const buildAudioKey = useCallback((characterId: string, soundId: string) => `${characterId}:${soundId}`, []);
 
@@ -400,6 +281,22 @@ function App() {
     });
   }, []);
 
+  const unmuteCharacter = useCallback((characterId: string) => {
+    setMutedCharacterIds((prev) => {
+      if (prev.has(characterId)) {
+        const next = new Set(prev);
+        next.delete(characterId);
+        Object.entries(audioRefs.current).forEach(([key, audio]) => {
+          if (key.startsWith(`${characterId}:`)) {
+            audio.volume = 1;
+          }
+        });
+        return next;
+      }
+      return prev;
+    });
+  }, []);
+
   const enableSound = useCallback(
     (characterId: string, soundId: string) => {
       const sound = soundCatalogById.get(soundId);
@@ -409,16 +306,17 @@ function App() {
 
       const audioKey = buildAudioKey(characterId, soundId);
       const existingAudio = audioRefs.current[audioKey];
-      const isMuted = mutedCharacterIds.has(characterId);
+
+      unmuteCharacter(characterId);
 
       if (existingAudio) {
         existingAudio.currentTime = 0;
-        existingAudio.volume = isMuted ? 0 : 1;
+        existingAudio.volume = 1;
         void existingAudio.play().catch(() => undefined);
       } else {
         const nextAudio = new Audio(sound.path);
         nextAudio.loop = true;
-        nextAudio.volume = isMuted ? 0 : 1;
+        nextAudio.volume = 1;
         void nextAudio.play().catch(() => undefined);
         audioRefs.current[audioKey] = nextAudio;
       }
@@ -456,11 +354,10 @@ function App() {
           );
         };
 
-        while (order.length >= MAX_SOUNDS_TOTAL) {
+        const totalActive = Object.values(next).reduce((sum, ids) => sum + ids.length, 0);
+        while (totalActive >= MAX_SOUNDS_TOTAL && order.length > 0) {
           const oldest = order[0];
-          if (!oldest) {
-            break;
-          }
+          if (!oldest) break;
           removeEntry(oldest.characterId, oldest.soundId);
         }
 
@@ -475,11 +372,13 @@ function App() {
         return next;
       });
     },
-    [buildAudioKey, soundCatalogById, mutedCharacterIds],
+    [buildAudioKey, soundCatalogById, unmuteCharacter],
   );
 
   const disableSound = useCallback(
     (characterId: string, soundId: string) => {
+      unmuteCharacter(characterId);
+
       const audioKey = buildAudioKey(characterId, soundId);
       const audio = audioRefs.current[audioKey];
       if (audio) {
@@ -501,11 +400,13 @@ function App() {
         (entry) => !(entry.characterId === characterId && entry.soundId === soundId),
       );
     },
-    [buildAudioKey],
+    [buildAudioKey, unmuteCharacter],
   );
 
   const resetCharacter = useCallback(
     (characterId: string) => {
+      unmuteCharacter(characterId);
+
       setActiveSoundsByCharacter((previous) => {
         const current = previous[characterId] ?? [];
         if (current.length === 0) {
@@ -525,138 +426,37 @@ function App() {
         return { ...previous, [characterId]: [] };
       });
 
-      activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
-        (entry) => entry.characterId !== characterId,
-      );
-
-      if (characterId === activeCharacterId) {
-        activeComboIdRef.current = null;
-        setComboWord(null);
-      }
+      activeSoundOrderRef.current = activeSoundOrderRef.current.filter((entry) => entry.characterId !== characterId);
     },
-    [activeCharacterId, buildAudioKey],
+    [buildAudioKey, unmuteCharacter],
   );
 
   const toggleSound = useCallback(
-    (soundId: string) => {
-      if (!activeCharacterId) {
+    (soundId: string, characterId: string) => {
+      const characterSounds = activeSoundsByCharacter[characterId] ?? [];
+      if (characterSounds.includes(soundId)) {
+        disableSound(characterId, soundId);
         return;
       }
 
-      if (activeSoundIds.includes(soundId)) {
-        disableSound(activeCharacterId, soundId);
-        return;
-      }
-
-      enableSound(activeCharacterId, soundId);
-    },
-    [activeCharacterId, activeSoundIds, disableSound, enableSound],
-  );
-
-  const handleDragStart = (event: DragEvent<HTMLButtonElement>, soundId: string) => {
-    event.dataTransfer.setData('text/plain', soundId);
-    event.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleTouchStart = (soundId: string) => {
-    setTouchDraggedSound(soundId);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLElement>, characterId: string) => {
-    event.preventDefault();
-    setDropTargetId(null);
-    const soundId = event.dataTransfer.getData('text/plain');
-    if (!soundId) {
-      return;
-    }
-
-    if (characterId !== activeCharacterId) {
-      handleSelectCharacter(characterId);
       enableSound(characterId, soundId);
-      return;
-    }
-
-    enableSound(characterId, soundId);
-  };
-
-  const handleTouchMove = (event: TouchEvent<HTMLElement>) => {
-    if (!touchDraggedSound) {
-      return;
-    }
-
-    const touch = event.touches[0];
-    if (!touch) {
-      return;
-    }
-
-    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-    const target = dropTarget?.closest('[data-character-id]') as HTMLElement | null;
-    const targetId = target?.getAttribute('data-character-id') ?? null;
-    setDropTargetId(targetId);
-  };
-
-  const handleTouchEnd = (event: TouchEvent<HTMLElement>) => {
-    if (!touchDraggedSound) {
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-    const target = dropTarget?.closest('[data-character-id]') as HTMLElement | null;
-    const targetId = target?.getAttribute('data-character-id');
-
-    if (targetId) {
-      if (targetId !== activeCharacterId) {
-        handleSelectCharacter(targetId);
-        enableSound(targetId, touchDraggedSound);
-      } else {
-        enableSound(targetId, touchDraggedSound);
-      }
-    }
-
-    setTouchDraggedSound(null);
-    setDropTargetId(null);
-  };
-
-  const persistTimeoutRef = useRef<number | null>(null);
-
-  const persistCharacterCustomStorageDebounced = useCallback((customMap: CharacterCustomizationMap) => {
-    if (persistTimeoutRef.current) {
-      window.clearTimeout(persistTimeoutRef.current);
-    }
-    persistTimeoutRef.current = window.setTimeout(() => {
-      persistCharacterCustomStorage(customMap);
-      persistTimeoutRef.current = null;
-    }, 500);
-  }, []);
-
-  const updateCharacterCustomization = useCallback(
-    (characterId: string, patch: CharacterCustomization) => {
-      setCharacterCustomizations((previous) => {
-        const current = previous[characterId] ?? {};
-        const next = { ...previous, [characterId]: { ...current, ...patch } };
-        persistCharacterCustomStorageDebounced(next);
-        return next;
-      });
     },
-    [persistCharacterCustomStorageDebounced],
+    [activeSoundsByCharacter, disableSound, enableSound],
   );
 
-  const handleSelectCharacter = useCallback(
+  const handleCharacterClick = useCallback(
     (characterId: string) => {
-      if (characterId === activeCharacterId) {
-        return;
+      const soundIds = activeSoundsByCharacter[characterId] ?? [];
+      if (soundIds.length > 0) {
+        toggleMuteCharacter(characterId);
       }
-
-      setActiveCharacterId(characterId);
-      setIsGlowBurst(false);
-      setIsUltraMode(false);
-      setComboWord(null);
-      activeComboIdRef.current = null;
-      stopCheerAudio();
     },
-    [activeCharacterId, stopCheerAudio],
+    [activeSoundsByCharacter, toggleMuteCharacter],
   );
+
+  const handleToggleFavorite = useCallback((characterId: string) => {
+    setFavoriteCharacterId((prev) => (prev === characterId ? '' : characterId));
+  }, []);
 
   const handleCharacterImageLoad = useCallback((characterId: string) => {
     setLoadedCharacterMap((previous) => {
@@ -669,16 +469,13 @@ function App() {
 
   const resetBoard = useCallback(() => {
     stopAllAudio();
-    stopCheerAudio();
     setTouchDraggedSound(null);
     setDropTargetId(null);
     setActiveSoundsByCharacter({});
     setIsGlowBurst(false);
-    setIsUltraMode(false);
     activeComboIdRef.current = null;
     setComboWord(null);
-    setVisibleSounds(getRandomSounds(ALL_SOUNDS, VISIBLE_SOUND_COUNT));
-  }, [stopAllAudio, stopCheerAudio]);
+  }, [stopAllAudio]);
 
   const toggleRenderMode = useCallback(() => {
     if (renderMode === 'glitch') {
@@ -751,7 +548,7 @@ function App() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [isMobileVerticalDevice]);
 
   useEffect(() => () => stopAllAudio(), [stopAllAudio]);
 
@@ -759,19 +556,20 @@ function App() {
     try {
       window.localStorage.setItem(GLITCH_PREF_KEY, renderMode);
     } catch {
-      // Ignore localStorage failures and keep current runtime mode.
+      // Ignore localStorage failures
     }
   }, [renderMode]);
 
   useEffect(() => {
-    if (totalActiveSounds >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) {
+    const total = Object.values(activeSoundsByCharacter).reduce((sum, ids) => sum + ids.length, 0);
+    if (total >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) {
       triggerGlowBurst();
     }
-    totalActiveSoundsRef.current = totalActiveSounds;
-  }, [totalActiveSounds, triggerGlowBurst]);
+    totalActiveSoundsRef.current = total;
+  }, [activeSoundsByCharacter, triggerGlowBurst]);
 
   useEffect(() => {
-    const activeSet = new Set(activeSoundIds);
+    const activeSet = new Set(Object.values(activeSoundsByCharacter).flat());
     const matchedCombo = COMBO_WORDS.find((combo) => combo.soundIds.every((soundId) => activeSet.has(soundId)));
 
     if (!matchedCombo) {
@@ -791,7 +589,7 @@ function App() {
     comboTimeoutRef.current = window.setTimeout(() => {
       setComboWord(null);
     }, 2200);
-  }, [activeSoundIds]);
+  }, [activeSoundsByCharacter]);
 
   useEffect(
     () => () => {
@@ -812,6 +610,88 @@ function App() {
   const handleGlitchMenuAction = () => {
     toggleRenderMode();
     setIsMenuOpen(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLElement>, characterId: string) => {
+    event.preventDefault();
+    setDropTargetId(null);
+    const soundId = event.dataTransfer.getData('text/plain');
+    if (!soundId) {
+      return;
+    }
+    enableSound(characterId, soundId);
+  };
+
+  const handleTouchMove = (event: TouchEvent<HTMLElement>) => {
+    if (!touchDraggedSound) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    if (!touch) {
+      return;
+    }
+
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = dropTarget?.closest('[data-character-id]') as HTMLElement | null;
+    const targetId = target?.getAttribute('data-character-id') ?? null;
+    setDropTargetId(targetId);
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    if (!touchDraggedSound) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = dropTarget?.closest('[data-character-id]') as HTMLElement | null;
+    const targetId = target?.getAttribute('data-character-id');
+
+    if (targetId) {
+      enableSound(targetId, touchDraggedSound);
+    }
+
+    setTouchDraggedSound(null);
+    setDropTargetId(null);
+  };
+
+  const persistTimeoutRef = useRef<number | null>(null);
+
+  const persistCharacterCustomStorageDebounced = useCallback((customMap: CharacterCustomizationMap) => {
+    if (persistTimeoutRef.current) {
+      window.clearTimeout(persistTimeoutRef.current);
+    }
+    persistTimeoutRef.current = window.setTimeout(() => {
+      persistCharacterCustomStorage(customMap);
+      persistTimeoutRef.current = null;
+    }, 500);
+  }, []);
+
+  const updateCharacterCustomization = useCallback(
+    (characterId: string, patch: CharacterCustomization) => {
+      setCharacterCustomizations((previous) => {
+        const current = previous[characterId] ?? {};
+        const next = { ...previous, [characterId]: { ...current, ...patch } };
+        persistCharacterCustomStorageDebounced(next);
+        return next;
+      });
+    },
+    [persistCharacterCustomStorageDebounced],
+  );
+
+  const activeBackgroundImage = useMemo(() => {
+    const activeBackgroundKey = BACKGROUND_IMAGE_KEYS[backgroundIndex] ?? BACKGROUND_IMAGE_KEYS[0];
+    const suffix = isMobileVerticalDevice ? BG_MOBILE_SUFFIX : BG_DESKTOP_SUFFIX;
+    return buildBackgroundImagePath(activeBackgroundKey, suffix);
+  }, [backgroundIndex, isMobileVerticalDevice]);
+
+  const activeCharacter = CHARACTERS.find((c) => c.id === favoriteCharacterId) || CHARACTERS[0];
+  const activeScheme = activeCharacter?.schemes?.[0] ?? {
+    titleColor: 'white',
+    primaryColor: '#600b87cc',
+    secondaryColor: '#ff0040a1',
+    soundboardColor: '#29063acc',
   };
 
   return (
@@ -839,7 +719,7 @@ function App() {
 
           <CharacterGrid
             characters={CHARACTERS}
-            activeCharacterId={activeCharacterId}
+            favoriteCharacterId={favoriteCharacterId}
             customizations={characterCustomizations}
             activeSoundsByCharacter={activeSoundsByCharacter}
             mutedCharacterIds={mutedCharacterIds}
@@ -848,7 +728,8 @@ function App() {
             loadedCharacterMap={loadedCharacterMap}
             isGlowBurst={isGlowBurst}
             comboWord={comboWord}
-            onSelectCharacter={handleSelectCharacter}
+            onSelectCharacter={handleCharacterClick}
+            onToggleFavorite={handleToggleFavorite}
             onDragOverCharacter={(_, characterId) => setDropTargetId(characterId)}
             onDragLeaveCharacter={(characterId) => {
               if (dropTargetId === characterId) {
@@ -860,27 +741,7 @@ function App() {
             onEditCharacter={(characterId) => navigate(`/${characterId}/edit`)}
             onResetCharacter={resetCharacter}
             onToggleMuteCharacter={toggleMuteCharacter}
-          />
-
-          <SoundPanel
-            activeCharacterName={activeCustomization.name?.trim() || activeCharacter.name}
-            activeSoundIds={activeSoundIds}
-            totalActiveSounds={totalActiveSounds}
-            maxSoundsTotal={MAX_SOUNDS_TOTAL}
-            soundCatalogById={soundCatalogById}
-            visibleSounds={visibleSounds}
-            isUltraReady={isUltraReady}
-            isUltraMode={isUltraMode}
-            ultraLabel={ultraLabel}
-            glowPercent={glowPercent}
-            isCheerVisible={isCheerVisible}
-            isCheerActive={isCheerActive}
-            onActivateUltra={activateUltraMode}
-            onPlayCheer={playCheer}
-            onDisableSound={(soundId) => disableSound(activeCharacterId, soundId)}
-            onToggleSound={toggleSound}
-            onDragStart={handleDragStart}
-            onTouchStart={handleTouchStart}
+            onOpenSoundPicker={(characterId) => setPickingSoundsCharacterId(characterId)}
           />
         </section>
 
@@ -900,13 +761,80 @@ function App() {
           }}
         />
 
+        {pickingSoundsCharacterId && (
+          <>
+            <div className={styles.backdrop} onClick={() => setPickingSoundsCharacterId(null)} />
+            <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add sounds">
+              <div className={styles.pickerCard}>
+                <header className={styles.pickerHeader}>
+                  <div className={styles.pickerTitleGroup}>
+                    <h3 className={styles.pickerTitle}>
+                      {(
+                        characterCustomizations[pickingSoundsCharacterId]?.name ||
+                        CHARACTERS.find((c) => c.id === pickingSoundsCharacterId)?.name ||
+                        ''
+                      ).toUpperCase()}
+                      'S SOUNDBOARD
+                    </h3>
+                    <p className={styles.pickerSubtitle}>choose up to 3 char sounds</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.closeButton}
+                    onClick={() => setPickingSoundsCharacterId(null)}
+                  >
+                    <FontAwesomeIcon icon={faXmark} />
+                  </button>
+                </header>
+                <div className={styles.pickerList}>
+                  {ALL_SOUNDS.slice(0, 12).map((sound) => {
+                    const characterSounds = activeSoundsByCharacter[pickingSoundsCharacterId] ?? [];
+                    const isActive = characterSounds.includes(sound.id);
+                    const isMaxReached = characterSounds.length >= 3 && !isActive;
+
+                    return (
+                      <button
+                        key={sound.id}
+                        type="button"
+                        disabled={isMaxReached}
+                        className={`${styles.pickerItem} ${isActive ? styles.pickerItemActive : ''} ${isMaxReached ? styles.pickerItemDisabled : ''}`}
+                        onClick={() => toggleSound(sound.id, pickingSoundsCharacterId)}
+                        style={{
+                          backgroundColor: isActive ? `var(${sound.colorToken})` : `var(${sound.colorToken}-opq)`,
+                        }}
+                      >
+                        {sound.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.cancelButton}
+                    onClick={() => {
+                      setPickingSoundsCharacterId(null);
+                      navigate(`/${pickingSoundsCharacterId}/edit`);
+                    }}
+                  >
+                    EDIT
+                  </button>
+                  <button type="button" className={styles.okButton} onClick={() => setPickingSoundsCharacterId(null)}>
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         <button
           type="button"
           className={styles.refreshButton}
           onClick={resetBoard}
           aria-label="Reset all active sounds"
         >
-          Reset & Change
+          Reset board
         </button>
 
         <div className={styles.hamburgerWrap}>
@@ -929,7 +857,6 @@ function App() {
           )}
         </div>
       </main>
-
     </div>
   );
 }

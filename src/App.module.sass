@@ -43,8 +43,8 @@
   z-index: 1
   min-height: 100svh
   display: flex
+  flex-direction: column
   align-items: center
-  justify-content: center
   padding: 1rem 0.85rem 4.75rem
 
 .panel
@@ -99,10 +99,114 @@
   cursor: pointer
   box-shadow: var(--shadow-refresh)
   transition: background-color 0.2s ease, transform 0.2s ease
+  z-index: 50
 
 .refreshButton:hover
   background: var(--color-button-hover)
   transform: translateY(-2px)
+
+.backdrop
+  position: fixed
+  inset: 0
+  background: rgba(8, 6, 26, 0.72)
+  backdrop-filter: blur(6px)
+  z-index: 60
+
+.pickerOverlay
+  position: fixed
+  inset: 0
+  display: flex
+  justify-content: center
+  align-items: flex-start
+  padding: 2rem 1.5rem
+  z-index: 61
+  overflow-y: auto
+
+.pickerCard
+  width: min(100%, 28rem)
+  background: rgba(18, 10, 48, 0.95)
+  border: 1px solid rgba(255, 255, 255, 0.25)
+  border-radius: var(--radius-md)
+  box-shadow: var(--shadow-panel)
+  padding: 1.25rem
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  flex-shrink: 0
+  margin-bottom: 2rem
+
+.pickerHeader
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 1rem
+  flex-shrink: 0
+
+.pickerTitleGroup
+  display: grid
+  gap: 0.25rem
+
+.pickerTitle
+  margin: 0
+  font-family: var(--font-title)
+  font-size: 1.1rem
+  letter-spacing: 0.08em
+  text-transform: uppercase
+  color: var(--color-text-strong)
+
+.pickerSubtitle
+  margin: 0
+  font-size: 0.75rem
+  color: var(--color-text-muted)
+  font-weight: 500
+
+.pickerList
+  display: grid
+  grid-template-columns: repeat(2, 1fr)
+  gap: 0.5rem
+
+.pickerItem
+  width: 100%
+  border: 1px solid transparent
+  border-radius: var(--radius-chip)
+  color: var(--color-sound-chip-text-idle)
+  min-height: 2.5rem
+  font-family: var(--font-body)
+  font-size: 0.85rem
+  font-weight: 700
+  letter-spacing: 0.02em
+  cursor: pointer
+  user-select: none
+  transition: all 0.2s ease
+  display: flex
+  align-items: center
+  justify-content: center
+
+.pickerItem:active
+  transform: scale(0.98)
+
+.pickerItemDisabled
+  opacity: 0.4
+  cursor: not-allowed
+
+.pickerItemActive
+  border-color: white
+  color: var(--color-sound-chip-text)
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55)
+  box-shadow: 0 0 0.8rem rgba(255, 255, 255, 0.15)
+
+.closeButton
+  border: 1px solid rgba(255, 255, 255, 0.25)
+  border-radius: var(--radius-sm)
+  background: rgba(8, 8, 18, 0.8)
+  color: #fff
+  font-size: 0.9rem
+  width: 2.1rem
+  height: 2.1rem
+  display: grid
+  place-items: center
+  cursor: pointer
+  box-shadow: var(--shadow-refresh)
 
 .hamburgerWrap
   position: fixed
