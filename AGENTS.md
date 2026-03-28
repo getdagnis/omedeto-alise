@@ -18,7 +18,7 @@ MVP will ship: private-beta accounts, username/password auth, invite codes, one 
 9. Voting: One upvote per user per mix.
 10. Invite system: Invite codes.
 11. Password recovery: Admin reset only.
-12. Deployment: Cloudflare Pages + Workers + Supabase.
+12. Deployment: Vercel (initially) + Cloudflare Pages (to scale) + Workers + Supabase.
 13. AI future path: Provider-agnostic adapter.
 14. Sound governance: Owned/approved assets only.
 15. New profile default visibility: Unlisted.
@@ -30,11 +30,12 @@ MVP will ship: private-beta accounts, username/password auth, invite codes, one 
    - UI keeps current visual identity/components; logic moved into modular feature folders.
    - Public profile routes are server-rendered for indexability.
 2. Runtime:
-   - Cloudflare Pages + Workers runtime for Next.js.
+   - Vercel (initially) + Cloudflare Pages (planned) + Cloudflarers Workers runtime for Next.js.
    - Edge middleware for session check and basic anti-abuse gates.
 3. Backend:
    - Supabase Postgres for core data.
    - Supabase Storage for character/wallpaper/sound assets.
+   - Sanity.io to manage Users, Invites, Sounds and Character Image libraries
    - Server-only writes through Next route handlers using Supabase service role.
    - Public reads through controlled APIs and selective direct reads.
 4. Auth (custom):

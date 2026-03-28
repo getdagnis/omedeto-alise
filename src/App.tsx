@@ -5,9 +5,10 @@ import { BACKGROUND_IMAGE_KEYS, CHARACTERS, type SoundOption } from './config';
 
 const VISIBLE_SOUND_COUNT = 20;
 const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
+const CHARACTER_SCHEME_COOKIE = 'gumi-alise-character-schemes';
 const DEFAULT_GLITCH_MODE: 'stable' | 'glitch' = 'stable';
-const CHARACTER_SWITCH_OVERLAY_MS = 2600;
-const CHARACTER_SWITCH_VISIBLE_SWAP_MS = 2000;
+const CHARACTER_SWITCH_OVERLAY_MS = 1200;
+const CHARACTER_SWITCH_VISIBLE_SWAP_MS = 1000;
 const CHARACTER_SWITCH_SOUND_PATH = '/hanako/goat.mp3';
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const BG_DESKTOP_SUFFIX = '1920';
@@ -90,12 +91,58 @@ const getIsMobileVerticalDevice = () => {
   return isPortrait && hasCoarsePointer;
 };
 
+type CharacterSchemeMap = Record<string, number>;
+
+const parseCharacterSchemeCookie = (): CharacterSchemeMap => {
+  if (typeof document === 'undefined') {
+    return {};
+  }
+
+  const cookieEntry = document.cookie
+    .split('; ')
+    .find((entry) => entry.startsWith(`${CHARACTER_SCHEME_COOKIE}=`));
+
+  if (!cookieEntry) {
+    return {};
+  }
+
+  const rawValue = cookieEntry.split('=').slice(1).join('=');
+
+  try {
+    const parsed = JSON.parse(decodeURIComponent(rawValue));
+    if (!parsed || typeof parsed !== 'object') {
+      return {};
+    }
+
+    const sanitized: CharacterSchemeMap = {};
+    Object.entries(parsed as Record<string, unknown>).forEach(([key, value]) => {
+      if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
+        sanitized[key] = value;
+      }
+    });
+
+    return sanitized;
+  } catch {
+    return {};
+  }
+};
+
+const persistCharacterSchemeCookie = (schemeMap: CharacterSchemeMap) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const encoded = encodeURIComponent(JSON.stringify(schemeMap));
+  document.cookie = `${CHARACTER_SCHEME_COOKIE}=${encoded}; Path=/; Max-Age=31536000; SameSite=Lax`;
+};
+
 function App() {
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [isMobileVerticalDevice, setIsMobileVerticalDevice] = useState(() => getIsMobileVerticalDevice());
   const [isBackgroundRotationReady, setIsBackgroundRotationReady] = useState(false);
   const [characterIndex, setCharacterIndex] = useState(0);
   const [isCharacterSwitching, setIsCharacterSwitching] = useState(false);
+  const [characterSchemeMap, setCharacterSchemeMap] = useState<CharacterSchemeMap>(() => parseCharacterSchemeCookie());
   const [renderMode, setRenderMode] = useState<'stable' | 'glitch'>(() => getStoredGlitchMode());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [glitchOverlayVars, setGlitchOverlayVars] = useState<CSSProperties>(() => createGlitchOverlayVars());
@@ -110,6 +157,25 @@ function App() {
 
   const activeCharacter = CHARACTERS[characterIndex] ?? defaultCharacter;
   const characterSounds = activeCharacter.sounds;
+  const activeSchemeIndex = useMemo(() => {
+    const storedIndex = characterSchemeMap[activeCharacter.id];
+    if (
+      typeof storedIndex === 'number' &&
+      Number.isInteger(storedIndex) &&
+      storedIndex >= 0 &&
+      storedIndex < activeCharacter.schemes.length
+    ) {
+      return storedIndex;
+    }
+
+    return 0;
+  }, [activeCharacter, characterSchemeMap]);
+  const activeScheme = activeCharacter.schemes[activeSchemeIndex] ?? {
+    titleColor: activeCharacter.titleColor,
+    primaryColor: activeCharacter.primaryColor,
+    secondaryColor: activeCharacter.secondaryColor,
+    soundboardColor: activeCharacter.soundboardColor,
+  };
   const activeBackgroundSuffix = isMobileVerticalDevice ? BG_MOBILE_SUFFIX : BG_DESKTOP_SUFFIX;
   const activeBackgroundImage = useMemo(() => {
     const activeBackgroundKey = BACKGROUND_IMAGE_KEYS[backgroundIndex] ?? BACKGROUND_IMAGE_KEYS[0];
@@ -243,12 +309,15 @@ function App() {
     setIsDropActive(false);
   };
 
-  const rotateCharacter = () => {
+  const switchCharacterTo = (nextCharacterIndex: number) => {
     if (isCharacterSwitching) {
       return;
     }
 
-    const nextCharacterIndex = (characterIndex + 1) % CHARACTERS.length;
+    if (nextCharacterIndex === characterIndex) {
+      return;
+    }
+
     const nextCharacter = CHARACTERS[nextCharacterIndex] ?? defaultCharacter;
     const runId = characterSwitchRunIdRef.current + 1;
     characterSwitchRunIdRef.current = runId;
@@ -290,6 +359,14 @@ function App() {
       stopCharacterSwitchAudio();
     })();
   };
+
+  const setCharacterScheme = useCallback((characterId: string, schemeIndex: number) => {
+    setCharacterSchemeMap((previous) => {
+      const next = { ...previous, [characterId]: schemeIndex };
+      persistCharacterSchemeCookie(next);
+      return next;
+    });
+  }, []);
 
   const dropTargetPulseClass = useMemo(() => {
     if (activeSoundIds.length === 0) {
@@ -440,10 +517,10 @@ function App() {
           className={styles.panel}
           style={
             {
-              '--character-title': activeCharacter.titleColor,
-              '--character-primary': activeCharacter.primaryColor,
-              '--character-secondary': activeCharacter.secondaryColor,
-              '--character-soundboard': activeCharacter.soundboardColor,
+              '--character-title': activeScheme.titleColor,
+              '--character-primary': activeScheme.primaryColor,
+              '--character-secondary': activeScheme.secondaryColor,
+              '--character-soundboard': activeScheme.soundboardColor,
             } as CSSProperties
           }
         >
@@ -465,26 +542,81 @@ function App() {
               onDrop={handleDrop}
             >
               <p className={styles.dropLabel}>{activeCharacter.mixLabel}</p>
-              <div className={styles.characterImageWrap}>
-                {!isCharacterImageLoaded && (
-                  <img className={styles.characterPlaceholder} src={CHARACTER_PLACEHOLDER_PATH} alt="" aria-hidden="true" />
-                )}
-                <img
-                  className={`${styles.characterImage} ${!isCharacterImageLoaded ? styles.characterImageHidden : ''}`}
-                  src={activeCharacter.img}
-                  alt={`${activeCharacter.name} character`}
-                  onClick={resetBoard}
-                  onLoad={() => setIsCharacterImageLoaded(true)}
-                />
-                <button
-                  type="button"
-                  className={styles.characterCycleButton}
-                  onClick={rotateCharacter}
-                  disabled={isCharacterSwitching}
-                  aria-label="Show next character"
-                >
-                  ↻
-                </button>
+              <div className={styles.characterLayout}>
+                <div className={styles.characterControls}>
+                  {CHARACTERS.length > 1 && (
+                    <div className={styles.characterSelector} role="group" aria-label="Character selection">
+                      {CHARACTERS.map((character, index) => {
+                        const isActive = index === characterIndex;
+
+                        return (
+                          <button
+                            key={character.id}
+                            type="button"
+                            className={`${styles.characterSelectButton} ${
+                              isActive ? styles.characterSelectButtonActive : ''
+                            }`}
+                            onClick={() => switchCharacterTo(index)}
+                            disabled={isCharacterSwitching || isActive}
+                            aria-pressed={isActive}
+                            aria-label={`Show ${character.name}`}
+                            title={character.name}
+                          >
+                            <img className={styles.characterSelectIcon} src={character.img} alt="" aria-hidden="true" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div
+                    className={styles.characterSchemeList}
+                    role="group"
+                    aria-label={`${activeCharacter.name} color schemes`}
+                  >
+                    {activeCharacter.schemes.map((scheme, index) => {
+                      const isActiveScheme = index === activeSchemeIndex;
+
+                      return (
+                        <button
+                          key={`${activeCharacter.id}-${scheme.id}`}
+                          type="button"
+                          className={`${styles.characterSchemeButton} ${
+                            isActiveScheme ? styles.characterSchemeButtonActive : ''
+                          }`}
+                          onClick={() => setCharacterScheme(activeCharacter.id, index)}
+                          disabled={isCharacterSwitching}
+                          aria-pressed={isActiveScheme}
+                          aria-label={`${activeCharacter.name} scheme: ${scheme.name}`}
+                          title={scheme.name}
+                          style={
+                            {
+                              '--scheme-primary': scheme.primaryColor,
+                              '--scheme-secondary': scheme.secondaryColor,
+                              '--scheme-soundboard': scheme.soundboardColor,
+                            } as CSSProperties
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className={styles.characterImageWrap}>
+                  {!isCharacterImageLoaded && (
+                    <img
+                      className={styles.characterPlaceholder}
+                      src={CHARACTER_PLACEHOLDER_PATH}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  )}
+                  <img
+                    className={`${styles.characterImage} ${!isCharacterImageLoaded ? styles.characterImageHidden : ''}`}
+                    src={activeCharacter.img}
+                    alt={`${activeCharacter.name} character`}
+                    onClick={resetBoard}
+                    onLoad={() => setIsCharacterImageLoaded(true)}
+                  />
+                </div>
               </div>
             </div>
 

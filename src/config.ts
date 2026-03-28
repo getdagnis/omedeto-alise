@@ -10,6 +10,15 @@ export type SoundOption = {
 
 type BaseSoundOption = Omit<SoundOption, 'colorToken'>;
 
+export type CharacterColorScheme = {
+  id: string;
+  name: string;
+  titleColor: string;
+  primaryColor: string;
+  secondaryColor: string;
+  soundboardColor: string;
+};
+
 export type CharacterOption = {
   id: string;
   name: string;
@@ -19,6 +28,7 @@ export type CharacterOption = {
   primaryColor: string;
   secondaryColor: string;
   soundboardColor: string;
+  schemes: CharacterColorScheme[];
   sounds: SoundOption[];
 };
 
@@ -157,6 +167,48 @@ export const CHARACTERS: CharacterOption[] = [
     primaryColor: '#600b87cc',
     secondaryColor: '#ff0040a1',
     soundboardColor: '#29063acc',
+    schemes: [
+      {
+        id: 'default',
+        name: 'Neon Violet',
+        titleColor: 'white',
+        primaryColor: '#600b87cc',
+        secondaryColor: '#ff0040a1',
+        soundboardColor: '#29063acc',
+      },
+      {
+        id: 'nova',
+        name: 'Nova Bloom',
+        titleColor: 'white',
+        primaryColor: '#6b1bb1cc',
+        secondaryColor: '#ff2f6ba1',
+        soundboardColor: '#2d083fcc',
+      },
+      {
+        id: 'azure',
+        name: 'Azure Burst',
+        titleColor: 'white',
+        primaryColor: '#2b6fd7cc',
+        secondaryColor: '#58d6ffa6',
+        soundboardColor: '#0b2a4acc',
+      },
+      {
+        id: 'cherry',
+        name: 'Cherry Glow',
+        titleColor: 'white',
+        primaryColor: '#c71f5acc',
+        secondaryColor: '#ff8acfa1',
+        soundboardColor: '#43102fcc',
+      },
+      {
+        id: 'midnight',
+        name: 'Midnight Pulse',
+        titleColor: 'white',
+        primaryColor: '#1a1b4bcc',
+        secondaryColor: '#6f3effa6',
+        soundboardColor: '#121426cc',
+      },
+    ],
     sounds: SOUNDS.gumi,
   },
   {
@@ -168,6 +220,48 @@ export const CHARACTERS: CharacterOption[] = [
     primaryColor: '#5dc630cc',
     secondaryColor: '#234315a1',
     soundboardColor: '#243b0ecc',
+    schemes: [
+      {
+        id: 'default',
+        name: 'Spring Green',
+        titleColor: 'white',
+        primaryColor: '#5dc630cc',
+        secondaryColor: '#234315a1',
+        soundboardColor: '#243b0ecc',
+      },
+      {
+        id: 'citrus',
+        name: 'Citrus Pop',
+        titleColor: 'white',
+        primaryColor: '#b9ff3acc',
+        secondaryColor: '#44d43fa1',
+        soundboardColor: '#2c4b14cc',
+      },
+      {
+        id: 'neon',
+        name: 'Neon Mint',
+        titleColor: 'white',
+        primaryColor: '#2eff9acc',
+        secondaryColor: '#00c8ffa1',
+        soundboardColor: '#0a2f2bcc',
+      },
+      {
+        id: 'forest',
+        name: 'Deep Forest',
+        titleColor: 'white',
+        primaryColor: '#1f7a3dcc',
+        secondaryColor: '#0e2f1ca1',
+        soundboardColor: '#0e2417cc',
+      },
+      {
+        id: 'honey',
+        name: 'Honey Sun',
+        titleColor: '#20170c',
+        primaryColor: '#f9d423cc',
+        secondaryColor: '#f08a24a1',
+        soundboardColor: '#3b2b10cc',
+      },
+    ],
     sounds: SOUNDS.gumi,
   },
   {
@@ -179,6 +273,48 @@ export const CHARACTERS: CharacterOption[] = [
     primaryColor: '#e4003a',
     secondaryColor: '#990026aa',
     soundboardColor: '#990026aa',
+    schemes: [
+      {
+        id: 'default',
+        name: 'Crimson Ink',
+        titleColor: 'white',
+        primaryColor: '#e4003a',
+        secondaryColor: '#990026aa',
+        soundboardColor: '#990026aa',
+      },
+      {
+        id: 'lantern',
+        name: 'Lantern Glow',
+        titleColor: 'white',
+        primaryColor: '#ff3b5bcc',
+        secondaryColor: '#ff9a4aa1',
+        soundboardColor: '#3b0c10cc',
+      },
+      {
+        id: 'midnight',
+        name: 'Midnight Shrine',
+        titleColor: 'white',
+        primaryColor: '#2f1b5dcc',
+        secondaryColor: '#7a3bffa1',
+        soundboardColor: '#1b1033cc',
+      },
+      {
+        id: 'ivory',
+        name: 'Ivory Paper',
+        titleColor: '#1f1a1a',
+        primaryColor: '#f2e3d3cc',
+        secondaryColor: '#d0a38aa1',
+        soundboardColor: '#3b2b24cc',
+      },
+      {
+        id: 'bloodmoon',
+        name: 'Blood Moon',
+        titleColor: 'white',
+        primaryColor: '#b4002acc',
+        secondaryColor: '#520011a1',
+        soundboardColor: '#260009cc',
+      },
+    ],
     sounds: SOUNDS.hanako,
   },
 ];

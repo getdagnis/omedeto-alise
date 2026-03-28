@@ -161,7 +161,23 @@
   letter-spacing: 0.11em
   font-weight: 700
 
+.characterLayout
+  width: 100%
+  display: grid
+  grid-template-columns: 1fr
+  grid-template-areas: 'controls' 'image'
+  justify-items: center
+  gap: 0.65rem
+
+.characterControls
+  grid-area: controls
+  display: grid
+  gap: 0.55rem
+  justify-items: center
+  align-items: start
+
 .characterImageWrap
+  grid-area: image
   position: relative
   display: inline-block
   text-align: center
@@ -195,20 +211,89 @@
   filter: drop-shadow(var(--shadow-character))
   animation: characterPlaceholderPulse 2.6s ease-in-out infinite
 
-.characterCycleButton
-  position: absolute
-  right: 0.35rem
-  bottom: 0.5rem
-  width: 2.1rem
-  height: 2.1rem
+.characterSelector
+  display: flex
+  flex-direction: column
+  gap: 0.35rem
+  padding: 0.35rem
+  border-radius: 1rem
+  background: rgba(8, 8, 18, 0.42)
+  box-shadow: var(--shadow-refresh)
+  backdrop-filter: blur(6px)
+  -webkit-backdrop-filter: blur(6px)
+
+.characterSelectButton
+  width: 2.25rem
+  height: 2.25rem
   border: 1px solid var(--character-title, var(--color-button-border))
   border-radius: 999px
   background: var(--color-button-bg)
-  color: var(--color-button-text)
-  font-size: 1.05rem
-  line-height: 1
+  padding: 0.12rem
+  display: grid
+  place-items: center
   cursor: pointer
   box-shadow: var(--shadow-refresh)
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease
+  user-select: none
+  -webkit-user-drag: none
+
+.characterSelectButton:hover
+  transform: translateY(-2px)
+
+.characterSelectButton:disabled
+  cursor: default
+  opacity: 0.55
+  transform: none
+  box-shadow: none
+
+.characterSelectButtonActive
+  border-color: var(--character-primary, var(--color-drop-border-active))
+  box-shadow: 0 0 0 2px var(--character-primary, var(--color-drop-border-active)), var(--shadow-refresh)
+
+.characterSelectIcon
+  width: 100%
+  height: 100%
+  border-radius: 999px
+  object-fit: cover
+  object-position: top center
+  display: block
+  pointer-events: none
+  -webkit-user-drag: none
+
+.characterSchemeList
+  display: grid
+  grid-template-columns: 1.65rem
+  grid-auto-rows: 1.65rem
+  gap: 0.35rem
+  padding: 0.35rem
+  border-radius: 0.9rem
+  background: rgba(8, 8, 18, 0.35)
+  box-shadow: var(--shadow-refresh)
+  backdrop-filter: blur(6px)
+  -webkit-backdrop-filter: blur(6px)
+
+.characterSchemeButton
+  width: 1.65rem
+  height: 1.65rem
+  border-radius: 0.55rem
+  border: 1px solid var(--scheme-soundboard, var(--color-button-border))
+  background: linear-gradient(135deg, var(--scheme-primary, #5a5a5a), var(--scheme-secondary, #2d2d2d))
+  cursor: pointer
+  box-shadow: var(--shadow-refresh)
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease
+  user-select: none
+
+.characterSchemeButton:hover
+  transform: translateY(-2px)
+
+.characterSchemeButton:disabled
+  cursor: default
+  opacity: 0.6
+  transform: none
+  box-shadow: none
+
+.characterSchemeButtonActive
+  box-shadow: 0 0 0 2px var(--character-primary, var(--color-drop-border-active)), var(--shadow-refresh)
 
 .activeSummary
   margin: 0
@@ -410,6 +495,19 @@
 @media (min-width: 56rem)
   .panel
     padding: 1.35rem 2rem 1.6rem
+
+  .dropTarget
+    width: min(100%, 32rem)
+
+  .characterLayout
+    grid-template-columns: 1fr auto
+    grid-template-areas: 'image controls'
+    align-items: start
+    justify-items: stretch
+
+  .characterControls
+    justify-items: end
+    align-items: start
 
 @keyframes glitchPulse
   0%,
