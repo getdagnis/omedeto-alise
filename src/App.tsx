@@ -5,6 +5,8 @@ import { faVolumeHigh, faXmark, faPen } from '@fortawesome/free-solid-svg-icons'
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
+import ProgressionMeter from './components/ProgressionMeter';
+import { useProgression } from './hooks/useProgression';
 import {
   ALL_SOUNDS,
   BACKGROUND_IMAGE_KEYS,
@@ -236,6 +238,14 @@ function App() {
   const glowBurstTimeoutRef = useRef<number | null>(null);
   const activeComboIdRef = useRef<string | null>(null);
 
+  const {
+    state: progressionState,
+    currentLevelInfo,
+    nextLevelInfo,
+    recordSoundPlayed,
+    recordCharacterCustomized,
+  } = useProgression();
+
   useEffect(() => {
     if (editingCharacterId) {
       // Modal is opening
@@ -353,44 +363,73 @@ function App() {
     });
   }, []);
 
-  const disableAllSoundsForCharacter = useCallback((characterId: string) => {
-    Object.keys(audioRefs.current).forEach((key) => {
-      if (key.startsWith(`${characterId}:`)) {
-        const audio = audioRefs.current[key];
-        audio.pause();
-        audio.currentTime = 0;
-        delete audioRefs.current[key];
-      }
-    });
-  }, []);
-
   const setSingleSound = useCallback(
     (characterId: string, soundId: string) => {
       const sound = soundCatalogById.get(soundId);
       if (!sound) return;
 
+      recordSoundPlayed(characterId, soundId);
       unmuteCharacter(characterId);
-      disableAllSoundsForCharacter(characterId);
-
-      const audioKey = buildAudioKey(characterId, soundId);
-      const nextAudio = new Audio(sound.path);
-      nextAudio.loop = true;
-      nextAudio.volume = 1;
-      void nextAudio.play().catch(() => undefined);
-      audioRefs.current[audioKey] = nextAudio;
 
       setActiveSoundsByCharacter((previous) => {
-        const next = { ...previous, [characterId]: [soundId] };
+        const currentActive = previous[characterId] ?? [];
+        let nextActive = [...currentActive];
 
-        activeSoundOrderRef.current = activeSoundOrderRef.current.filter((e) => e.characterId !== characterId);
-        activeSoundOrderRef.current.push({ characterId, soundId });
+        const audioKey = buildAudioKey(characterId, soundId);
 
-        return next;
+        if (nextActive.includes(soundId)) {
+          // Toggle off if already active
+          nextActive = nextActive.filter(id => id !== soundId);
+          const audio = audioRefs.current[audioKey];
+          if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+            delete audioRefs.current[audioKey];
+          }
+          activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
+            (e) => !(e.characterId === characterId && e.soundId === soundId)
+          );
+        } else {
+          // Add new sound
+          const maxSounds = currentLevelInfo.soundsPerCharacter;
+          
+          if (nextActive.length >= maxSounds) {
+            // Remove the oldest sound to make room
+            const oldestSoundId = nextActive.shift();
+            if (oldestSoundId) {
+              const oldAudioKey = buildAudioKey(characterId, oldestSoundId);
+              const oldAudio = audioRefs.current[oldAudioKey];
+              if (oldAudio) {
+                oldAudio.pause();
+                oldAudio.currentTime = 0;
+                delete audioRefs.current[oldAudioKey];
+              }
+              activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
+                (e) => !(e.characterId === characterId && e.soundId === oldestSoundId)
+              );
+            }
+          }
+
+          nextActive.push(soundId);
+
+          const nextAudio = new Audio(sound.path);
+          nextAudio.loop = true;
+          nextAudio.volume = 1;
+          void nextAudio.play().catch(() => undefined);
+          audioRefs.current[audioKey] = nextAudio;
+
+          activeSoundOrderRef.current.push({ characterId, soundId });
+        }
+
+        return { ...previous, [characterId]: nextActive };
       });
 
-      setPickingSoundsCharacterId(null);
+      // Optional: Close picker if only 1 sound allowed, else keep open for multi-select
+      if (currentLevelInfo.soundsPerCharacter === 1) {
+        setPickingSoundsCharacterId(null);
+      }
     },
-    [buildAudioKey, soundCatalogById, unmuteCharacter, disableAllSoundsForCharacter],
+    [buildAudioKey, soundCatalogById, unmuteCharacter, recordSoundPlayed, currentLevelInfo.soundsPerCharacter],
   );
 
   const resetCharacter = useCallback(
@@ -546,6 +585,7 @@ function App() {
 
   const updateCharacterCustomization = useCallback(
     (characterId: string, patch: CharacterCustomization) => {
+      recordCharacterCustomized(characterId);
       setCharacterCustomizations((previous) => {
         const current = previous[characterId] ?? {};
         const next = { ...previous, [characterId]: { ...current, ...patch } };
@@ -553,7 +593,7 @@ function App() {
         return next;
       });
     },
-    [persistCharacterCustomStorageDebounced],
+    [persistCharacterCustomStorageDebounced, recordCharacterCustomized],
   );
 
   const handleRandomizeSounds = useCallback((characterId: string) => {
@@ -776,6 +816,8 @@ function App() {
             </div>
           )}
         </div>
+
+        <ProgressionMeter state={progressionState} currentLevelInfo={currentLevelInfo} nextLevelInfo={nextLevelInfo} />
       </main>
     </div>
   );

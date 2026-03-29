@@ -1,0 +1,66 @@
+.progressionContainer
+  position: fixed
+  bottom: 0
+  left: 0
+  width: 100%
+  background: rgba(8, 6, 26, 0.85)
+  backdrop-filter: blur(8px)
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  padding: 0.5rem 1rem
+  z-index: 50
+  display: flex
+  flex-direction: column
+  align-items: center
+  gap: 0.4rem
+
+.levelInfo
+  display: flex
+  justify-content: space-between
+  width: 100%
+  max-width: 60rem
+  color: var(--color-text-strong)
+  font-family: var(--font-title)
+  font-size: 0.75rem
+  text-transform: uppercase
+  letter-spacing: 0.08em
+
+.meters
+  display: flex
+  gap: 0.5rem
+  width: 100%
+  max-width: 60rem
+  justify-content: center
+
+.meterWrap
+  flex: 1
+  display: flex
+  flex-direction: column
+  gap: 0.2rem
+
+.meterLabel
+  font-size: 0.6rem
+  color: var(--color-text-muted)
+  text-align: center
+  text-transform: uppercase
+  font-family: var(--font-body)
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+.meterTrack
+  height: 0.35rem
+  background: rgba(255, 255, 255, 0.1)
+  border-radius: 999px
+  overflow: hidden
+
+.meterFill
+  height: 100%
+  background: var(--color-mood-tokyo-13)
+  transition: width 0.3s ease-out
+
+.maxText
+  font-size: 0.8rem
+  color: var(--color-mood-tokyo-15)
+  font-family: var(--font-title)
+  text-transform: uppercase
+  letter-spacing: 0.2em

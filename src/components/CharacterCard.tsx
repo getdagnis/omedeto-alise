@@ -223,19 +223,16 @@ function CharacterCard({
           </>
         )}
 
-        {!hideSounds && (
+        {!hideSounds && soundNames.length > 0 && (
           <div className={styles.characterSoundList}>
-            {Array.from({ length: 3 }).map((_, index) => {
-              const soundName = soundNames[index];
-              return (
-                <span
-                  key={`${character.id}-slot-${index}`}
-                  className={`${styles.characterSoundTag} ${!soundName ? styles.characterSoundTagEmpty : ''}`}
-                >
-                  {soundName || ''}
-                </span>
-              );
-            })}
+            {soundNames.map((soundName, index) => (
+              <span
+                key={`${character.id}-slot-${index}`}
+                className={styles.characterSoundTag}
+              >
+                {soundName}
+              </span>
+            ))}
           </div>
         )}
       </div>

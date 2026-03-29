@@ -168,6 +168,7 @@ MVP will ship: private-beta accounts, username/password auth, invite codes, one 
    - Test strategy and required checks before merge.
    - Release checklist and incident response basics.
 3. Non-negotiable guardrails:
+   - Use separate components where possible; keep main files like `App.tsx` from bloating.
    - No plaintext passwords or reversible secrets.
    - No direct client writes to sensitive tables.
    - No public profile indexing unless visibility is `public`.
