@@ -137,31 +137,35 @@ function CharacterCard({
   }
 
   return (
-    <div className={styles.characterCard}>
+    <div
+      className={`${styles.characterCard} ${isGreyedOut ? styles.characterCardMuted : ''}`}
+      style={
+        {
+          '--character-bg': colors[0],
+          '--character-bg-1': colors[0],
+          '--character-bg-2': colors[1] || colors[0],
+          '--character-bg-3': colors[2] || colors[1] || colors[0],
+          '--character-primary': colors[0],
+          '--character-secondary': colors[0],
+          '--character-title': colors[0],
+          '--ring-color': ringColor,
+          color: colors[0],
+        } as CSSProperties
+      }
+    >
       {showName && <p className={styles.characterName}>{displayName.toUpperCase()}'S MIX</p>}
+      
       <div
         className={`${styles.dropTarget} ${pulseClass} ${isDropActive ? styles.dropTargetActive : ''} ${
           isActive ? styles.dropTargetSelected : ''
         } ${isGlowBurst && isActive ? styles.dropTargetGlow : ''} ${isLooping ? styles.dropTargetHasLoop : ''} ${
           forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''
-        } ${isGreyedOut ? styles.dropTargetMuted : ''}`}
+        }`}
         data-character-id={character.id}
         onClick={handleCharacterClick}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        style={
-          {
-            '--character-bg': colors[0],
-            '--character-bg-1': colors[0],
-            '--character-bg-2': colors[1] || colors[0],
-            '--character-bg-3': colors[2] || colors[1] || colors[0],
-            '--character-primary': colors[0],
-            '--character-secondary': colors[0],
-            '--ring-color': ringColor,
-            color: colors[0],
-          } as CSSProperties
-        }
       >
         <div
           className={`${styles.backgroundLoop} ${isLooping ? styles.backgroundLoopActive : ''} ${
@@ -199,7 +203,7 @@ function CharacterCard({
         {children !== undefined ? (
           children
         ) : (
-          <div className={styles.characterImageWrap}>
+          <>
             <img
               className={`${styles.characterImage} ${!isImageLoaded ? styles.characterImageHidden : ''}`}
               src={displayImage}
@@ -207,9 +211,10 @@ function CharacterCard({
               onLoad={onImageLoad}
             />
             <img className={styles.characterPlaceholder} src={CHARACTER_PLACEHOLDER_PATH} alt="" aria-hidden="true" />
-          </div>
+          </>
         )}
       </div>
+
       {!hideSounds && (
         <div className={styles.characterSoundList}>
           {Array.from({ length: 3 }).map((_, index) => {
@@ -225,6 +230,7 @@ function CharacterCard({
           })}
         </div>
       )}
+
       {showActions && (
         <div className={styles.characterActions}>
           <button type="button" className={styles.characterActionButton} onClick={onEdit} aria-label="Edit character">

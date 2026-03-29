@@ -8,6 +8,10 @@
   padding-bottom: 1.5rem
   position: relative
 
+.characterCardMuted
+  filter: grayscale(1)
+  opacity: 0.85
+
 .characterName
   margin: 0
   font-family: var(--font-title)
@@ -25,23 +29,22 @@
   white-space: nowrap
 
 .dropTarget
-  --ring-color: rgba(38, 30, 60, 0.85)
-  width: clamp(6.4rem, 20vw, 7.4rem)
-  height: clamp(6.4rem, 20vw, 7.4rem)
+  --circle-size: 76.9%
+  width: clamp(8.32rem, 26vw, 9.62rem)
+  height: clamp(8.32rem, 26vw, 9.62rem)
   aspect-ratio: 1 / 1
   position: relative
   overflow: visible
-  border-radius: 999px
+  border-radius: 50%
   border: 0
-  background-image: radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.18), transparent 55%)
-  background-color: var(--character-bg, rgba(255, 255, 255, 0.08))
+  background-color: transparent
   color: var(--character-primary, var(--color-mood-tokyo-8))
   display: grid
   place-items: center
   justify-items: center
   padding: 0
   box-sizing: border-box
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease
+  transition: box-shadow 0.2s ease, color 0.2s ease
   user-select: none
   -webkit-user-select: none
   cursor: pointer
@@ -49,7 +52,6 @@
   z-index: 1
 
 .dropTargetHasLoop
-  background-color: transparent !important
   animation: dropTargetLoop 6s ease-in-out infinite
 
 .dropTargetHasLoopFast
@@ -57,11 +59,15 @@
 
 .backgroundLoop
   position: absolute
-  inset: 0
-  background-color: inherit
+  top: calc(50% - 1rem)
+  left: 50%
+  transform: translate(-50%, -50%)
+  width: var(--circle-size)
+  height: var(--circle-size)
+  background-color: transparent
   z-index: -2
   pointer-events: none
-  border-radius: inherit
+  border-radius: 50%
 
 .backgroundLoopActive
   background-color: currentColor
@@ -69,39 +75,45 @@
 @keyframes dropTargetLoop
   0%, 100%
     color: var(--character-bg-1)
-    background-color: var(--character-bg-1)
   33%
     color: var(--character-bg-2)
-    background-color: var(--character-bg-2)
   66%
     color: var(--character-bg-3)
-    background-color: var(--character-bg-3)
 
-.dropTargetSelected
+.dropTargetSelected::before
   box-shadow: 0 0 0 2px var(--ring-color), var(--shadow-refresh)
 
 .dropTarget::before
   content: ''
   position: absolute
-  inset: 0
+  top: calc(50% - 1rem)
+  left: 50%
+  transform: translate(-50%, -50%)
+  width: var(--circle-size)
+  height: var(--circle-size)
   border-radius: 50%
   border: 4px solid var(--ring-color)
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35), 0 0 0.9rem rgba(255, 255, 255, 0.18)
   pointer-events: none
-  z-index: 2
+  z-index: 0
+  transition: box-shadow 0.2s ease
 
 .dropTarget::after
   content: ''
   position: absolute
-  inset: -20%
+  top: calc(50% - 1rem)
+  left: 50%
+  transform: translate(-50%, -50%)
+  width: var(--circle-size)
+  height: var(--circle-size)
   border-radius: 50%
   opacity: 0.15
   pointer-events: none
-  transform: scale(0.95)
   background: radial-gradient(circle at center, currentColor 0%, transparent 70%)
+  background-color: var(--character-bg, rgba(255, 255, 255, 0.08))
   mix-blend-mode: screen
   z-index: -1
-  transition: opacity 0.3s ease
+  transition: opacity 0.3s ease, background-color 0.2s ease
 
 .dropTargetPulseSlow::after
   animation: dropTargetPulseSlow 0.667s ease-in-out infinite
@@ -112,19 +124,19 @@
 .dropTargetPulseBoth::after
   animation: dropTargetPulseBoth 0.4375s ease infinite
 
-.dropTargetPulseSlow
+.dropTargetPulseSlow::before
   animation: dropTargetBeatSlow 0.667s ease-in-out infinite
 
-.dropTargetPulseFast
+.dropTargetPulseFast::before
   animation: dropTargetBeatFast 0.375s ease-in-out infinite
 
-.dropTargetPulseBoth
+.dropTargetPulseBoth::before
   animation: dropTargetBeatBoth 0.4375s ease-in-out infinite
 
-.dropTargetActive
+.dropTargetActive::before
   box-shadow: 0 0 0 2px var(--ring-color), 0 0 1.6rem rgba(255, 255, 255, 0.25)
 
-.dropTargetGlow
+.dropTargetGlow::before
   animation: dropTargetGlow 2.2s ease-out
 
 .comboWord
@@ -141,14 +153,14 @@
   letter-spacing: 0.12em
   text-transform: uppercase
   pointer-events: none
-  z-index: 3
+  z-index: 10
   animation: comboWordPop 2.2s ease-out forwards
 
 .characterSoundList
   height: 4rem
   display: flex
   flex-direction: column
-  justify-content: center
+  justify-content: flex-end
   gap: 0.2rem
   font-size: 0.65rem
   font-weight: 600
@@ -170,6 +182,7 @@
   align-items: center
   justify-content: center
   line-height: 1
+  transition: color 0.2s ease
 
 .characterSoundTagEmpty
   opacity: 0.25
@@ -216,10 +229,9 @@
   box-shadow: none
 
 .favoriteButton
-  visibility: hidden !important
   position: absolute
-  top: 0.4rem
-  right: 0.4rem
+  top: calc(15% - 1rem)
+  right: 15%
   width: 1.8rem
   height: 1.8rem
   border-radius: 50%
@@ -242,10 +254,6 @@
   color: #ff4d4d
   border-color: rgba(255, 77, 77, 0.4)
   background: rgba(255, 77, 77, 0.1)
-
-.dropTargetMuted
-  filter: grayscale(1)
-  opacity: 1
 
 .mutedOverlay
   position: absolute
@@ -270,18 +278,6 @@
     background: var(--color-mood-tokyo-1)
     box-shadow: 0 0 1.5rem var(--color-mood-tokyo-1)
 
-.characterImageWrap
-  position: relative
-  width: 130%
-  height: 130%
-  display: grid
-  align-items: end
-  justify-items: center
-  line-height: 0
-  transform: translateY(5%)
-  z-index: 2
-  pointer-events: none
-
 .characterImage
   display: block
   width: auto
@@ -294,6 +290,7 @@
   pointer-events: none
   -webkit-user-drag: none
   z-index: 1
+  transform: translateY(5%)
 
 .characterImageHidden
   visibility: hidden
@@ -303,7 +300,7 @@
   inset: 0
   margin: auto
   width: auto
-  height: 90%
+  height: 70%
   max-width: 100%
   object-fit: contain
   opacity: 0.15
@@ -315,13 +312,13 @@
 
 @media (min-width: 40rem)
   .dropTarget
-    width: clamp(6.8rem, 16vw, 8.2rem)
-    height: clamp(6.8rem, 16vw, 8.2rem)
+    width: clamp(8.84rem, 20.8vw, 10.66rem)
+    height: clamp(8.84rem, 20.8vw, 10.66rem)
 
 @media (min-width: 56rem)
   .dropTarget
-    width: clamp(7.4rem, 10.4vw, 9.6rem)
-    height: clamp(7.4rem, 10.4vw, 9.6rem)
+    width: clamp(9.62rem, 13.52vw, 12.48rem)
+    height: clamp(9.62rem, 13.52vw, 12.48rem)
 
   .comboWord
     top: 0.55rem
@@ -330,97 +327,74 @@
   0%
     opacity: 0
     transform: translate(-50%, 6px) scale(0.9)
-
   20%
     opacity: 1
     transform: translate(-50%, 0) scale(1)
-
   80%
     opacity: 1
     transform: translate(-50%, -2px) scale(1)
-
   100%
     opacity: 0
     transform: translate(-50%, -8px) scale(0.95)
 
 @keyframes dropTargetGlow
-  0%,
-  100%
+  0%, 100%
     box-shadow: 0 0 0 rgba(0, 0, 0, 0)
-
   40%
     box-shadow: 0 0 1.6rem var(--character-primary, rgba(255, 255, 255, 0.45)), 0 0 2.8rem var(--character-secondary, rgba(255, 255, 255, 0.35))
 
 @keyframes characterPlaceholderPulse
-  0%,
-  100%
+  0%, 100%
     transform: scale(0.985)
-
   50%
     transform: scale(1.015)
 
 @keyframes dropTargetPulseSlow
-  0%,
-  100%
+  0%, 100%
     opacity: 0.15
-    transform: scale(0.95)
-
+    transform: translate(-50%, -50%) scale(0.95)
   50%
     opacity: 0.52
-    transform: scale(1.01)
+    transform: translate(-50%, -50%) scale(1.01)
 
 @keyframes dropTargetPulseFast
-  0%,
-  100%
+  0%, 100%
     opacity: 0.15
-    transform: scale(0.94)
-
+    transform: translate(-50%, -50%) scale(0.94)
   50%
     opacity: 0.66
-    transform: scale(1.02)
+    transform: translate(-50%, -50%) scale(1.02)
 
 @keyframes dropTargetPulseBoth
-  0%,
-  100%
+  0%, 100%
     opacity: 0.15
-    transform: scale(0.95)
-
+    transform: translate(-50%, -50%) scale(0.95)
   40%
     opacity: 0.74
-    transform: scale(1.04)
-
+    transform: translate(-50%, -50%) scale(1.04)
   75%
     opacity: 0.52
-    transform: scale(0.985)
+    transform: translate(-50%, -50%) scale(0.985)
 
 @keyframes dropTargetBeatSlow
-  0%,
-  100%
+  0%, 100%
     box-shadow: 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq)), 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq))
-
   50%
     box-shadow: 0 0 1.1rem var(--character-primary, var(--color-mood-tokyo-8)), 0 0 2.3rem var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0.8rem var(--character-secondary, var(--color-mood-tokyo-8-opq))
 
 @keyframes dropTargetBeatFast
-  0%,
-  100%
+  0%, 100%
     box-shadow: 0 0 0 var(--character-secondary, var(--color-mood-tokyo-3-opq)), 0 0 0 var(--character-secondary, var(--color-mood-tokyo-7-opq)), inset 0 0 0 var(--character-secondary, var(--color-mood-tokyo-1-opq))
-
   25%
     box-shadow: 0 0 1.2rem var(--character-primary, var(--color-mood-tokyo-3)), 0 0 2.1rem var(--character-secondary, var(--color-mood-tokyo-7-opq)), inset 0 0 0.8rem var(--character-secondary, var(--color-mood-tokyo-1-opq))
-
   75%
     box-shadow: 0 0 1.4rem var(--character-primary, var(--color-mood-tokyo-8)), 0 0 2.3rem var(--character-secondary, var(--color-mood-tokyo-6-opq)), inset 0 0 0.9rem var(--character-secondary, var(--color-mood-tokyo-11-opq))
 
 @keyframes dropTargetBeatBoth
-  0%,
-  50%,
-  100%
+  0%, 50%, 100%
     box-shadow: 0 0 0 var(--character-secondary, var(--color-mood-tokyo-4-opq)), 0 0 0 var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0 var(--character-secondary, var(--color-mood-tokyo-10-opq))
-
   25%, 55%
     box-shadow: 0 0 1rem var(--character-primary, #d0f1f4e8), 0 0 2.2rem var(--character-secondary, var(--color-mood-tokyo-8-opq)), inset 0 0 0.85rem var(--character-secondary, var(--color-mood-tokyo-10-opq))
-
   70%
     box-shadow: 0 0 1.55rem var(--character-primary, var(--color-mood-tokyo-3)), 0 0 2.6rem var(--character-secondary, var(--color-mood-tokyo-7-opq)), inset 0 0 0.95rem var(--character-secondary, var(--color-mood-tokyo-11-opq))
 
@@ -431,7 +405,7 @@
   gap: 0.6rem
   padding: 0.45rem 0.6rem
   border: 1px solid rgba(255, 255, 255, 0.15)
-  border-radius: var(--radius-sm)
+  border-radius: 999px
   background: rgba(8, 8, 18, 0.45)
   cursor: pointer
   transition: all 0.2s ease
@@ -467,11 +441,12 @@
 @media (prefers-reduced-motion: reduce)
   .dropTargetPulseSlow::after,
   .dropTargetPulseFast::after,
-  .dropTargetPulseBoth::after
+  .dropTargetPulseBoth::after,
+  .dropTargetPulseSlow::before,
+  .dropTargetPulseFast::before,
+  .dropTargetPulseBoth::before
     animation: none
-
-  .dropTargetGlow
+  .dropTargetGlow::before
     animation: none
-
   .comboWord
     animation: none
