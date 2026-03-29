@@ -371,87 +371,97 @@ function App() {
       recordSoundPlayed(characterId, soundId);
       unmuteCharacter(characterId);
 
-      setActiveSoundsByCharacter((previous) => {
-        const currentActive = previous[characterId] ?? [];
-        let nextActive = [...currentActive];
+      const audioKey = buildAudioKey(characterId, soundId);
+      const isRemoving = activeSoundsByCharacter[characterId]?.includes(soundId);
 
-        const audioKey = buildAudioKey(characterId, soundId);
+      if (isRemoving) {
+        // Stop and remove the specific sound
+        const audio = audioRefs.current[audioKey];
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          delete audioRefs.current[audioKey];
+        }
+        activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
+          (e) => !(e.characterId === characterId && e.soundId === soundId)
+        );
+      } else {
+        // Prepare to add new sound
+        const currentActive = activeSoundsByCharacter[characterId] ?? [];
+        const maxSounds = currentLevelInfo.soundsPerCharacter;
 
-        if (nextActive.includes(soundId)) {
-          // Toggle off if already active
-          nextActive = nextActive.filter(id => id !== soundId);
-          const audio = audioRefs.current[audioKey];
-          if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-            delete audioRefs.current[audioKey];
-          }
-          activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
-            (e) => !(e.characterId === characterId && e.soundId === soundId)
-          );
-        } else {
-          // Add new sound
-          const maxSounds = currentLevelInfo.soundsPerCharacter;
-          
-          if (nextActive.length >= maxSounds) {
-            // Remove the oldest sound to make room
-            const oldestSoundId = nextActive.shift();
-            if (oldestSoundId) {
-              const oldAudioKey = buildAudioKey(characterId, oldestSoundId);
-              const oldAudio = audioRefs.current[oldAudioKey];
-              if (oldAudio) {
-                oldAudio.pause();
-                oldAudio.currentTime = 0;
-                delete audioRefs.current[oldAudioKey];
-              }
-              activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
-                (e) => !(e.characterId === characterId && e.soundId === oldestSoundId)
-              );
+        if (currentActive.length >= maxSounds) {
+          // Find and stop the oldest sound
+          const oldestSoundId = currentActive[0];
+          if (oldestSoundId) {
+            const oldAudioKey = buildAudioKey(characterId, oldestSoundId);
+            const oldAudio = audioRefs.current[oldAudioKey];
+            if (oldAudio) {
+              oldAudio.pause();
+              oldAudio.currentTime = 0;
+              delete audioRefs.current[oldAudioKey];
             }
+            activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
+              (e) => !(e.characterId === characterId && e.soundId === oldestSoundId)
+            );
           }
-
-          nextActive.push(soundId);
-
-          const nextAudio = new Audio(sound.path);
-          nextAudio.loop = true;
-          nextAudio.volume = 1;
-          void nextAudio.play().catch(() => undefined);
-          audioRefs.current[audioKey] = nextAudio;
-
-          activeSoundOrderRef.current.push({ characterId, soundId });
         }
 
-        return { ...previous, [characterId]: nextActive };
+        // Play the new sound
+        const nextAudio = new Audio(sound.path);
+        nextAudio.loop = true;
+        nextAudio.volume = 1;
+        void nextAudio.play().catch(() => undefined);
+        audioRefs.current[audioKey] = nextAudio;
+        activeSoundOrderRef.current.push({ characterId, soundId });
+      }
+
+      // Update state
+      setActiveSoundsByCharacter((previous) => {
+        const current = previous[characterId] ?? [];
+        let nextList: string[];
+
+        if (isRemoving) {
+          nextList = current.filter((id) => id !== soundId);
+        } else {
+          const maxSounds = currentLevelInfo.soundsPerCharacter;
+          nextList = current.length >= maxSounds ? [...current.slice(1), soundId] : [...current, soundId];
+        }
+
+        return { ...previous, [characterId]: nextList };
       });
 
-      // Optional: Close picker if only 1 sound allowed, else keep open for multi-select
       if (currentLevelInfo.soundsPerCharacter === 1) {
         setPickingSoundsCharacterId(null);
       }
     },
-    [buildAudioKey, soundCatalogById, unmuteCharacter, recordSoundPlayed, currentLevelInfo.soundsPerCharacter],
+    [buildAudioKey, soundCatalogById, unmuteCharacter, recordSoundPlayed, currentLevelInfo.soundsPerCharacter, activeSoundsByCharacter],
   );
 
   const resetCharacter = useCallback(
     (characterId: string) => {
       unmuteCharacter(characterId);
-      setActiveSoundsByCharacter((previous) => {
-        const current = previous[characterId] ?? [];
-        if (current.length === 0) return previous;
-        current.forEach((soundId) => {
-          const audioKey = buildAudioKey(characterId, soundId);
-          const audio = audioRefs.current[audioKey];
-          if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-            delete audioRefs.current[audioKey];
-          }
-        });
-        return { ...previous, [characterId]: [] };
+
+      // Stop all sounds for this character
+      const currentActive = activeSoundsByCharacter[characterId] ?? [];
+      currentActive.forEach((soundId) => {
+        const audioKey = buildAudioKey(characterId, soundId);
+        const audio = audioRefs.current[audioKey];
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          delete audioRefs.current[audioKey];
+        }
       });
+
       activeSoundOrderRef.current = activeSoundOrderRef.current.filter((e) => e.characterId !== characterId);
+
+      setActiveSoundsByCharacter((previous) => ({
+        ...previous,
+        [characterId]: [],
+      }));
     },
-    [buildAudioKey, unmuteCharacter],
+    [buildAudioKey, unmuteCharacter, activeSoundsByCharacter],
   );
 
   const handleCharacterClick = useCallback(
