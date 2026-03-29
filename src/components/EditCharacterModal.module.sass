@@ -1,8 +1,7 @@
 .backdrop
   position: fixed
   inset: 0
-  background: rgba(8, 6, 26, 0.72)
-  backdrop-filter: blur(6px)
+  background: rgba(4, 3, 14, 0.92)
   z-index: 60
 
 .modal
@@ -62,6 +61,32 @@
   flex-direction: column
   align-items: center
   gap: 1.25rem
+
+.cardPreviewWrap
+  position: relative
+  width: 100%
+
+.imageEditButton
+  position: absolute
+  bottom: 1.2rem
+  right: 1.2rem
+  width: 2.4rem
+  height: 2.4rem
+  border-radius: 50%
+  background: rgba(8, 8, 18, 0.85)
+  border: 1px solid rgba(255, 255, 255, 0.35)
+  color: #fff
+  display: grid
+  place-items: center
+  cursor: pointer
+  z-index: 10
+  box-shadow: var(--shadow-refresh)
+  transition: all 0.2s ease
+  font-size: 0.9rem
+
+  &:hover
+    background: rgba(25, 25, 45, 0.95)
+    transform: scale(1.1)
 
 .columnControls
   display: grid
@@ -200,34 +225,6 @@
   border-radius: 999px
   border: 1px solid rgba(255, 255, 255, 0.5)
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35)
-
-.imageGrid
-  display: grid
-  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr))
-  gap: 0.6rem
-
-.imageOption
-  border: 1px solid rgba(255, 255, 255, 0.25)
-  border-radius: var(--radius-sm)
-  background: rgba(8, 8, 18, 0.6)
-  padding: 0.4rem
-  display: grid
-  gap: 0.35rem
-  justify-items: center
-  cursor: pointer
-  color: var(--color-text-strong)
-  font-size: 0.7rem
-  text-align: center
-
-.imageOptionActive
-  border-color: rgba(255, 255, 255, 0.7)
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18)
-
-.imageOption img
-  width: 100%
-  height: 4.5rem
-  object-fit: cover
-  border-radius: var(--radius-sm)
 
 .okButton, .cancelButton
   height: 2.8rem
@@ -459,3 +456,77 @@
     opacity: 0.5
   to
     opacity: 1
+
+/* Sub-modal for Image Picker */
+.subModal
+  position: fixed
+  inset: 0
+  display: grid
+  place-items: center
+  z-index: 100
+  background: rgba(4, 3, 14, 0.8)
+
+.subModalCard
+  width: min(90%, 40rem)
+  background: rgba(18, 10, 48, 0.98)
+  border: 1px solid rgba(255, 255, 255, 0.25)
+  border-radius: var(--radius-md)
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.5)
+  padding: 1.5rem
+  display: flex
+  flex-direction: column
+  gap: 1.25rem
+
+.subModalHeader
+  display: flex
+  align-items: center
+  justify-content: center
+
+.subModalTitle
+  margin: 0
+  font-family: var(--font-title)
+  font-size: 1rem
+  letter-spacing: 0.08em
+  text-transform: uppercase
+
+.imagePickerGrid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr))
+  gap: 0.75rem
+  max-height: 50vh
+  overflow-y: auto
+  padding: 0.25rem
+
+.imagePickerOption
+  border: 1px solid rgba(255, 255, 255, 0.2)
+  border-radius: var(--radius-sm)
+  background: rgba(8, 8, 18, 0.6)
+  padding: 0.5rem
+  display: grid
+  gap: 0.4rem
+  justify-items: center
+  cursor: pointer
+  color: var(--color-text-strong)
+  font-size: 0.7rem
+  text-align: center
+  transition: all 0.2s ease
+
+  &:hover
+    background: rgba(25, 25, 45, 0.8)
+    border-color: rgba(255, 255, 255, 0.4)
+
+  img
+    width: 100%
+    aspect-ratio: 1/1
+    object-fit: cover
+    border-radius: var(--radius-sm)
+
+.imagePickerOptionActive
+  border-color: rgba(255, 255, 255, 0.7)
+  background: rgba(45, 45, 75, 0.8)
+  box-shadow: 0 0 1rem rgba(255, 255, 255, 0.15)
+
+.subModalActions
+  display: flex
+  justify-content: center
+  margin-top: 0.5rem

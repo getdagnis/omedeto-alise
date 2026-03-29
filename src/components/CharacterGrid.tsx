@@ -78,7 +78,7 @@ function CharacterGrid({
             return [defaultColor];
           })();
 
-          const ringColor = INACTIVE_RING_COLOR;
+          const ringColor = `${colors[0]}99`; // Use primary color with approx 60% opacity for the ring
 
           return (
             <CharacterCard

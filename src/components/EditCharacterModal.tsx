@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVolumeHigh } from '@fortawesome/free-solid-svg-icons';
+import { faVolumeHigh, faPen } from '@fortawesome/free-solid-svg-icons';
 import styles from './EditCharacterModal.module.sass';
 import type { CharacterOption, SoundOption, SoundCategory } from '../config';
 import CharacterCard from './CharacterCard';
@@ -74,6 +74,7 @@ function EditCharacterModal({
   const [draftCustomization, setDraftCustomization] = useState<CharacterCustomization>({});
   const [activeTab, setActiveTab] = useState<'colors' | 'sounds'>(initialTab);
   const [activeCategory, setActiveCategory] = useState<SoundCategory | 'all'>('all');
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
 
@@ -135,7 +136,7 @@ function EditCharacterModal({
 
   const handleToggleSound = (soundId: string) => {
     const currentSounds = draftCustomization.soundIds ?? [];
-    
+
     if (currentSounds.includes(soundId)) {
       handleUpdateDraft({ soundIds: currentSounds.filter((id) => id !== soundId) });
     } else {
@@ -185,13 +186,12 @@ function EditCharacterModal({
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Edit character">
         <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
           <header className={styles.modalHeader}>
-            <h2 className={styles.modalTitle}>CHARACTER SETTINGS</h2>
+            <h2 className={styles.modalTitle}>EDIT CHARACTER</h2>
           </header>
 
           <div className={styles.layoutColumns}>
             {/* Left Column: Live Preview */}
             <aside className={styles.columnPreview}>
-              <h3 className={styles.columnTitle}>PREVIEW</h3>
               <div className={styles.previewContainer}>
                 {(() => {
                   const effectiveColorModes =
@@ -207,25 +207,36 @@ function EditCharacterModal({
                     : character.primaryColor || 'rgba(255, 255, 255, 0.08)';
 
                   const colors = effectiveColorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
+                  const ringColor = `${colors[0]}99`;
 
                   return (
-                    <CharacterCard
-                      character={character}
-                      customization={draftCustomization}
-                      soundIds={characterSoundIds}
-                      soundCatalogById={soundCatalogById}
-                      isFavorite={false}
-                      isDropActive={false}
-                      isGlowBurst={false}
-                      comboWord={null}
-                      colors={colors}
-                      ringColor="rgba(38, 30, 60, 0.85)"
-                      isImageLoaded={true}
-                      hideSounds={true}
-                      forceLoop={true}
-                      showActions={false}
-                      size="large"
-                    />
+                    <div className={styles.cardPreviewWrap}>
+                      <CharacterCard
+                        character={character}
+                        customization={draftCustomization}
+                        soundIds={characterSoundIds}
+                        soundCatalogById={soundCatalogById}
+                        isFavorite={false}
+                        isDropActive={false}
+                        isGlowBurst={false}
+                        comboWord={null}
+                        colors={colors}
+                        ringColor={ringColor}
+                        isImageLoaded={true}
+                        hideSounds={true}
+                        forceLoop={true}
+                        showActions={false}
+                        size="large"
+                      />
+                      <button
+                        type="button"
+                        className={styles.imageEditButton}
+                        onClick={() => setIsImagePickerOpen(true)}
+                        aria-label="Change image"
+                      >
+                        <FontAwesomeIcon icon={faPen} />
+                      </button>
+                    </div>
                   );
                 })()}
               </div>
@@ -239,14 +250,14 @@ function EditCharacterModal({
                   className={`${styles.tabButton} ${activeTab === 'colors' ? styles.tabButtonActive : ''}`}
                   onClick={() => setActiveTab('colors')}
                 >
-                  COLORS & IMAGE
+                  COLORS
                 </button>
                 <button
                   type="button"
                   className={`${styles.tabButton} ${activeTab === 'sounds' ? styles.tabButtonActive : ''}`}
                   onClick={() => setActiveTab('sounds')}
                 >
-                  SOUNDS ({(draftCustomization.soundIds?.length ?? 0)}/12)
+                  SOUNDS ({draftCustomization.soundIds?.length ?? 0}/12)
                 </button>
               </div>
 
@@ -302,27 +313,6 @@ function EditCharacterModal({
                       })}
                     </div>
                   </div>
-
-                  <div className={styles.field}>
-                    <span className={styles.fieldLabel}>IMAGE</span>
-                    <div className={styles.imageGrid}>
-                      {imageOptions.map((option) => {
-                        const isSelected = (draftCustomization.image ?? character.img) === option.src;
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`}
-                            onClick={() => handleUpdateDraft({ image: option.src })}
-                            aria-pressed={isSelected}
-                          >
-                            <img src={option.src} alt={option.label} />
-                            <span>{option.label.toUpperCase()}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -336,7 +326,7 @@ function EditCharacterModal({
                         className={styles.randomizeButton}
                         onClick={() => {
                           const shuffled = [...character.sounds].sort(() => 0.5 - Math.random());
-                          handleUpdateDraft({ soundIds: shuffled.slice(0, 12).map(s => s.id) });
+                          handleUpdateDraft({ soundIds: shuffled.slice(0, 12).map((s) => s.id) });
                         }}
                       >
                         RANDOMIZE
@@ -355,7 +345,7 @@ function EditCharacterModal({
                         </button>
                       ))}
                     </div>
-                    
+
                     <div className={styles.soundGrid}>
                       {filteredSounds.map((sound) => {
                         const currentSounds = draftCustomization.soundIds ?? [];
@@ -369,13 +359,15 @@ function EditCharacterModal({
                             className={`${styles.soundOptionWrap} ${isSelected ? styles.soundOptionActive : ''} ${
                               isMaxReached ? styles.soundOptionDisabled : ''
                             }`}
-                            style={isSelected ? ({ '--sound-color': `var(${sound.colorToken})` } as React.CSSProperties) : {}}
+                            style={
+                              isSelected ? ({ '--sound-color': `var(${sound.colorToken})` } as React.CSSProperties) : {}
+                            }
                           >
                             <button
                               type="button"
                               className={`${styles.soundOptionPreview} ${isPreviewing ? styles.soundOptionPreviewing : ''}`}
                               onClick={() => togglePreviewSound(sound.id, sound.path)}
-                              aria-label={isPreviewing ? "Stop preview" : "Preview sound"}
+                              aria-label={isPreviewing ? 'Stop preview' : 'Preview sound'}
                             >
                               <FontAwesomeIcon icon={faVolumeHigh} />
                             </button>
@@ -446,6 +438,41 @@ function EditCharacterModal({
           </div>
         </div>
       </div>
+
+      {/* Character Image Picker Modal */}
+      {isImagePickerOpen && (
+        <div className={styles.subModal} onClick={() => setIsImagePickerOpen(false)}>
+          <div className={styles.subModalCard} onClick={(e) => e.stopPropagation()}>
+            <header className={styles.subModalHeader}>
+              <h3 className={styles.subModalTitle}>SELECT AVATAR</h3>
+            </header>
+
+            <div className={styles.imagePickerGrid}>
+              {imageOptions.map((option) => {
+                const isSelected = (draftCustomization.image ?? character.img) === option.src;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`${styles.imagePickerOption} ${isSelected ? styles.imagePickerOptionActive : ''}`}
+                    onClick={() => handleUpdateDraft({ image: option.src })}
+                    aria-pressed={isSelected}
+                  >
+                    <img src={option.src} alt={option.label} />
+                    <span>{option.label.toUpperCase()}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <nav className={styles.subModalActions}>
+              <button type="button" className={styles.okButton} onClick={() => setIsImagePickerOpen(false)}>
+                OK
+              </button>
+            </nav>
+          </div>
+        </div>
+      )}
     </>
   );
 }

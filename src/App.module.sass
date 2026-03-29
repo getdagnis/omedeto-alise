@@ -45,14 +45,14 @@
   display: flex
   flex-direction: column
   align-items: center
-  padding: 1rem 0.85rem 4.75rem
+  padding: 0.65rem 0.65rem 5.5rem
 
 .panel
   width: 100%
   max-width: 80rem
   background: var(--color-panel-bg, var(--color-panel-bg))
   border: 1px solid var(--color-panel-border)
-  border-radius: var(--radius-panel)
+  border-radius: calc(var(--radius-panel) / 2)
   box-shadow: var(--shadow-panel)
   padding: 0.9rem
 
@@ -155,7 +155,7 @@
   align-items: center
   justify-content: center
   transition: color 0.2s ease
-  
+
 .editSoundsButton:hover
   color: var(--color-text-strong)
 
@@ -284,7 +284,6 @@
 .pickerItemActive .pickerItemPreview
   border-right-color: rgba(255, 255, 255, 0.2)
 
-
 .closeButton
   border: 0
   background: transparent
@@ -300,57 +299,96 @@
 
 .hamburgerWrap
   position: fixed
-  right: max(0.85rem, env(safe-area-inset-right))
-  top: max(0.85rem, env(safe-area-inset-top))
-  z-index: 30
-  width: 2.55rem
-  height: 2.55rem
+  right: 3rem
+  top: 2rem
+  z-index: 9998
+  @media (max-width: 480px) or (max-height: 700px)
+    top: 1.5rem
+    right: 1.5rem
+  @media (max-width: 600px) or (max-height: 480px)
+    top: 1rem
+    right: 1rem
 
-.hamburgerButton
-  border: 1px solid var(--color-button-border)
-  border-radius: var(--radius-md)
-  background: var(--color-button-bg)
-  color: var(--color-button-text)
-  font-family: var(--font-body)
-  font-size: 1rem
-  font-weight: 700
-  letter-spacing: 0.04em
-  min-width: 2.55rem
-  min-height: 2.55rem
-  padding: 0.35rem
+.hamburger
+  display: flex
+  align-items: center
+  justify-content: center
+  padding: 0
+  height: 28px
+  width: 34px
   cursor: pointer
-  box-shadow: var(--shadow-refresh)
-  transition: background-color 0.2s ease, transform 0.2s ease
+  transition-property: opacity, filter
+  transition-duration: 0.15s
+  transition-timing-function: linear
+  overflow: visible
+  z-index: 9998
 
-.hamburgerButton:hover
-  background: var(--color-button-hover)
-  transform: translateY(-2px)
+.hamburgerActive .hamburgerInner,
+.hamburgerActive .hamburgerInner::before,
+.hamburgerActive .hamburgerInner::after
+  background-color: white
+  transform: scale(1.1)
 
-.hamburgerMenu
+.hamburgerActive:hover
+  transform: rotateY(180deg)
+  transition: all 0.5s ease
+
+.hamburgerBox
+  width: 40px
+  height: 24px
+  display: inline-block
+  position: relative
+
+.hamburgerInner
+  display: block
+  top: 50%
+  margin-top: -2px
+
+.hamburgerInner,
+.hamburgerInner::before,
+.hamburgerInner::after
+  width: 34px
+  height: 3px
+  background-color: white
+  border-radius: 2px
   position: absolute
-  right: 0
-  top: calc(100% + 0.45rem)
-  min-width: 10.4rem
-  border: 1px solid var(--color-dropdown-border)
-  border-radius: var(--radius-md)
-  background: var(--color-dropdown-bg)
-  box-shadow: var(--shadow-panel)
-  padding: 0.35rem
+  transition: transform 0.15s ease
 
-.hamburgerItem
-  width: 100%
-  border: 1px solid var(--color-button-border)
-  border-radius: var(--radius-sm)
-  background: transparent
-  color: var(--color-text-strong)
-  text-align: left
-  font-size: 0.85rem
-  font-weight: 700
-  padding: 0.55rem 0.65rem
-  cursor: pointer
+.hamburgerInner::before,
+.hamburgerInner::after
+  content: ''
+  display: block
 
-.hamburgerItem:hover
-  background: rgba(255, 255, 255, 0.08)
+.hamburgerInner::before
+  top: -10px
+
+.hamburgerInner::after
+  bottom: -10px
+
+.hamburger .hamburgerInner
+  transition: background-color 0.125s 0.175s ease-in
+  &::before
+    left: 0
+    transition: transform 0.125s cubic-bezier(0.6, 0.04, 0.98, 0.335), top 0.05s 0.125s linear, left 0.125s 0.175s ease-in
+  &::after
+    top: 10px
+    right: 0
+    transition: transform 0.125s cubic-bezier(0.6, 0.04, 0.98, 0.335), top 0.05s 0.125s linear, right 0.125s 0.175s ease-in
+
+.hamburgerActive .hamburgerInner
+  transition-delay: 0s
+  transition-timing-function: ease-out
+  background-color: transparent !important
+  &::before
+    left: -80px
+    top: -80px
+    transform: translate3d(80px, 80px, 0) rotate(45deg)
+    transition: left 0.125s ease-out, top 0.05s 0.125s linear, transform 0.125s 0.175s cubic-bezier(0.075, 0.82, 0.165, 1)
+  &::after
+    right: -80px
+    top: -80px
+    transform: translate3d(-80px, 80px, 0) rotate(-45deg)
+    transition: right 0.125s ease-out, top 0.05s 0.125s linear, transform 0.125s 0.175s cubic-bezier(0.075, 0.82, 0.165, 1)
 
 @media (min-width: 40rem)
   .content

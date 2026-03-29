@@ -23,7 +23,7 @@ export const PROGRESSION_LEVELS: ProgressionLevel[] = [
     level: 1,
     name: 'Dual Boost',
     soundsPerCharacter: 2,
-    requirements: { charactersPlayed: 6, charactersCustomized: 6, soundsPlayed: 12 },
+    requirements: { charactersPlayed: 3, charactersCustomized: 3, soundsPlayed: 6 },
   },
   {
     level: 2,

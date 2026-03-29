@@ -6,6 +6,7 @@ import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
 import ProgressionMeter from './components/ProgressionMeter';
+import { Menu } from './components/Menu/Menu';
 import { useProgression } from './hooks/useProgression';
 import {
   ALL_SOUNDS,
@@ -815,17 +816,22 @@ function App() {
         </button>
 
         <div className={styles.hamburgerWrap}>
-          <button type="button" className={styles.hamburgerButton} onClick={() => setIsMenuOpen((prev) => !prev)}>
-            ☰
-          </button>
-          {isMenuOpen && (
-            <div id="main-menu" className={styles.hamburgerMenu} role="menu">
-              <button type="button" className={styles.hamburgerItem} onClick={handleGlitchMenuAction}>
-                Glitch: {renderMode === 'glitch' ? 'Off' : 'On'}
-              </button>
-            </div>
-          )}
+          <div
+            className={`${styles.hamburger} ${isMenuOpen ? styles.hamburgerActive : ''}`}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            <span className={styles.hamburgerBox}>
+              <span className={styles.hamburgerInner}></span>
+            </span>
+          </div>
         </div>
+
+        <Menu 
+          isOpen={isMenuOpen} 
+          onClose={() => setIsMenuOpen(false)} 
+          renderMode={renderMode}
+          onToggleGlitch={handleGlitchMenuAction}
+        />
 
         <ProgressionMeter state={progressionState} currentLevelInfo={currentLevelInfo} nextLevelInfo={nextLevelInfo} />
       </main>

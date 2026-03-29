@@ -1,14 +1,6 @@
 export type SoundAnimation = 'slow' | 'fast' | 'both';
 
-export type SoundCategory =
-  | 'voice'
-  | 'beats'
-  | 'drums'
-  | 'animals'
-  | 'melody'
-  | 'creepy'
-  | 'calm'
-  | 'other';
+export type SoundCategory = 'voice' | 'beats' | 'drums' | 'animals' | 'melody' | 'creepy' | 'calm' | 'other';
 
 export type SoundOption = {
   id: string;
@@ -230,7 +222,7 @@ export const CHARACTERS: CharacterOption[] = [
     img: '/alise-1.png',
     mixLabel: "Alise's Mix!",
     titleColor: 'white',
-    primaryColor: '#600b87cc',
+    primaryColor: '#9a21d1CC',
     secondaryColor: '#ff0040a1',
     soundboardColor: '#29063acc',
     schemes: [
@@ -238,9 +230,9 @@ export const CHARACTERS: CharacterOption[] = [
         id: 'default',
         name: 'Neon Violet',
         titleColor: 'white',
-        primaryColor: '#600b87cc',
-        secondaryColor: '#ff0040a1',
-        soundboardColor: '#29063acc',
+        primaryColor: '#9a21d1CC',
+        secondaryColor: '#ff0040',
+        soundboardColor: '#29063a',
       },
       {
         id: 'nova',
