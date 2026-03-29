@@ -7,6 +7,7 @@ type CharacterCustomization = {
   name?: string;
   colorModes?: string[];
   image?: string;
+  soundIds?: string[];
 };
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;

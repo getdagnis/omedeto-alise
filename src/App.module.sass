@@ -139,6 +139,26 @@
   padding-bottom: 0.5rem
   border-bottom: 1px solid rgba(255, 255, 255, 0.1)
 
+.pickerHeaderLeft
+  display: flex
+  align-items: center
+  gap: 0.5rem
+
+.editSoundsButton
+  background: transparent
+  border: none
+  color: var(--color-text-muted)
+  cursor: pointer
+  font-size: 0.8rem
+  padding: 0.25rem
+  display: flex
+  align-items: center
+  justify-content: center
+  transition: color 0.2s ease
+  
+.editSoundsButton:hover
+  color: var(--color-text-strong)
+
 .pickerTitle
   margin: 0
   font-family: var(--font-title)
@@ -147,39 +167,123 @@
   text-transform: uppercase
   color: var(--color-text-muted)
 
+.pickerContent
+  flex: 1
+  min-height: 12rem
+  display: flex
+  flex-direction: column
+
+.emptyPickerState
+  flex: 1
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  gap: 1.5rem
+  text-align: center
+  padding: 2rem 1rem
+
+.emptyPickerText
+  margin: 0
+  color: var(--color-text-muted)
+  font-size: 0.85rem
+  line-height: 1.4
+
+.emptyPickerActions
+  display: flex
+  gap: 0.75rem
+  flex-wrap: wrap
+  justify-content: center
+
+.emptyPickerButton
+  height: 2.4rem
+  padding: 0 1.25rem
+  border-radius: 999px
+  background: rgba(255, 255, 255, 0.08)
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  color: #fff
+  font-family: var(--font-title)
+  font-size: 0.75rem
+  letter-spacing: 0.05em
+  cursor: pointer
+  transition: all 0.2s ease
+
+.emptyPickerButton:hover
+  background: rgba(255, 255, 255, 0.15)
+  border-color: rgba(255, 255, 255, 0.3)
+  transform: translateY(-1px)
+
 .pickerList
   display: flex
   flex-direction: column
   gap: 0.35rem
 
-.pickerItem
-  width: 100%
-  border: 0
+.pickerItemWrap
+  display: flex
+  height: 2.8rem
+  background: rgba(255, 255, 255, 0.06)
   border-radius: var(--radius-sm)
+  overflow: hidden
+  transition: all 0.2s ease
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1)
+
+.pickerItemActive
+  background: var(--sound-color)
+  box-shadow: inset 0 0 0 2px #fff, 0 0 1rem rgba(255, 255, 255, 0.2)
+
+.pickerItemPreview
+  width: 2.8rem
+  height: 100%
+  display: grid
+  place-items: center
+  background: rgba(0, 0, 0, 0.15)
+  border: none
+  border-right: 1px solid rgba(255, 255, 255, 0.1)
+  color: rgba(255, 255, 255, 0.7)
+  cursor: pointer
+  transition: all 0.2s ease
+  font-size: 0.9rem
+
+.pickerItemPreview:hover
   color: #fff
-  min-height: 2.8rem
+  background: rgba(0, 0, 0, 0.25)
+
+.pickerItemPreviewing
+  color: #fff
+  background: rgba(255, 255, 255, 0.2)
+  animation: previewIconFlash 0.8s infinite alternate
+
+@keyframes previewIconFlash
+  from
+    opacity: 0.5
+  to
+    opacity: 1
+
+.pickerItemSelect
+  flex: 1
+  height: 100%
+  display: flex
+  align-items: center
   padding: 0 1rem
+  background: transparent
+  border: none
+  color: #fff
   font-family: var(--font-body)
   font-size: 0.8rem
   font-weight: 700
   letter-spacing: 0.04em
+  text-align: left
   cursor: pointer
-  display: flex
-  align-items: center
-  gap: 0.75rem
-  transition: transform 0.1s ease, filter 0.2s ease
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1)
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
 
-.pickerItem:hover
-  filter: brightness(1.1)
-  transform: translateX(4px)
+.pickerItemActive .pickerItemSelect
+  color: #fff
 
-.pickerItemActive
-  box-shadow: inset 0 0 0 2px #fff, 0 0 1rem rgba(255, 255, 255, 0.2)
+.pickerItemActive .pickerItemPreview
+  border-right-color: rgba(255, 255, 255, 0.2)
 
-.pickerItemIcon
-  font-size: 0.9rem
-  opacity: 0.8
 
 .closeButton
   border: 0

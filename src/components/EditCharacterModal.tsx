@@ -1,12 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faVolumeHigh } from '@fortawesome/free-solid-svg-icons';
 import styles from './EditCharacterModal.module.sass';
-import type { CharacterOption, SoundOption } from '../config';
+import type { CharacterOption, SoundOption, SoundCategory } from '../config';
 import CharacterCard from './CharacterCard';
+
+const SOUND_CATEGORIES: { id: SoundCategory | 'all'; label: string }[] = [
+  { id: 'all', label: 'ALL' },
+  { id: 'voice', label: 'VOICE' },
+  { id: 'beats', label: 'BEATS' },
+  { id: 'drums', label: 'DRUMS' },
+  { id: 'animals', label: 'ANIMALS' },
+  { id: 'melody', label: 'MELODY' },
+  { id: 'creepy', label: 'CREEPY' },
+  { id: 'calm', label: 'CALM' },
+  { id: 'other', label: 'OTHER' },
+];
 
 type CharacterCustomization = {
   name?: string;
   colorModes?: string[];
   image?: string;
+  soundIds?: string[];
 };
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
@@ -32,6 +47,7 @@ type EditCharacterModalProps = {
   soundCatalogById: Map<string, SoundOption>;
   colorOptions: readonly CharacterColorOption[];
   imageOptions: readonly CharacterImageOption[];
+  initialTab?: 'colors' | 'sounds';
   onClose: () => void;
   onSelectCharacter: (id: string) => void;
   onUpdateCustomization: (id: string, patch: CharacterCustomization) => void;
@@ -50,19 +66,44 @@ function EditCharacterModal({
   soundCatalogById,
   colorOptions,
   imageOptions,
+  initialTab = 'colors',
   onClose,
   onSelectCharacter,
   onUpdateCustomization,
 }: EditCharacterModalProps) {
   const [draftCustomization, setDraftCustomization] = useState<CharacterCustomization>({});
+  const [activeTab, setActiveTab] = useState<'colors' | 'sounds'>(initialTab);
+  const [activeCategory, setActiveCategory] = useState<SoundCategory | 'all'>('all');
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
 
   const character = characters.find((c) => c.id === editingCharacterId);
 
+  const filteredSounds = useMemo(() => {
+    if (!character) return [];
+    if (activeCategory === 'all') return character.sounds;
+    return character.sounds.filter((s) => s.category === activeCategory);
+  }, [character, activeCategory]);
+
   useEffect(() => {
     if (isOpen && character) {
-      setDraftCustomization(customizations[character.id] ?? {});
+      setTimeout(() => {
+        setDraftCustomization(customizations[character.id] ?? {});
+        setActiveTab(initialTab);
+      }, 0);
     }
-  }, [isOpen, character, customizations]);
+  }, [isOpen, character, customizations, initialTab]);
+
+  // Stop preview on modal close or tab change
+  useEffect(() => {
+    return () => {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+        previewAudioRef.current = null;
+        setPreviewingSoundId(null);
+      }
+    };
+  }, [isOpen, activeTab]);
 
   if (!isOpen || !editingCharacterId || !character) {
     return null;
@@ -90,6 +131,36 @@ function EditCharacterModal({
         colorModes: [...filteredColors, colorValue].slice(-3),
       });
     }
+  };
+
+  const handleToggleSound = (soundId: string) => {
+    const currentSounds = draftCustomization.soundIds ?? [];
+    
+    if (currentSounds.includes(soundId)) {
+      handleUpdateDraft({ soundIds: currentSounds.filter((id) => id !== soundId) });
+    } else {
+      if (currentSounds.length >= 12) return;
+      handleUpdateDraft({ soundIds: [...currentSounds, soundId] });
+    }
+  };
+
+  const togglePreviewSound = (soundId: string, path: string) => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+
+    if (previewingSoundId === soundId) {
+      setPreviewingSoundId(null);
+      return;
+    }
+
+    const audio = new Audio(path);
+    audio.loop = false;
+    audio.onended = () => setPreviewingSoundId(null);
+    void audio.play().catch(() => undefined);
+    previewAudioRef.current = audio;
+    setPreviewingSoundId(soundId);
   };
 
   const handleOk = () => {
@@ -153,6 +224,7 @@ function EditCharacterModal({
                       hideSounds={true}
                       forceLoop={true}
                       showActions={false}
+                      size="large"
                     />
                   );
                 })()}
@@ -161,77 +233,166 @@ function EditCharacterModal({
 
             {/* Middle Column: Controls */}
             <main className={styles.columnControls}>
-              <label className={styles.field}>
-                <span className={styles.fieldLabel}>NAME</span>
-                <input
-                  className={styles.textInput}
-                  type="text"
-                  value={draftCustomization.name ?? ''}
-                  placeholder={character.name}
-                  onChange={handleUpdateName}
-                />
-              </label>
-
-              <div className={styles.field}>
-                <span className={styles.fieldLabel}>COLORS (UP TO 3)</span>
-                <div className={styles.colorGrid}>
-                  {colorOptions.map((option) => {
-                    const effectiveColorModes =
-                      draftCustomization.colorModes && draftCustomization.colorModes.length > 0
-                        ? draftCustomization.colorModes
-                        : ['auto'];
-
-                    const selectedIndex = effectiveColorModes.indexOf(option.value);
-                    const isSelected = selectedIndex !== -1;
-                    const isMaxReached =
-                      !isSelected && effectiveColorModes.length >= 3 && !effectiveColorModes.includes('auto');
-                    const isDefaultDisabled = !isSelected && !effectiveColorModes.includes('auto');
-
-                    const isDisabled = option.value === 'auto' ? isDefaultDisabled : isMaxReached;
-
-                    const swatchStyle =
-                      option.value === 'auto' ? AUTO_SWATCH_STYLE : { background: `var(${option.value})` };
-
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        className={`${styles.colorOption} ${isSelected ? styles.colorOptionActive : ''} ${
-                          isDisabled ? styles.colorOptionDisabled : ''
-                        }`}
-                        onClick={() => handleToggleColor(option.value)}
-                      >
-                        <span className={styles.colorSwatch} style={swatchStyle} />
-                        <span>{option.label.toUpperCase()}</span>
-                        {isSelected && option.value !== 'auto' && (
-                          <span className={styles.colorBadge}>{selectedIndex + 1}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className={styles.tabButtons}>
+                <button
+                  type="button"
+                  className={`${styles.tabButton} ${activeTab === 'colors' ? styles.tabButtonActive : ''}`}
+                  onClick={() => setActiveTab('colors')}
+                >
+                  COLORS & IMAGE
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.tabButton} ${activeTab === 'sounds' ? styles.tabButtonActive : ''}`}
+                  onClick={() => setActiveTab('sounds')}
+                >
+                  SOUNDS ({(draftCustomization.soundIds?.length ?? 0)}/12)
+                </button>
               </div>
 
-              <div className={styles.field}>
-                <span className={styles.fieldLabel}>IMAGE</span>
-                <div className={styles.imageGrid}>
-                  {imageOptions.map((option) => {
-                    const isSelected = (draftCustomization.image ?? character.img) === option.src;
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`}
-                        onClick={() => handleUpdateDraft({ image: option.src })}
-                        aria-pressed={isSelected}
-                      >
-                        <img src={option.src} alt={option.label} />
-                        <span>{option.label.toUpperCase()}</span>
-                      </button>
-                    );
-                  })}
+              {activeTab === 'colors' && (
+                <div className={styles.tabContent}>
+                  <label className={styles.field}>
+                    <span className={styles.fieldLabel}>NAME</span>
+                    <input
+                      className={styles.textInput}
+                      type="text"
+                      value={draftCustomization.name ?? ''}
+                      placeholder={character.name}
+                      onChange={handleUpdateName}
+                    />
+                  </label>
+
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>COLORS (UP TO 3)</span>
+                    <div className={styles.colorGrid}>
+                      {colorOptions.map((option) => {
+                        const effectiveColorModes =
+                          draftCustomization.colorModes && draftCustomization.colorModes.length > 0
+                            ? draftCustomization.colorModes
+                            : ['auto'];
+
+                        const selectedIndex = effectiveColorModes.indexOf(option.value);
+                        const isSelected = selectedIndex !== -1;
+                        const isMaxReached =
+                          !isSelected && effectiveColorModes.length >= 3 && !effectiveColorModes.includes('auto');
+                        const isDefaultDisabled = !isSelected && !effectiveColorModes.includes('auto');
+
+                        const isDisabled = option.value === 'auto' ? isDefaultDisabled : isMaxReached;
+
+                        const swatchStyle =
+                          option.value === 'auto' ? AUTO_SWATCH_STYLE : { background: `var(${option.value})` };
+
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={`${styles.colorOption} ${isSelected ? styles.colorOptionActive : ''} ${
+                              isDisabled ? styles.colorOptionDisabled : ''
+                            }`}
+                            onClick={() => handleToggleColor(option.value)}
+                          >
+                            <span className={styles.colorSwatch} style={swatchStyle} />
+                            <span>{option.label.toUpperCase()}</span>
+                            {isSelected && option.value !== 'auto' && (
+                              <span className={styles.colorBadge}>{selectedIndex + 1}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>IMAGE</span>
+                    <div className={styles.imageGrid}>
+                      {imageOptions.map((option) => {
+                        const isSelected = (draftCustomization.image ?? character.img) === option.src;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`}
+                            onClick={() => handleUpdateDraft({ image: option.src })}
+                            aria-pressed={isSelected}
+                          >
+                            <img src={option.src} alt={option.label} />
+                            <span>{option.label.toUpperCase()}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {activeTab === 'sounds' && (
+                <div className={styles.tabContent}>
+                  <div className={styles.field}>
+                    <div className={styles.fieldHeader}>
+                      <span className={styles.fieldLabel}>AVAILABLE SOUNDS</span>
+                      <button
+                        type="button"
+                        className={styles.randomizeButton}
+                        onClick={() => {
+                          const shuffled = [...character.sounds].sort(() => 0.5 - Math.random());
+                          handleUpdateDraft({ soundIds: shuffled.slice(0, 12).map(s => s.id) });
+                        }}
+                      >
+                        RANDOMIZE
+                      </button>
+                    </div>
+
+                    <div className={styles.filterBar}>
+                      {SOUND_CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          className={`${styles.filterButton} ${activeCategory === cat.id ? styles.filterButtonActive : ''}`}
+                          onClick={() => setActiveCategory(cat.id)}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <div className={styles.soundGrid}>
+                      {filteredSounds.map((sound) => {
+                        const currentSounds = draftCustomization.soundIds ?? [];
+                        const isSelected = currentSounds.includes(sound.id);
+                        const isMaxReached = !isSelected && currentSounds.length >= 12;
+                        const isPreviewing = previewingSoundId === sound.id;
+
+                        return (
+                          <div
+                            key={sound.id}
+                            className={`${styles.soundOptionWrap} ${isSelected ? styles.soundOptionActive : ''} ${
+                              isMaxReached ? styles.soundOptionDisabled : ''
+                            }`}
+                            style={isSelected ? ({ '--sound-color': `var(${sound.colorToken})` } as React.CSSProperties) : {}}
+                          >
+                            <button
+                              type="button"
+                              className={`${styles.soundOptionPreview} ${isPreviewing ? styles.soundOptionPreviewing : ''}`}
+                              onClick={() => togglePreviewSound(sound.id, sound.path)}
+                              aria-label={isPreviewing ? "Stop preview" : "Preview sound"}
+                            >
+                              <FontAwesomeIcon icon={faVolumeHigh} />
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.soundOptionSelect}
+                              onClick={() => handleToggleSound(sound.id)}
+                            >
+                              <span className={styles.soundName}>{sound.name.toUpperCase()}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </main>
 
             {/* Right Column: Character Tabs */}

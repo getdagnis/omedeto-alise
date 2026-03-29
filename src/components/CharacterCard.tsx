@@ -48,6 +48,7 @@ type CharacterCardProps = {
   showActions?: boolean;
   children?: React.ReactNode;
   forceLoop?: boolean;
+  size?: 'normal' | 'large';
 };
 
 const getDropTargetPulseClass = (soundIds: string[], soundCatalogById: Map<string, SoundOption>) => {
@@ -102,6 +103,7 @@ function CharacterCard({
   showActions = true,
   children,
   forceLoop = false,
+  size = 'normal',
 }: CharacterCardProps) {
   const [isFlashing, setIsFlashing] = useState(false);
   const displayName = customization.name?.trim() || character.name;
@@ -165,7 +167,9 @@ function CharacterCard({
       <div
         className={`${styles.dropTarget} ${pulseClass} ${isDropActive ? styles.dropTargetActive : ''} ${
           isGlowBurst && isFavorite ? styles.dropTargetGlow : ''
-        } ${isLooping ? styles.dropTargetHasLoop : ''} ${forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''}`}
+        } ${isLooping ? styles.dropTargetHasLoop : ''} ${forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''} ${
+          size === 'large' ? styles.dropTargetLarge : styles.dropTargetNormal
+        }`}
         data-character-id={character.id}
         onClick={handleCharacterClick}
         onDragOver={onDragOver}

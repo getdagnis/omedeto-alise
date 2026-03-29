@@ -2,6 +2,7 @@
   position: fixed
   inset: 0
   background: rgba(8, 6, 26, 0.72)
+  backdrop-filter: blur(6px)
   z-index: 60
 
 .modal
@@ -95,6 +96,7 @@
     margin: 0
     padding: 1rem 1.5rem 1.5rem
     background: linear-gradient(to top, rgba(8, 6, 26, 0.95) 80%, transparent)
+    backdrop-filter: blur(8px)
     justify-content: center
     z-index: 70
     border-top: 1px solid rgba(255, 255, 255, 0.1)
@@ -253,3 +255,207 @@
 @media (min-width: 40rem)
   .modalCard
     padding: 1.2rem 1.3rem
+
+.tabButtons
+  display: flex
+  gap: 0.5rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1)
+  margin-bottom: 1rem
+
+.tabButton
+  flex: 1
+  padding: 0.5rem
+  background: transparent
+  border: none
+  border-bottom: 2px solid transparent
+  color: var(--color-text-muted)
+  font-family: var(--font-title)
+  font-size: 0.75rem
+  letter-spacing: 0.1em
+  text-transform: uppercase
+  cursor: pointer
+  transition: all 0.2s ease
+
+.tabButton:hover
+  color: var(--color-text-strong)
+  background: rgba(255, 255, 255, 0.05)
+
+.tabButtonActive
+  color: var(--color-text-strong)
+  border-bottom-color: rgba(255, 255, 255, 0.6)
+
+.tabContent
+  display: grid
+  gap: 1.25rem
+  align-content: start
+
+.fieldHeader
+  display: flex
+  align-items: center
+  justify-content: space-between
+  margin-bottom: 0.5rem
+
+.randomizeButton
+  background: transparent
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  border-radius: 999px
+  color: var(--color-text-muted)
+  font-size: 0.65rem
+  font-weight: 700
+  letter-spacing: 0.05em
+  padding: 0.25rem 0.75rem
+  cursor: pointer
+  transition: all 0.2s ease
+
+.randomizeButton:hover
+  color: var(--color-text-strong)
+  background: rgba(255, 255, 255, 0.05)
+  border-color: rgba(255, 255, 255, 0.3)
+
+.filterBar
+  display: flex
+  gap: 0.4rem
+  flex-wrap: wrap
+  margin-bottom: 0.5rem
+
+.filterButton
+  background: rgba(255, 255, 255, 0.05)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  border-radius: 999px
+  color: var(--color-text-muted)
+  font-size: 0.6rem
+  font-weight: 700
+  padding: 0.2rem 0.6rem
+  cursor: pointer
+  transition: all 0.2s ease
+
+.filterButton:hover
+  background: rgba(255, 255, 255, 0.1)
+  border-color: rgba(255, 255, 255, 0.2)
+
+.filterButtonActive
+  background: rgba(255, 255, 255, 0.2)
+  border-color: rgba(255, 255, 255, 0.4)
+  color: #fff
+
+.emptySoundsGrid
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  padding: 3rem 1rem
+  background: rgba(255, 255, 255, 0.03)
+  border: 1px dashed rgba(255, 255, 255, 0.1)
+  border-radius: var(--radius-sm)
+  gap: 1.5rem
+  text-align: center
+
+.emptySoundsText
+  margin: 0
+  color: var(--color-text-muted)
+  font-size: 0.85rem
+
+.emptySoundsActions
+  display: flex
+  justify-content: center
+
+.emptyPickerButton
+  height: 2.4rem
+  padding: 0 1.5rem
+  border-radius: 999px
+  background: rgba(255, 255, 255, 0.08)
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  color: #fff
+  font-family: var(--font-title)
+  font-size: 0.75rem
+  letter-spacing: 0.05em
+  cursor: pointer
+  transition: all 0.2s ease
+
+.emptyPickerButton:hover
+  background: rgba(255, 255, 255, 0.15)
+  border-color: rgba(255, 255, 255, 0.3)
+  transform: translateY(-1px)
+
+.soundGrid
+  display: grid
+  grid-template-columns: repeat(2, 1fr)
+  gap: 0.4rem
+  max-height: 40vh
+  overflow-y: auto
+  padding-right: 0.5rem
+
+@media (min-width: 40rem)
+  .soundGrid
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr))
+
+.soundOptionWrap
+  display: flex
+  height: 2.2rem
+  background: rgba(255, 255, 255, 0.06)
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  border-radius: var(--radius-sm)
+  overflow: hidden
+  transition: all 0.2s ease
+
+.soundOptionActive
+  border-color: var(--sound-color)
+  box-shadow: 0 0 0.8rem var(--sound-color)
+  background: var(--sound-color)
+
+.soundOptionDisabled
+  opacity: 0.3
+  cursor: not-allowed
+  filter: grayscale(0.8)
+
+.soundOptionPreview
+  width: 2.2rem
+  height: 100%
+  display: grid
+  place-items: center
+  background: rgba(0, 0, 0, 0.15)
+  border: none
+  border-right: 1px solid rgba(255, 255, 255, 0.1)
+  color: rgba(255, 255, 255, 0.7)
+  cursor: pointer
+  transition: all 0.2s ease
+  font-size: 0.8rem
+
+.soundOptionPreview:hover
+  color: #fff
+  background: rgba(0, 0, 0, 0.25)
+
+.soundOptionPreviewing
+  color: #fff
+  background: rgba(255, 255, 255, 0.2)
+  animation: previewIconFlash 0.8s infinite alternate
+
+.soundOptionSelect
+  flex: 1
+  height: 100%
+  display: flex
+  align-items: center
+  padding: 0 0.5rem
+  background: transparent
+  border: none
+  color: #fff
+  font-family: var(--font-body)
+  font-size: 0.65rem
+  font-weight: 600
+  text-align: left
+  cursor: pointer
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+.soundOptionActive .soundOptionSelect
+  color: #fff
+
+.soundOptionActive .soundOptionPreview
+  border-right-color: rgba(255, 255, 255, 0.2)
+
+@keyframes previewIconFlash
+  from
+    opacity: 0.5
+  to
+    opacity: 1

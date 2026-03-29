@@ -39,8 +39,6 @@
 
 .dropTarget
   --circle-size: 76.9%
-  width: min(12rem, 40vw)
-  height: min(12rem, 40vw)
   aspect-ratio: 1 / 1
   position: relative
   overflow: visible
@@ -60,6 +58,14 @@
   cursor: pointer
   margin-bottom: 0
   z-index: 1
+
+.dropTargetNormal
+  width: min(12rem, 40vw)
+  height: min(12rem, 40vw)
+
+.dropTargetLarge
+  width: min(15rem, 60vw)
+  height: min(15rem, 60vw)
 
 .dropTargetHasLoop
   animation: dropTargetLoop 6s ease-in-out infinite
@@ -311,14 +317,8 @@
   animation: characterPlaceholderPulse 2.6s ease-in-out infinite
 
 @media (min-width: 40rem)
-  .dropTarget
-    width: clamp(8.84rem, 20.8vw, 10.66rem)
-    height: clamp(8.84rem, 20.8vw, 10.66rem)
-
-@media (min-width: 56rem)
-  .dropTarget
-    width: clamp(9.62rem, 13.52vw, 12.48rem)
-    height: clamp(9.62rem, 13.52vw, 12.48rem)
+  .modalCard
+    // placeholder or other styles if any
 
   .comboWord
     top: 0.55rem

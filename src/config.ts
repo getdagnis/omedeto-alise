@@ -1,11 +1,22 @@
 export type SoundAnimation = 'slow' | 'fast' | 'both';
 
+export type SoundCategory =
+  | 'voice'
+  | 'beats'
+  | 'drums'
+  | 'animals'
+  | 'melody'
+  | 'creepy'
+  | 'calm'
+  | 'other';
+
 export type SoundOption = {
   id: string;
   name: string;
   path: string;
   colorToken: string;
   animation: SoundAnimation;
+  category: SoundCategory;
 };
 
 type BaseSoundOption = Omit<SoundOption, 'colorToken'>;
@@ -67,91 +78,98 @@ const mapSoundColors = (baseSounds: BaseSoundOption[]): SoundOption[] =>
 
 // most common used sounds first. do not reorder alphabetically.
 const GUMI_BASE_SOUNDS: BaseSoundOption[] = [
-  { id: 'ok', name: 'Ok', path: '/gumi/ok.mp3', animation: 'slow' },
-  { id: 'yokune', name: 'Yokune', path: '/gumi/Yokune.mp3', animation: 'slow' },
-  { id: 'energy', name: 'Energy', path: '/gumi/energy.wav', animation: 'fast' },
-  { id: 'fly-me', name: 'Fly Me', path: '/gumi/fly-me.wav', animation: 'slow' },
-  { id: 'grow', name: 'Grow', path: '/gumi/grow.mp3', animation: 'slow' },
+  { id: 'ok', name: 'Ok', path: '/gumi/ok.mp3', animation: 'slow', category: 'voice' },
+  { id: 'yokune', name: 'Yokune', path: '/gumi/Yokune.mp3', animation: 'slow', category: 'voice' },
+  { id: 'energy', name: 'Energy', path: '/gumi/energy.wav', animation: 'fast', category: 'melody' },
+  { id: 'fly-me', name: 'Fly Me', path: '/gumi/fly-me.wav', animation: 'slow', category: 'melody' },
+  { id: 'grow', name: 'Grow', path: '/gumi/grow.mp3', animation: 'slow', category: 'melody' },
   {
     id: 'synth-rise',
     name: 'Synth Rise',
     path: '/gumi/synth%20rise.wav',
     animation: 'fast',
+    category: 'melody',
   },
-  { id: 'kick-1', name: 'Kick It!', path: '/gumi/kick1.wav', animation: 'fast' },
-  { id: 'machines', name: 'Machines', path: '/gumi/machines.wav', animation: 'slow' },
-  { id: 'oh-boy', name: 'Oh Boy', path: '/gumi/oh-boy.mp3', animation: 'slow' },
-  { id: 'peace-1', name: 'Peace Out', path: '/gumi/peace1.wav', animation: 'slow' },
-  { id: 'sad', name: 'Sad', path: '/gumi/sad.mp3', animation: 'slow' },
-  { id: 'noise-1', name: 'Noise', path: '/gumi/noise1.wav', animation: 'slow' },
-  { id: 'alien', name: 'Alien', path: '/gumi/alien.wav', animation: 'slow' },
+  { id: 'kick-1', name: 'Kick It!', path: '/gumi/kick1.wav', animation: 'fast', category: 'drums' },
+  { id: 'machines', name: 'Machines', path: '/gumi/machines.wav', animation: 'slow', category: 'other' },
+  { id: 'oh-boy', name: 'Oh Boy', path: '/gumi/oh-boy.mp3', animation: 'slow', category: 'voice' },
+  { id: 'peace-1', name: 'Peace Out', path: '/gumi/peace1.wav', animation: 'slow', category: 'voice' },
+  { id: 'sad', name: 'Sad', path: '/gumi/sad.mp3', animation: 'slow', category: 'melody' },
+  { id: 'noise-1', name: 'Noise', path: '/gumi/noise1.wav', animation: 'slow', category: 'other' },
+  { id: 'alien', name: 'Alien', path: '/gumi/alien.wav', animation: 'slow', category: 'voice' },
   {
     id: 'synth-forest',
     name: 'Synth Forest',
     path: '/gumi/synth%20forest.wav',
     animation: 'fast',
+    category: 'calm',
   },
   {
     id: 'synth-garden',
     name: 'Synth Garden',
     path: '/gumi/synth%20garden.wav',
     animation: 'fast',
+    category: 'calm',
   },
-  { id: 'tomorrow', name: 'Tomorrow', path: '/gumi/tomorrow.wav', animation: 'slow' },
-  { id: 'anthenna', name: 'Anthenna', path: '/gumi/anthenna.wav', animation: 'fast' },
-  { id: 'busy', name: 'Busy', path: '/gumi/busy.wav', animation: 'slow' },
+  { id: 'tomorrow', name: 'Tomorrow', path: '/gumi/tomorrow.wav', animation: 'slow', category: 'melody' },
+  { id: 'anthenna', name: 'Anthenna', path: '/gumi/anthenna.wav', animation: 'fast', category: 'melody' },
+  { id: 'busy', name: 'Busy', path: '/gumi/busy.wav', animation: 'slow', category: 'other' },
   {
     id: 'candy-machine',
     name: 'Synth Candy',
     path: '/gumi/candy-machine.mp3',
     animation: 'slow',
+    category: 'melody',
   },
-  { id: 'cartoon', name: 'Cartoon', path: '/gumi/cartoon.wav', animation: 'slow' },
-  { id: 'drama', name: 'Drama', path: '/gumi/drama.wav', animation: 'slow' },
+  { id: 'cartoon', name: 'Cartoon', path: '/gumi/cartoon.wav', animation: 'slow', category: 'other' },
+  { id: 'drama', name: 'Drama', path: '/gumi/drama.wav', animation: 'slow', category: 'other' },
   {
     id: 'synth-grow',
     name: 'Synth Grow',
     path: '/gumi/synth%20grow.wav',
     animation: 'fast',
+    category: 'melody',
   },
   {
     id: 'synth-night',
     name: 'Synth Night',
     path: '/gumi/synth%20night.mp3',
     animation: 'fast',
+    category: 'calm',
   },
   {
     id: 'synth-space',
     name: 'Synth Space',
     path: '/gumi/synth%20space.wav',
     animation: 'fast',
+    category: 'melody',
   },
-  { id: 'alert', name: 'Alert', path: '/gumi/alert.wav', animation: 'slow' },
+  { id: 'alert', name: 'Alert', path: '/gumi/alert.wav', animation: 'slow', category: 'other' },
 ];
 
 const HANAKO_BASE_SOUNDS: BaseSoundOption[] = [
-  { id: 'horror', name: 'Horror', path: '/hanako/horror.mp3', animation: 'fast' },
-  { id: 'polyphon', name: 'Polyphon', path: '/hanako/polyphon.mp3', animation: 'slow' },
-  { id: 'trombone', name: 'Trombone', path: '/hanako/trombone.mp3', animation: 'slow' },
-  { id: 'violins', name: 'Violins', path: '/hanako/violins.mp3', animation: 'slow' },
-  { id: 'laugh', name: 'Laugh', path: '/hanako/laugh.mp3', animation: 'slow' },
-  { id: 'laugh-2', name: 'Laugh 2', path: '/hanako/laugh2.mp3', animation: 'slow' },
-  { id: 'laugh-3', name: 'Laugh 3', path: '/hanako/laugh3.mp3', animation: 'slow' },
-  { id: 'beat-2', name: 'Beat 2', path: '/hanako/beat2.mp3', animation: 'fast' },
-  { id: 'beat-3', name: 'Beat 3', path: '/hanako/beat3.mp3', animation: 'fast' },
-  { id: 'cry', name: 'Cry', path: '/hanako/cry.mp3', animation: 'slow' },
-  { id: 'drums-1', name: 'Drums 1', path: '/hanako/drums1.mp3', animation: 'fast' },
-  { id: 'cow', name: 'Cow', path: '/hanako/cow.mp3', animation: 'slow' },
-  { id: 'drums-2', name: 'Drums 2', path: '/hanako/drums2.mp3', animation: 'fast' },
-  { id: 'giggle', name: 'Giggle', path: '/hanako/giggle.mp3', animation: 'slow' },
-  { id: 'goat', name: 'Goat', path: '/hanako/goat.mp3', animation: 'slow' },
-  { id: 'guitar', name: 'Guitar', path: '/hanako/guitar.mp3', animation: 'slow' },
-  { id: 'monks', name: 'Monks', path: '/hanako/monks.mp3', animation: 'slow' },
-  { id: 'beat-4', name: 'Beat 4', path: '/hanako/beat4.mp3', animation: 'fast' },
-  { id: 'beat-1', name: 'Beat 1', path: '/hanako/beat1.mp3', animation: 'fast' },
-  { id: 'choir', name: 'Choir', path: '/hanako/choir.mp3', animation: 'slow' },
-  { id: 'christmas', name: 'Christmas', path: '/hanako/christmas.mp3', animation: 'slow' },
-  { id: 'applause', name: 'Applause', path: '/hanako/applause.mp3', animation: 'slow' },
+  { id: 'horror', name: 'Horror', path: '/hanako/horror.mp3', animation: 'fast', category: 'creepy' },
+  { id: 'polyphon', name: 'Polyphon', path: '/hanako/polyphon.mp3', animation: 'slow', category: 'melody' },
+  { id: 'trombone', name: 'Trombone', path: '/hanako/trombone.mp3', animation: 'slow', category: 'melody' },
+  { id: 'violins', name: 'Violins', path: '/hanako/violins.mp3', animation: 'slow', category: 'melody' },
+  { id: 'laugh', name: 'Laugh', path: '/hanako/laugh.mp3', animation: 'slow', category: 'voice' },
+  { id: 'laugh-2', name: 'Laugh 2', path: '/hanako/laugh2.mp3', animation: 'slow', category: 'voice' },
+  { id: 'laugh-3', name: 'Laugh 3', path: '/hanako/laugh3.mp3', animation: 'slow', category: 'voice' },
+  { id: 'beat-2', name: 'Beat 2', path: '/hanako/beat2.mp3', animation: 'fast', category: 'beats' },
+  { id: 'beat-3', name: 'Beat 3', path: '/hanako/beat3.mp3', animation: 'fast', category: 'beats' },
+  { id: 'cry', name: 'Cry', path: '/hanako/cry.mp3', animation: 'slow', category: 'voice' },
+  { id: 'drums-1', name: 'Drums 1', path: '/hanako/drums1.mp3', animation: 'fast', category: 'drums' },
+  { id: 'cow', name: 'Cow', path: '/hanako/cow.mp3', animation: 'slow', category: 'animals' },
+  { id: 'drums-2', name: 'Drums 2', path: '/hanako/drums2.mp3', animation: 'fast', category: 'drums' },
+  { id: 'giggle', name: 'Giggle', path: '/hanako/giggle.mp3', animation: 'slow', category: 'voice' },
+  { id: 'goat', name: 'Goat', path: '/hanako/goat.mp3', animation: 'slow', category: 'animals' },
+  { id: 'guitar', name: 'Guitar', path: '/hanako/guitar.mp3', animation: 'slow', category: 'melody' },
+  { id: 'monks', name: 'Monks', path: '/hanako/monks.mp3', animation: 'slow', category: 'voice' },
+  { id: 'beat-4', name: 'Beat 4', path: '/hanako/beat4.mp3', animation: 'fast', category: 'beats' },
+  { id: 'beat-1', name: 'Beat 1', path: '/hanako/beat1.mp3', animation: 'fast', category: 'beats' },
+  { id: 'choir', name: 'Choir', path: '/hanako/choir.mp3', animation: 'slow', category: 'voice' },
+  { id: 'christmas', name: 'Christmas', path: '/hanako/christmas.mp3', animation: 'slow', category: 'melody' },
+  { id: 'applause', name: 'Applause', path: '/hanako/applause.mp3', animation: 'slow', category: 'other' },
 ];
 
 export const ALL_SOUNDS = mapSoundColors([...GUMI_BASE_SOUNDS, ...HANAKO_BASE_SOUNDS]);

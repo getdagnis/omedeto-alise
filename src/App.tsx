@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVolumeHigh, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faVolumeHigh, faXmark, faPen } from '@fortawesome/free-solid-svg-icons';
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
@@ -110,6 +110,7 @@ type CharacterCustomization = {
   name?: string;
   colorModes?: string[];
   image?: string;
+  soundIds?: string[];
 };
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
@@ -149,6 +150,9 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
       }
       if (typeof typed.image === 'string') {
         next.image = typed.image;
+      }
+      if (Array.isArray(typed.soundIds)) {
+        next.soundIds = typed.soundIds.filter((s) => typeof s === 'string').slice(0, 12);
       }
 
       sanitized[key] = next;
@@ -208,6 +212,7 @@ function App() {
   );
   const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
   const [pickingSoundsCharacterId, setPickingSoundsCharacterId] = useState<string | null>(null);
+  const [initialEditTab, setInitialEditTab] = useState<'colors' | 'sounds'>('colors');
 
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
@@ -221,9 +226,10 @@ function App() {
   const [glitchOverlayVars, setGlitchOverlayVars] = useState<CSSProperties>(() => createGlitchOverlayVars());
 
   const savedScrollPositionRef = useRef<number>(0);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
 
   const soundCatalogById = useMemo(() => new Map(ALL_SOUNDS.map((sound) => [sound.id, sound] as const)), []);
-
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const activeSoundOrderRef = useRef<Array<{ characterId: string; soundId: string }>>([]);
   const totalActiveSoundsRef = useRef(0);
@@ -265,6 +271,44 @@ function App() {
   }, []);
 
   const buildAudioKey = useCallback((characterId: string, soundId: string) => `${characterId}:${soundId}`, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+        previewAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!pickingSoundsCharacterId && previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+      setTimeout(() => {
+        setPreviewingSoundId(null);
+      }, 0);
+    }
+  }, [pickingSoundsCharacterId]);
+
+  const togglePreviewSound = useCallback((soundId: string, path: string) => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+
+    if (previewingSoundId === soundId) {
+      setPreviewingSoundId(null);
+      return;
+    }
+
+    const audio = new Audio(path);
+    audio.loop = false;
+    audio.onended = () => setPreviewingSoundId(null);
+    void audio.play().catch(() => undefined);
+    previewAudioRef.current = audio;
+    setPreviewingSoundId(soundId);
+  }, [previewingSoundId]);
 
   const toggleMuteCharacter = useCallback((characterId: string) => {
     setMutedCharacterIds((previous) => {
@@ -462,12 +506,18 @@ function App() {
   useEffect(() => {
     try {
       window.localStorage.setItem(GLITCH_PREF_KEY, renderMode);
-    } catch {}
+    } catch {
+      // Ignore storage errors
+    }
   }, [renderMode]);
 
   useEffect(() => {
     const total = Object.values(activeSoundsByCharacter).reduce((sum, ids) => sum + ids.length, 0);
-    if (total >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) triggerGlowBurst();
+    if (total >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) {
+      setTimeout(() => {
+        triggerGlowBurst();
+      }, 0);
+    }
     totalActiveSoundsRef.current = total;
   }, [activeSoundsByCharacter, triggerGlowBurst]);
 
@@ -476,7 +526,9 @@ function App() {
     const matchedCombo = COMBO_WORDS.find((combo) => combo.soundIds.every((soundId) => activeSet.has(soundId)));
     if (!matchedCombo || activeComboIdRef.current === matchedCombo.id) return;
     activeComboIdRef.current = matchedCombo.id;
-    setComboWord(matchedCombo.word);
+    setTimeout(() => {
+      setComboWord(matchedCombo.word);
+    }, 0);
     window.setTimeout(() => setComboWord(null), 2200);
   }, [activeSoundsByCharacter]);
 
@@ -503,6 +555,17 @@ function App() {
     },
     [persistCharacterCustomStorageDebounced],
   );
+
+  const handleRandomizeSounds = useCallback((characterId: string) => {
+    const character = CHARACTERS.find((c) => c.id === characterId);
+    if (!character) return;
+
+    const availableSounds = character.sounds;
+    const shuffled = [...availableSounds].sort(() => 0.5 - Math.random());
+    const selectedIds = shuffled.slice(0, 12).map((s) => s.id);
+
+    updateCharacterCustomization(characterId, { soundIds: selectedIds });
+  }, [updateCharacterCustomization]);
 
   const activeBackgroundImage = useMemo(() => {
     const activeBackgroundKey = BACKGROUND_IMAGE_KEYS[backgroundIndex] ?? BACKGROUND_IMAGE_KEYS[0];
@@ -564,7 +627,10 @@ function App() {
               if (soundId) setSingleSound(characterId, soundId);
             }}
             onImageLoad={handleCharacterImageLoad}
-            onEditCharacter={(characterId) => navigate(`/${characterId}/edit`)}
+            onEditCharacter={(characterId) => {
+              setInitialEditTab('colors');
+              navigate(`/${characterId}/edit`);
+            }}
             onResetCharacter={resetCharacter}
             onOpenSoundPicker={(characterId) => setPickingSoundsCharacterId(characterId)}
           />
@@ -579,6 +645,7 @@ function App() {
           soundCatalogById={soundCatalogById}
           colorOptions={CHARACTER_COLOR_OPTIONS}
           imageOptions={CHARACTER_IMAGE_OPTIONS}
+          initialTab={initialEditTab}
           onClose={() => navigate('/')}
           onSelectCharacter={(id) => navigate(`/${id}/edit`)}
           onUpdateCustomization={(id, patch) => updateCharacterCustomization(id, patch)}
@@ -590,7 +657,22 @@ function App() {
             <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add sound">
               <div className={styles.pickerCard}>
                 <header className={styles.pickerHeader}>
-                  <h3 className={styles.pickerTitle}>SELECT LOOP</h3>
+                  <div className={styles.pickerHeaderLeft}>
+                    <h3 className={styles.pickerTitle}>SELECT LOOP</h3>
+                    <button
+                      type="button"
+                      className={styles.editSoundsButton}
+                      onClick={() => {
+                        setInitialEditTab('sounds');
+                        const charId = pickingSoundsCharacterId;
+                        setPickingSoundsCharacterId(null);
+                        navigate(`/${charId}/edit`);
+                      }}
+                      aria-label="Edit sounds"
+                    >
+                      <FontAwesomeIcon icon={faPen} />
+                    </button>
+                  </div>
                   <button
                     type="button"
                     className={styles.closeButton}
@@ -599,23 +681,79 @@ function App() {
                     <FontAwesomeIcon icon={faXmark} />
                   </button>
                 </header>
-                <div className={styles.pickerList}>
-                  {ALL_SOUNDS.slice(0, 12).map((sound) => {
-                    const characterSounds = activeSoundsByCharacter[pickingSoundsCharacterId] ?? [];
-                    const isActive = characterSounds.includes(sound.id);
+                <div className={styles.pickerContent}>
+                  {(() => {
+                    const characterId = pickingSoundsCharacterId;
+                    if (!characterId) return null;
+
+                    const customSoundIds = characterCustomizations[characterId]?.soundIds;
+                    
+                    if (!customSoundIds || customSoundIds.length === 0) {
+                      return (
+                        <div className={styles.emptyPickerState}>
+                          <p className={styles.emptyPickerText}>No sounds assigned to this character yet.</p>
+                          <div className={styles.emptyPickerActions}>
+                            <button
+                              type="button"
+                              className={styles.emptyPickerButton}
+                              onClick={() => {
+                                setInitialEditTab('sounds');
+                                setPickingSoundsCharacterId(null);
+                                navigate(`/${characterId}/edit`);
+                              }}
+                            >
+                              SELECT SOUNDS
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.emptyPickerButton}
+                              onClick={() => handleRandomizeSounds(characterId)}
+                            >
+                              RANDOM SOUNDS
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const availableSounds = customSoundIds
+                      .map(id => soundCatalogById.get(id))
+                      .filter((s): s is NonNullable<typeof s> => Boolean(s));
+
                     return (
-                      <button
-                        key={sound.id}
-                        type="button"
-                        className={`${styles.pickerItem} ${isActive ? styles.pickerItemActive : ''}`}
-                        onClick={() => setSingleSound(pickingSoundsCharacterId, sound.id)}
-                        style={{ backgroundColor: `var(${sound.colorToken})` }}
-                      >
-                        <FontAwesomeIcon icon={faVolumeHigh} className={styles.pickerItemIcon} />
-                        <span>{sound.name.toUpperCase()}</span>
-                      </button>
+                      <div className={styles.pickerList}>
+                        {availableSounds.map((sound) => {
+                          const characterSounds = activeSoundsByCharacter[characterId] ?? [];
+                          const isActive = characterSounds.includes(sound.id);
+                          const isPreviewing = previewingSoundId === sound.id;
+
+                          return (
+                            <div
+                              key={sound.id}
+                              className={`${styles.pickerItemWrap} ${isActive ? styles.pickerItemActive : ''}`}
+                              style={{ '--sound-color': `var(${sound.colorToken})` } as CSSProperties}
+                            >
+                              <button
+                                type="button"
+                                className={`${styles.pickerItemPreview} ${isPreviewing ? styles.pickerItemPreviewing : ''}`}
+                                onClick={() => togglePreviewSound(sound.id, sound.path)}
+                                aria-label={isPreviewing ? "Stop preview" : "Preview sound"}
+                              >
+                                <FontAwesomeIcon icon={faVolumeHigh} />
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.pickerItemSelect}
+                                onClick={() => setSingleSound(characterId, sound.id)}
+                              >
+                                <span>{sound.name.toUpperCase()}</span>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
                     );
-                  })}
+                  })()}
                 </div>
               </div>
             </div>
