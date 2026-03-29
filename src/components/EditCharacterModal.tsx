@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import styles from './EditCharacterModal.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
 import CharacterCard from './CharacterCard';
@@ -133,7 +131,9 @@ function EditCharacterModal({
                   const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
                   const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : (character.primaryColor || 'rgba(255, 255, 255, 0.08)');
+                  const autoBackground = lastSoundColorToken
+                    ? `var(${lastSoundColorToken})`
+                    : character.primaryColor || 'rgba(255, 255, 255, 0.08)';
 
                   const colors = effectiveColorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
 
@@ -243,7 +243,9 @@ function EditCharacterModal({
                   const cSounds = activeSoundsByCharacter[c.id] ?? [];
                   const lastSoundId = cSounds[cSounds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
+                  const autoBackground = lastSoundColorToken
+                    ? `var(${lastSoundColorToken})`
+                    : 'rgba(255, 255, 255, 0.08)';
 
                   const cColors =
                     cCustom.colorModes && cCustom.colorModes.length > 0

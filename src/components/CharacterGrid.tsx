@@ -30,7 +30,6 @@ type CharacterGridProps = {
   onOpenSoundPicker: (characterId: string) => void;
 };
 
-const ACTIVE_RING_COLOR = 'rgba(255, 255, 255, 0.95)';
 const INACTIVE_RING_COLOR = 'rgba(38, 30, 60, 0.85)';
 
 function CharacterGrid({
@@ -64,7 +63,9 @@ function CharacterGrid({
           const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
           const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
           // Only use character default if NO sound is playing. Otherwise use sound color.
-          const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : (character.primaryColor || 'rgba(255, 255, 255, 0.08)');
+          const autoBackground = lastSoundColorToken
+            ? `var(${lastSoundColorToken})`
+            : character.primaryColor || 'rgba(255, 255, 255, 0.08)';
 
           const colors = (() => {
             if (customization.colorModes && customization.colorModes.length > 0) {
