@@ -635,31 +635,35 @@ function App() {
     [persistCharacterCustomStorageDebounced, recordCharacterCustomized],
   );
 
-  const handleRemoveSound = useCallback((characterId: string, soundId: string) => {
-    const current = characterCustomizations[characterId]?.soundIds ?? [];
-    const next = current.filter(id => id !== soundId);
+  const handleRemoveSound = useCallback(
+    (characterId: string, soundId: string) => {
+      const current = characterCustomizations[characterId]?.soundIds ?? [];
+      const next = current.filter((id) => id !== soundId);
 
-    // Stop audio if it was playing as a loop
-    const audioKey = buildAudioKey(characterId, soundId);
-    const audio = audioRefs.current[audioKey];
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-      delete audioRefs.current[audioKey];
-    }
-    activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
-      (e) => !(e.characterId === characterId && e.soundId === soundId)
-    );
+      // Stop audio if it was playing as a loop
+      const audioKey = buildAudioKey(characterId, soundId);
+      const audio = audioRefs.current[audioKey];
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        delete audioRefs.current[audioKey];
+      }
+      activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
+        (e) => !(e.characterId === characterId && e.soundId === soundId),
+      );
 
-    updateCharacterCustomization(characterId, { soundIds: next });
+      updateCharacterCustomization(characterId, { soundIds: next });
 
-    setActiveSoundsByCharacter((prev) => ({
-      ...prev,
-      [characterId]: prev[characterId]?.filter(id => id !== soundId) ?? []
-    }));
-  }, [characterCustomizations, buildAudioKey, updateCharacterCustomization]);
+      setActiveSoundsByCharacter((prev) => ({
+        ...prev,
+        [characterId]: prev[characterId]?.filter((id) => id !== soundId) ?? [],
+      }));
+    },
+    [characterCustomizations, buildAudioKey, updateCharacterCustomization],
+  );
 
-  const handleRandomizeSounds = useCallback((characterId: string) => {
+  const handleRandomizeSounds = useCallback(
+    (characterId: string) => {
       const character = CHARACTERS.find((c) => c.id === characterId);
       if (!character) return;
 
@@ -797,7 +801,7 @@ function App() {
                     if (!customSoundIds || customSoundIds.length === 0) {
                       return (
                         <div className={styles.emptyPickerState}>
-                          <p className={styles.emptyPickerText}>No sounds assigned to this character yet.</p>
+                          <p className={styles.emptyPickerText}>Add some sounds to this char!</p>
                           <div className={styles.emptyPickerActions}>
                             <button
                               type="button"
