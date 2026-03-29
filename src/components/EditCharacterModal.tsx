@@ -117,9 +117,6 @@ function EditCharacterModal({
         <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
           <header className={styles.modalHeader}>
             <h2 className={styles.modalTitle}>CHARACTER SETTINGS</h2>
-            <button type="button" className={styles.closeButton} onClick={handleCancel} aria-label="Close edit panel">
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
           </header>
 
           <div className={styles.layoutColumns}>
@@ -136,7 +133,7 @@ function EditCharacterModal({
                   const characterSoundIds = activeSoundsByCharacter[character.id] ?? [];
                   const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
                   const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
+                  const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : (character.primaryColor || 'rgba(255, 255, 255, 0.08)');
 
                   const colors = effectiveColorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
 
@@ -146,12 +143,12 @@ function EditCharacterModal({
                       customization={draftCustomization}
                       soundIds={characterSoundIds}
                       soundCatalogById={soundCatalogById}
-                      isActive={true}
+                      isFavorite={false}
                       isDropActive={false}
                       isGlowBurst={false}
                       comboWord={null}
                       colors={colors}
-                      ringColor="rgba(255, 255, 255, 0.95)"
+                      ringColor="rgba(38, 30, 60, 0.85)"
                       isImageLoaded={true}
                       hideSounds={true}
                       forceLoop={true}
@@ -260,7 +257,7 @@ function EditCharacterModal({
                       customization={cCustom}
                       soundIds={cSounds}
                       soundCatalogById={soundCatalogById}
-                      isActive={c.id === editingCharacterId}
+                      isFavorite={c.id === editingCharacterId}
                       isDropActive={false}
                       isGlowBurst={false}
                       comboWord={null}

@@ -1,12 +1,19 @@
 import type { CSSProperties, DragEvent } from 'react';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart as faHeartSolid, faMusic, faPen, faRotateLeft, faVolumeXmark } from '@fortawesome/free-solid-svg-icons';
+import {
+  faHeart as faHeartSolid,
+  faMusic,
+  faPen,
+  faRotateLeft,
+  faVolumeXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
+const FAV_BUTTON = false;
 
 type CharacterCustomization = {
   name?: string;
@@ -19,7 +26,7 @@ type CharacterCardProps = {
   customization: CharacterCustomization;
   soundIds: string[];
   soundCatalogById: Map<string, SoundOption>;
-  isActive: boolean;
+  isFavorite: boolean;
   isDropActive: boolean;
   isGlowBurst: boolean;
   comboWord: string | null;
@@ -73,7 +80,7 @@ function CharacterCard({
   customization,
   soundIds,
   soundCatalogById,
-  isActive,
+  isFavorite,
   isDropActive,
   isGlowBurst,
   comboWord,
@@ -109,9 +116,9 @@ function CharacterCard({
 
   // Greyed out UNLESS:
   // a) sounds are playing and not muted
-  // b) is favorited (passed as isActive here from CharacterGrid)
+  // b) is favorited
   // c) forced loop (edit mode preview)
-  const isGreyedOut = !(soundsPlayingAndNotMuted || isActive || forceLoop);
+  const isGreyedOut = !(soundsPlayingAndNotMuted || isFavorite || forceLoop);
 
   const handleCharacterClick = () => {
     if (soundIds.length === 0) {
@@ -126,7 +133,7 @@ function CharacterCard({
     return (
       <button
         type="button"
-        className={`${styles.smallPreview} ${isActive ? styles.smallPreviewActive : ''}`}
+        className={`${styles.smallPreview} ${isFavorite ? styles.smallPreviewActive : ''}`}
         onClick={onSelect}
         style={{ '--preview-color': colors[0] } as CSSProperties}
       >
@@ -154,13 +161,11 @@ function CharacterCard({
       }
     >
       {showName && <p className={styles.characterName}>{displayName.toUpperCase()}'S MIX</p>}
-      
+
       <div
         className={`${styles.dropTarget} ${pulseClass} ${isDropActive ? styles.dropTargetActive : ''} ${
-          isActive ? styles.dropTargetSelected : ''
-        } ${isGlowBurst && isActive ? styles.dropTargetGlow : ''} ${isLooping ? styles.dropTargetHasLoop : ''} ${
-          forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''
-        }`}
+          isGlowBurst && isFavorite ? styles.dropTargetGlow : ''
+        } ${isLooping ? styles.dropTargetHasLoop : ''} ${forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''}`}
         data-character-id={character.id}
         onClick={handleCharacterClick}
         onDragOver={onDragOver}
@@ -172,24 +177,24 @@ function CharacterCard({
             forceLoop ? styles.backgroundLoopFast : ''
           }`}
         />
-        {comboWord && isActive && (
+        {comboWord && isFavorite && (
           <div className={styles.comboWord} role="status" aria-live="polite">
             {comboWord}
           </div>
         )}
-        
+
         {/* Favorite Heart Button */}
-        {showActions && (
-          <button 
-            type="button" 
-            className={`${styles.favoriteButton} ${isActive ? styles.favoriteButtonActive : ''}`}
+        {showActions && FAV_BUTTON && (
+          <button
+            type="button"
+            className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteButtonActive : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               if (onToggleFavorite) onToggleFavorite();
             }}
-            aria-label={isActive ? "Remove from favorites" : "Add to favorites"}
+            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <FontAwesomeIcon icon={isActive ? faHeartSolid : faHeartRegular} />
+            <FontAwesomeIcon icon={isFavorite ? faHeartSolid : faHeartRegular} />
           </button>
         )}
 
@@ -213,23 +218,23 @@ function CharacterCard({
             <img className={styles.characterPlaceholder} src={CHARACTER_PLACEHOLDER_PATH} alt="" aria-hidden="true" />
           </>
         )}
-      </div>
 
-      {!hideSounds && (
-        <div className={styles.characterSoundList}>
-          {Array.from({ length: 3 }).map((_, index) => {
-            const soundName = soundNames[index];
-            return (
-              <span
-                key={`${character.id}-slot-${index}`}
-                className={`${styles.characterSoundTag} ${!soundName ? styles.characterSoundTagEmpty : ''}`}
-              >
-                {soundName || ''}
-              </span>
-            );
-          })}
-        </div>
-      )}
+        {!hideSounds && (
+          <div className={styles.characterSoundList}>
+            {Array.from({ length: 3 }).map((_, index) => {
+              const soundName = soundNames[index];
+              return (
+                <span
+                  key={`${character.id}-slot-${index}`}
+                  className={`${styles.characterSoundTag} ${!soundName ? styles.characterSoundTagEmpty : ''}`}
+                >
+                  {soundName || ''}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {showActions && (
         <div className={styles.characterActions}>

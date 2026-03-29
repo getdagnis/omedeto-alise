@@ -220,6 +220,8 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [glitchOverlayVars, setGlitchOverlayVars] = useState<CSSProperties>(() => createGlitchOverlayVars());
 
+  const savedScrollPositionRef = useRef<number>(0);
+
   const soundCatalogById = useMemo(() => new Map(ALL_SOUNDS.map((sound) => [sound.id, sound] as const)), []);
 
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
@@ -228,6 +230,20 @@ function App() {
   const glowBurstTimeoutRef = useRef<number | null>(null);
   const activeComboIdRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    if (editingCharacterId) {
+      // Modal is opening
+      savedScrollPositionRef.current = window.scrollY;
+      window.scrollTo(0, 0);
+    } else {
+      // Modal is closing (or was never open)
+      // Only restore if we have a saved position (avoids jumping on initial load)
+      if (savedScrollPositionRef.current !== 0) {
+        window.scrollTo(0, savedScrollPositionRef.current);
+        savedScrollPositionRef.current = 0;
+      }
+    }
+  }, [editingCharacterId]);
   const stopAllAudio = useCallback(() => {
     Object.values(audioRefs.current).forEach((audio) => {
       audio.pause();
@@ -263,7 +279,12 @@ function App() {
 
       Object.entries(audioRefs.current).forEach(([key, audio]) => {
         if (key.startsWith(`${characterId}:`)) {
-          audio.volume = isMuting ? 0 : 1;
+          audio.muted = isMuting;
+          if (isMuting) {
+            audio.pause();
+          } else {
+            void audio.play().catch(() => undefined);
+          }
         }
       });
 
@@ -278,7 +299,8 @@ function App() {
         next.delete(characterId);
         Object.entries(audioRefs.current).forEach(([key, audio]) => {
           if (key.startsWith(`${characterId}:`)) {
-            audio.volume = 1;
+            audio.muted = false;
+            void audio.play().catch(() => undefined);
           }
         });
         return next;

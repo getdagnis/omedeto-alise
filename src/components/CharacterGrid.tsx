@@ -63,7 +63,8 @@ function CharacterGrid({
 
           const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
           const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-          const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : 'rgba(255, 255, 255, 0.08)';
+          // Only use character default if NO sound is playing. Otherwise use sound color.
+          const autoBackground = lastSoundColorToken ? `var(${lastSoundColorToken})` : (character.primaryColor || 'rgba(255, 255, 255, 0.08)');
 
           const colors = (() => {
             if (customization.colorModes && customization.colorModes.length > 0) {
@@ -75,7 +76,7 @@ function CharacterGrid({
             return [defaultColor];
           })();
 
-          const ringColor = isFavorite ? ACTIVE_RING_COLOR : INACTIVE_RING_COLOR;
+          const ringColor = INACTIVE_RING_COLOR;
 
           return (
             <CharacterCard
@@ -84,7 +85,7 @@ function CharacterGrid({
               customization={customization}
               soundIds={characterSoundIds}
               soundCatalogById={soundCatalogById}
-              isActive={isFavorite}
+              isFavorite={isFavorite}
               isDropActive={false}
               isGlowBurst={isGlowBurst}
               comboWord={comboWord}
