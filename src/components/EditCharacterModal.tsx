@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVolumeHigh, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faVolumeHigh, faTrash } from '@fortawesome/free-solid-svg-icons';
 import styles from './EditCharacterModal.module.sass';
 import type { CharacterOption, SoundOption, SoundCategory } from '../config';
 import CharacterCard from './CharacterCard';
@@ -48,6 +48,7 @@ type EditCharacterModalProps = {
   colorOptions: readonly CharacterColorOption[];
   imageOptions: readonly CharacterImageOption[];
   initialTab?: 'colors' | 'sounds';
+  unlockedLevel?: number;
   onClose: () => void;
   onSelectCharacter: (id: string) => void;
   onUpdateCustomization: (id: string, patch: CharacterCustomization) => void;
@@ -67,6 +68,7 @@ function EditCharacterModal({
   colorOptions,
   imageOptions,
   initialTab = 'colors',
+  unlockedLevel = 0,
   onClose,
   onSelectCharacter,
   onUpdateCustomization,
@@ -75,8 +77,10 @@ function EditCharacterModal({
   const [activeTab, setActiveTab] = useState<'colors' | 'sounds'>(initialTab);
   const [activeCategory, setActiveCategory] = useState<SoundCategory | 'all'>('all');
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [recentlyActiveSoundIds, setRecentlyActiveIds] = useState<Record<string, number>>({});
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
+  const prevPreviewingIdRef = useRef<string | null>(null);
 
   const character = characters.find((c) => c.id === editingCharacterId);
 
@@ -85,6 +89,22 @@ function EditCharacterModal({
     if (activeCategory === 'all') return character.sounds;
     return character.sounds.filter((s) => s.category === activeCategory);
   }, [character, activeCategory]);
+
+  useEffect(() => {
+    if (prevPreviewingIdRef.current && !previewingSoundId) {
+      const id = prevPreviewingIdRef.current;
+      setRecentlyActiveIds((prev) => ({ ...prev, [id]: Date.now() }));
+      const timeout = window.setTimeout(() => {
+        setRecentlyActiveIds((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      }, 5000);
+      return () => window.clearTimeout(timeout);
+    }
+    prevPreviewingIdRef.current = previewingSoundId;
+  }, [previewingSoundId]);
 
   useEffect(() => {
     if (isOpen && character) {
@@ -116,6 +136,7 @@ function EditCharacterModal({
 
   const handleToggleColor = (colorValue: string) => {
     const currentColors = draftCustomization.colorModes ?? [];
+    const maxColors = unlockedLevel >= 1 ? 3 : 1;
 
     if (colorValue === 'auto') {
       handleUpdateDraft({ colorModes: ['auto'] });
@@ -129,7 +150,7 @@ function EditCharacterModal({
       handleUpdateDraft({ colorModes: nextColors.length > 0 ? nextColors : ['auto'] });
     } else {
       handleUpdateDraft({
-        colorModes: [...filteredColors, colorValue].slice(-3),
+        colorModes: [...filteredColors, colorValue].slice(-maxColors),
       });
     }
   };
@@ -227,15 +248,8 @@ function EditCharacterModal({
                         forceLoop={true}
                         showActions={false}
                         size="large"
+                        onEditImage={() => setIsImagePickerOpen(true)}
                       />
-                      <button
-                        type="button"
-                        className={styles.imageEditButton}
-                        onClick={() => setIsImagePickerOpen(true)}
-                        aria-label="Change image"
-                      >
-                        <FontAwesomeIcon icon={faPen} />
-                      </button>
                     </div>
                   );
                 })()}
@@ -250,7 +264,9 @@ function EditCharacterModal({
                   className={`${styles.tabButton} ${activeTab === 'colors' ? styles.tabButtonActive : ''}`}
                   onClick={() => setActiveTab('colors')}
                 >
-                  COLORS
+                  COLORS (
+                  {draftCustomization.colorModes?.filter((c) => c !== 'auto').length ?? 0}/
+                  {unlockedLevel >= 1 ? 3 : 1})
                 </button>
                 <button
                   type="button"
@@ -275,7 +291,7 @@ function EditCharacterModal({
                   </label>
 
                   <div className={styles.field}>
-                    <span className={styles.fieldLabel}>COLORS (UP TO 3)</span>
+                    <span className={styles.fieldLabel}>COLORS (UP TO {unlockedLevel >= 1 ? 3 : 1})</span>
                     <div className={styles.colorGrid}>
                       {colorOptions.map((option) => {
                         const effectiveColorModes =
@@ -285,14 +301,20 @@ function EditCharacterModal({
 
                         const selectedIndex = effectiveColorModes.indexOf(option.value);
                         const isSelected = selectedIndex !== -1;
+
+                        const maxColors = unlockedLevel >= 1 ? 3 : 1;
                         const isMaxReached =
-                          !isSelected && effectiveColorModes.length >= 3 && !effectiveColorModes.includes('auto');
+                          !isSelected &&
+                          effectiveColorModes.length >= maxColors &&
+                          !effectiveColorModes.includes('auto');
                         const isDefaultDisabled = !isSelected && !effectiveColorModes.includes('auto');
 
                         const isDisabled = option.value === 'auto' ? isDefaultDisabled : isMaxReached;
 
                         const swatchStyle =
-                          option.value === 'auto' ? AUTO_SWATCH_STYLE : { background: `var(${option.value})` };
+                          option.value === 'auto'
+                            ? AUTO_SWATCH_STYLE
+                            : { background: `var(${option.value})` };
 
                         return (
                           <button
@@ -338,7 +360,9 @@ function EditCharacterModal({
                         <button
                           key={cat.id}
                           type="button"
-                          className={`${styles.filterButton} ${activeCategory === cat.id ? styles.filterButtonActive : ''}`}
+                          className={`${styles.filterButton} ${
+                            activeCategory === cat.id ? styles.filterButtonActive : ''
+                          }`}
                           onClick={() => setActiveCategory(cat.id)}
                         >
                           {cat.label}
@@ -352,20 +376,28 @@ function EditCharacterModal({
                         const isSelected = currentSounds.includes(sound.id);
                         const isMaxReached = !isSelected && currentSounds.length >= 12;
                         const isPreviewing = previewingSoundId === sound.id;
+                        const isRecentlyActive = recentlyActiveSoundIds[sound.id];
+                        const showDelete = isPreviewing || isRecentlyActive;
 
                         return (
                           <div
                             key={sound.id}
-                            className={`${styles.soundOptionWrap} ${isSelected ? styles.soundOptionActive : ''} ${
-                              isMaxReached ? styles.soundOptionDisabled : ''
+                            className={`${styles.soundOptionWrap} ${
+                              isSelected ? styles.soundOptionActive : ''
+                            } ${isMaxReached ? styles.soundOptionDisabled : ''} ${
+                              isPreviewing ? styles.soundOptionWrapPreviewing : ''
                             }`}
                             style={
-                              isSelected ? ({ '--sound-color': `var(${sound.colorToken})` } as React.CSSProperties) : {}
+                              isSelected
+                                ? ({ '--sound-color': `var(${sound.colorToken})` } as React.CSSProperties)
+                                : {}
                             }
                           >
                             <button
                               type="button"
-                              className={`${styles.soundOptionPreview} ${isPreviewing ? styles.soundOptionPreviewing : ''}`}
+                              className={`${styles.soundOptionPreview} ${
+                                isPreviewing ? styles.soundOptionPreviewing : ''
+                              }`}
                               onClick={() => togglePreviewSound(sound.id, sound.path)}
                               aria-label={isPreviewing ? 'Stop preview' : 'Preview sound'}
                             >
@@ -378,6 +410,19 @@ function EditCharacterModal({
                             >
                               <span className={styles.soundName}>{sound.name.toUpperCase()}</span>
                             </button>
+                            {showDelete && isSelected && (
+                              <button
+                                type="button"
+                                className={styles.soundOptionDelete}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSound(sound.id);
+                                }}
+                                aria-label="Remove sound"
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </button>
+                            )}
                           </div>
                         );
                       })}
@@ -395,14 +440,18 @@ function EditCharacterModal({
                   const cCustom = customizations[c.id] ?? {};
                   const cSounds = activeSoundsByCharacter[c.id] ?? [];
                   const lastSoundId = cSounds[cSounds.length - 1];
-                  const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
+                  const lastSoundColorToken = lastSoundId
+                    ? soundCatalogById.get(lastSoundId)?.colorToken
+                    : null;
                   const autoBackground = lastSoundColorToken
                     ? `var(${lastSoundColorToken})`
                     : 'rgba(255, 255, 255, 0.08)';
 
                   const cColors =
                     cCustom.colorModes && cCustom.colorModes.length > 0
-                      ? cCustom.colorModes.map((color) => (color === 'auto' ? autoBackground : `var(${color})`))
+                      ? cCustom.colorModes.map((color) =>
+                          color === 'auto' ? autoBackground : `var(${color})`,
+                        )
                       : [c.primaryColor || autoBackground];
 
                   return (
@@ -444,7 +493,7 @@ function EditCharacterModal({
         <div className={styles.subModal} onClick={() => setIsImagePickerOpen(false)}>
           <div className={styles.subModalCard} onClick={(e) => e.stopPropagation()}>
             <header className={styles.subModalHeader}>
-              <h3 className={styles.subModalTitle}>SELECT AVATAR</h3>
+              <h3 className={styles.subModalTitle}>SELECT CHARACTER IMAGE</h3>
             </header>
 
             <div className={styles.imagePickerGrid}>
@@ -454,7 +503,9 @@ function EditCharacterModal({
                   <button
                     key={option.id}
                     type="button"
-                    className={`${styles.imagePickerOption} ${isSelected ? styles.imagePickerOptionActive : ''}`}
+                    className={`${styles.imagePickerOption} ${
+                      isSelected ? styles.imagePickerOptionActive : ''
+                    }`}
                     onClick={() => handleUpdateDraft({ image: option.src })}
                     aria-pressed={isSelected}
                   >
@@ -466,7 +517,11 @@ function EditCharacterModal({
             </div>
 
             <nav className={styles.subModalActions}>
-              <button type="button" className={styles.okButton} onClick={() => setIsImagePickerOpen(false)}>
+              <button
+                type="button"
+                className={styles.okButton}
+                onClick={() => setIsImagePickerOpen(false)}
+              >
                 OK
               </button>
             </nav>

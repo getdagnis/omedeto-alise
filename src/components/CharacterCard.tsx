@@ -41,6 +41,7 @@ type CharacterCardProps = {
   onDrop?: (event: DragEvent<HTMLDivElement>) => void;
   onImageLoad?: () => void;
   onEdit?: () => void;
+  onEditImage?: () => void;
   onReset?: () => void;
   onOpenSoundPicker?: () => void;
   isSmallPreview?: boolean;
@@ -96,6 +97,7 @@ function CharacterCard({
   onDrop,
   onImageLoad,
   onEdit,
+  onEditImage,
   onReset,
   onOpenSoundPicker,
   isSmallPreview = false,
@@ -199,6 +201,21 @@ function CharacterCard({
             aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             <FontAwesomeIcon icon={isFavorite ? faHeartSolid : faHeartRegular} />
+          </button>
+        )}
+
+        {/* Image Edit Button */}
+        {onEditImage && (
+          <button
+            type="button"
+            className={styles.imageEditButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditImage();
+            }}
+            aria-label="Change character image"
+          >
+            <FontAwesomeIcon icon={faPen} />
           </button>
         )}
 

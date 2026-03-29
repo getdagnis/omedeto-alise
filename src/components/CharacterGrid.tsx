@@ -31,8 +31,6 @@ type CharacterGridProps = {
   onOpenSoundPicker: (characterId: string) => void;
 };
 
-const INACTIVE_RING_COLOR = 'rgba(38, 30, 60, 0.85)';
-
 function CharacterGrid({
   characters,
   favoriteCharacterId,
