@@ -95,6 +95,19 @@ export function useProgression() {
     });
   }, [recordInteraction]);
 
+  const buySound = useCallback((soundId: string, price: number) => {
+    setState((prev) => {
+      if (prev.ownedSoundIds.includes(soundId)) return prev;
+      if (prev.walletBalance < price) return prev;
+
+      return {
+        ...prev,
+        walletBalance: prev.walletBalance - price,
+        ownedSoundIds: [...prev.ownedSoundIds, soundId],
+      };
+    });
+  }, []);
+
   // Calculate current level
   const currentLevelInfo = useMemo(() => {
     let currentLevel = 0;
@@ -138,5 +151,6 @@ export function useProgression() {
     recordSoundPlayed,
     recordCharacterCustomized,
     recordInteraction,
+    buySound,
   };
 }

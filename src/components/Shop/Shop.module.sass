@@ -1,0 +1,237 @@
+.shopOverlay
+  position: fixed
+  inset: 0
+  background: rgba(4, 3, 14, 0.95)
+  z-index: 200
+  display: grid
+  place-items: center
+  padding: 1rem
+  animation: fadeIn 0.2s ease-out
+
+.shopCard
+  width: min(100%, 64rem)
+  height: min(90vh, 50rem)
+  background: #120a30
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  border-radius: 1.5rem
+  display: flex
+  flex-direction: column
+  overflow: hidden
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.6)
+
+.shopHeader
+  display: flex
+  align-items: center
+  justify-content: space-between
+  padding: 1.25rem 1.5rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1)
+  background: rgba(255, 255, 255, 0.02)
+
+.headerLeft
+  display: flex
+  align-items: center
+  gap: 0.75rem
+
+.shopIcon
+  color: var(--color-mood-tokyo-13)
+  font-size: 1.25rem
+  filter: drop-shadow(0 0 8px var(--color-mood-tokyo-13))
+
+.shopTitle
+  margin: 0
+  font-family: var(--font-title)
+  font-size: 1.1rem
+  letter-spacing: 0.1em
+  color: #fff
+
+.headerRight
+  display: flex
+  align-items: center
+  gap: 1.5rem
+
+.wallet
+  display: flex
+  align-items: center
+  gap: 0.5rem
+  background: rgba(0, 0, 0, 0.3)
+  padding: 0.4rem 0.8rem
+  border-radius: 999px
+  border: 1px solid rgba(255, 230, 0, 0.3)
+  color: #ffe600
+  font-family: var(--font-title)
+  font-weight: 800
+  font-size: 0.9rem
+
+.coinIcon
+  font-size: 0.8rem
+
+.filterSection
+  padding: 1rem 1.5rem
+  background: rgba(0, 0, 0, 0.2)
+  display: grid
+  gap: 1rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05)
+
+.filterGroup
+  display: flex
+  align-items: center
+  gap: 1rem
+
+.filterLabel
+  font-size: 0.6rem
+  font-weight: 800
+  color: var(--color-text-muted)
+  min-width: 3rem
+
+.filterBar
+  display: flex
+  gap: 0.4rem
+  flex-wrap: wrap
+
+.filterButton
+  background: rgba(255, 255, 255, 0.05)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  border-radius: 999px
+  color: var(--color-text-muted)
+  font-size: 0.6rem
+  font-weight: 700
+  padding: 0.25rem 0.75rem
+  cursor: pointer
+  transition: all 0.2s ease
+
+  &:hover
+    background: rgba(255, 255, 255, 0.1)
+    border-color: rgba(255, 255, 255, 0.2)
+
+.filterButtonActive
+  background: var(--color-mood-tokyo-13)
+  border-color: rgba(255, 255, 255, 0.3)
+  color: #fff
+  box-shadow: 0 0 10px var(--color-mood-tokyo-13)
+
+.marketGrid
+  flex: 1
+  overflow-y: auto
+  padding: 1.5rem
+  display: grid
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr))
+  gap: 1rem
+  align-content: start
+
+.marketItem
+  background: rgba(255, 255, 255, 0.03)
+  border: 1px solid rgba(255, 255, 255, 0.08)
+  border-radius: 1rem
+  padding: 0.75rem
+  display: flex
+  align-items: center
+  gap: 0.75rem
+  transition: all 0.2s ease
+
+  &:hover
+    background: rgba(255, 255, 255, 0.06)
+    transform: translateY(-2px)
+
+.itemOwned
+  border-color: rgba(46, 204, 113, 0.3)
+  background: rgba(46, 204, 113, 0.02)
+
+.previewBtn
+  width: 2.5rem
+  height: 2.5rem
+  border-radius: 0.75rem
+  background: rgba(0, 0, 0, 0.3)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  color: rgba(255, 255, 255, 0.4)
+  cursor: pointer
+  display: grid
+  place-items: center
+  transition: all 0.2s ease
+
+  &:hover
+    background: rgba(255, 255, 255, 0.1)
+    color: #fff
+
+.previewing
+  background: var(--color-mood-tokyo-13)
+  color: #fff
+  border-color: #fff
+  animation: pulse 1s infinite alternate
+
+.itemInfo
+  flex: 1
+  display: flex
+  flex-direction: column
+  min-width: 0
+
+.itemName
+  font-size: 0.8rem
+  font-weight: 700
+  color: #fff
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+.itemTags
+  display: flex
+  gap: 0.4rem
+  margin-top: 0.2rem
+
+  span
+    font-size: 0.55rem
+    text-transform: uppercase
+    color: var(--color-text-muted)
+    background: rgba(255, 255, 255, 0.05)
+    padding: 0.1rem 0.3rem
+    border-radius: 4px
+
+.buyBtn
+  background: #fff
+  color: #000
+  border: none
+  border-radius: 0.75rem
+  padding: 0.5rem 0.75rem
+  font-weight: 800
+  font-size: 0.75rem
+  cursor: pointer
+  transition: all 0.2s ease
+  min-width: 4rem
+
+  &:hover:not(:disabled)
+    transform: scale(1.05)
+    background: var(--color-mood-tokyo-13)
+    color: #fff
+
+  &:disabled
+    opacity: 0.3
+    cursor: not-allowed
+
+.buyBtnOwned
+  background: rgba(46, 204, 113, 0.2)
+  color: #2ecc71
+  border: 1px solid #2ecc71
+  opacity: 1 !important
+
+.closeButton
+  background: transparent
+  border: none
+  color: var(--color-text-muted)
+  font-size: 1.25rem
+  cursor: pointer
+  padding: 0.5rem
+  transition: color 0.2s ease
+
+  &:hover
+    color: #fff
+
+@keyframes pulse
+  from
+    opacity: 0.7
+  to
+    opacity: 1
+
+@keyframes fadeIn
+  from
+    opacity: 0
+  to
+    opacity: 1

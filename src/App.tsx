@@ -7,6 +7,8 @@ import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
 import ProgressionMeter from './components/ProgressionMeter';
 import { Menu } from './components/Menu/Menu';
+import Shop from './components/Shop/Shop';
+import Admin from './components/Admin/Admin';
 import { useProgression } from './hooks/useProgression';
 import {
   ALL_SOUNDS,
@@ -14,6 +16,7 @@ import {
   CHARACTER_COLOR_TOKENS,
   CHARACTER_IMAGE_OPTIONS,
   CHARACTERS,
+  LOCALIZATIONS,
 } from './config';
 
 const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
@@ -216,10 +219,18 @@ function App() {
   const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
   const [pickingSoundsCharacterId, setPickingSoundsCharacterId] = useState<string | null>(null);
   const [initialEditTab, setInitialEditTab] = useState<'colors' | 'sounds'>('colors');
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
-    return match ? match[1] : null;
+    if (match) return match[1];
+    return null;
+  }, [currentPath]);
+
+  useEffect(() => {
+    setIsShopOpen(currentPath === '/shop');
+    setIsAdminOpen(currentPath === '/admin');
   }, [currentPath]);
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
@@ -263,6 +274,7 @@ function App() {
     nextLevelInfo,
     recordSoundPlayed,
     recordCharacterCustomized,
+    buySound,
   } = useProgression();
 
   useEffect(() => {
@@ -306,9 +318,12 @@ function App() {
       if (previewAudioRef.current) {
         previewAudioRef.current.pause();
         previewAudioRef.current = null;
+        setTimeout(() => {
+          setPreviewingSoundId(null);
+        }, 0);
       }
     };
-  }, []);
+  }, [currentPath]);
 
   useEffect(() => {
     if (!pickingSoundsCharacterId && previewAudioRef.current) {
@@ -754,11 +769,31 @@ function App() {
           soundCatalogById={soundCatalogById}
           colorOptions={CHARACTER_COLOR_OPTIONS}
           imageOptions={CHARACTER_IMAGE_OPTIONS}
+          ownedSoundIds={progressionState.ownedSoundIds}
           initialTab={initialEditTab}
           unlockedLevel={progressionState.unlockedLevel}
           onClose={() => navigate('/')}
           onSelectCharacter={(id) => navigate(`/${id}/edit`)}
           onUpdateCustomization={(id, patch) => updateCharacterCustomization(id, patch)}
+          onOpenShop={() => navigate('/shop')}
+        />
+
+        <Shop
+          isOpen={isShopOpen}
+          onClose={() => navigate('/')}
+          walletBalance={progressionState.walletBalance}
+          currencySymbol={LOCALIZATIONS.currencySymbol}
+          ownedSoundIds={progressionState.ownedSoundIds}
+          onBuySound={buySound}
+          onPreviewSound={togglePreviewSound}
+          previewingSoundId={previewingSoundId}
+        />
+
+        <Admin
+          isOpen={isAdminOpen}
+          onClose={() => navigate('/')}
+          onPreviewSound={togglePreviewSound}
+          previewingSoundId={previewingSoundId}
         />
 
         {pickingSoundsCharacterId && (
@@ -801,7 +836,7 @@ function App() {
                     if (!customSoundIds || customSoundIds.length === 0) {
                       return (
                         <div className={styles.emptyPickerState}>
-                          <p className={styles.emptyPickerText}>Add some sounds to this char!</p>
+                          <p className={styles.emptyPickerText}>Add some sounds to this character!</p>
                           <div className={styles.emptyPickerActions}>
                             <button
                               type="button"
@@ -907,8 +942,8 @@ function App() {
           onClose={() => setIsMenuOpen(false)}
           renderMode={renderMode}
           onToggleGlitch={handleGlitchMenuAction}
+          onNavigate={navigate}
         />
-
         <ProgressionMeter state={progressionState} currentLevelInfo={currentLevelInfo} nextLevelInfo={nextLevelInfo} />
       </main>
     </div>

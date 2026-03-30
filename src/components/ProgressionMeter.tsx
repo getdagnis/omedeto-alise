@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faLock, faCheck, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faLock, faCheck, faStar, faCoins } from '@fortawesome/free-solid-svg-icons';
 import styles from './ProgressionMeter.module.sass';
 import type { ProgressionState, ProgressionLevel } from '../progression';
 import { PROGRESSION_LEVELS } from '../progression';
+import { LOCALIZATIONS } from '../config';
 
 type ProgressionMeterProps = {
   state: ProgressionState;
@@ -68,12 +69,14 @@ export default function ProgressionMeter({ state, currentLevelInfo, nextLevelInf
           <div className={styles.levelList}>
             {PROGRESSION_LEVELS.map((level) => {
               const isCleared = state.unlockedLevel > level.level || (level.level === 0 && state.unlockedLevel > 0);
-              const isActive = (nextLevelInfo?.level === level.level) || (nextLevelInfo === null && level.level === PROGRESSION_LEVELS.length - 1);
+              const isActive =
+                nextLevelInfo?.level === level.level ||
+                (nextLevelInfo === null && level.level === PROGRESSION_LEVELS.length - 1);
               const isLocked = !isCleared && !isActive;
 
               return (
-                <div 
-                  key={level.level} 
+                <div
+                  key={level.level}
                   className={`${styles.levelCard} ${isCleared ? styles.levelCleared : ''} ${isActive ? styles.levelActive : ''} ${isLocked ? styles.levelLocked : ''}`}
                 >
                   <div className={styles.cardHeader}>
@@ -129,23 +132,41 @@ export default function ProgressionMeter({ state, currentLevelInfo, nextLevelInf
   }
 
   return (
-    <div className={styles.progressionContainer} onClick={() => setIsExpanded(true)} role="button" tabIndex={0}>
-      <div className={styles.levelInfo}>
-        <span>{currentLevelInfo.name}</span>
-        {nextLevelInfo ? <span>NEXT: {nextLevelInfo.name}</span> : <span className={styles.maxText}>ULTRA MODE ACTIVE</span>}
-      </div>
-      {nextLevelInfo && (
-        <div className={styles.meters}>
-          {currentMeters.map((meter, idx) => (
-            <div key={idx} className={styles.meterWrap}>
-              <div className={styles.meterLabel}>{meter.label} {meter.value}</div>
-              <div className={styles.meterTrack}>
-                <div className={styles.meterFill} style={{ width: `${meter.percent}%` }} />
-              </div>
-            </div>
-          ))}
+    <div className={styles.progressionContainer}>
+      <div className={styles.progressionLeft} onClick={() => setIsExpanded(true)} role="button" tabIndex={0}>
+        <div className={styles.levelInfo}>
+          <span>{currentLevelInfo.name}</span>
+          {nextLevelInfo ? (
+            <span>NEXT: {nextLevelInfo.name}</span>
+          ) : (
+            <span className={styles.maxText}>ULTRA MODE ACTIVE</span>
+          )}
         </div>
-      )}
+        {nextLevelInfo && (
+          <div className={styles.meters}>
+            {currentMeters.map((meter, idx) => (
+              <div key={idx} className={styles.meterWrap}>
+                <div className={styles.meterLabel}>
+                  {meter.label} {meter.value}
+                </div>
+                <div className={styles.meterTrack}>
+                  <div className={styles.meterFill} style={{ width: `${meter.percent}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.progressionRight}>
+        <div className={styles.footerWallet}>
+          <FontAwesomeIcon icon={faCoins} className={styles.footerCoinIcon} />
+          <span>
+            {state.walletBalance}
+            {LOCALIZATIONS.currencySymbol}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

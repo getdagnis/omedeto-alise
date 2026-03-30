@@ -47,11 +47,13 @@ type EditCharacterModalProps = {
   soundCatalogById: Map<string, SoundOption>;
   colorOptions: readonly CharacterColorOption[];
   imageOptions: readonly CharacterImageOption[];
+  ownedSoundIds: string[];
   initialTab?: 'colors' | 'sounds';
   unlockedLevel?: number;
   onClose: () => void;
   onSelectCharacter: (id: string) => void;
   onUpdateCustomization: (id: string, patch: CharacterCustomization) => void;
+  onOpenShop?: () => void;
 };
 
 const AUTO_SWATCH_STYLE = {
@@ -67,11 +69,13 @@ function EditCharacterModal({
   soundCatalogById,
   colorOptions,
   imageOptions,
+  ownedSoundIds,
   initialTab = 'colors',
   unlockedLevel = 0,
   onClose,
   onSelectCharacter,
   onUpdateCustomization,
+  onOpenShop,
 }: EditCharacterModalProps) {
   const [draftCustomization, setDraftCustomization] = useState<CharacterCustomization>({});
   const [activeTab, setActiveTab] = useState<'colors' | 'sounds'>(initialTab);
@@ -86,9 +90,11 @@ function EditCharacterModal({
 
   const filteredSounds = useMemo(() => {
     if (!character) return [];
-    if (activeCategory === 'all') return character.sounds;
-    return character.sounds.filter((s) => s.category === activeCategory);
-  }, [character, activeCategory]);
+    // Only show sounds that the user OWNS
+    const ownedSounds = character.sounds.filter(s => ownedSoundIds.includes(s.id));
+    if (activeCategory === 'all') return ownedSounds;
+    return ownedSounds.filter((s) => s.category === activeCategory);
+  }, [character, activeCategory, ownedSoundIds]);
 
   useEffect(() => {
     if (prevPreviewingIdRef.current && !previewingSoundId) {
@@ -342,17 +348,27 @@ function EditCharacterModal({
                 <div className={styles.tabContent}>
                   <div className={styles.field}>
                     <div className={styles.fieldHeader}>
-                      <span className={styles.fieldLabel}>AVAILABLE SOUNDS</span>
-                      <button
-                        type="button"
-                        className={styles.randomizeButton}
-                        onClick={() => {
-                          const shuffled = [...character.sounds].sort(() => 0.5 - Math.random());
-                          handleUpdateDraft({ soundIds: shuffled.slice(0, 12).map((s) => s.id) });
-                        }}
-                      >
-                        RANDOMIZE
-                      </button>
+                      <span className={styles.fieldLabel}>YOUR OWNED SOUNDS</span>
+                      <div className={styles.soundActions}>
+                        <button
+                          type="button"
+                          className={styles.randomizeButton}
+                          onClick={() => {
+                            const owned = character.sounds.filter(s => ownedSoundIds.includes(s.id));
+                            const shuffled = [...owned].sort(() => 0.5 - Math.random());
+                            handleUpdateDraft({ soundIds: shuffled.slice(0, 12).map((s) => s.id) });
+                          }}
+                        >
+                          RANDOMIZE
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.shopButton}
+                          onClick={onOpenShop}
+                        >
+                          SHOP
+                        </button>
+                      </div>
                     </div>
 
                     <div className={styles.filterBar}>

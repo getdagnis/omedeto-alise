@@ -9,14 +9,40 @@
   padding: 0.5rem 1rem
   z-index: 50
   display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 1rem
+
+.progressionLeft
+  flex: 1
+  display: flex
   flex-direction: column
   align-items: center
   gap: 0.4rem
   cursor: pointer
-  transition: background 0.2s ease
+  transition: opacity 0.2s ease
 
   &:hover
-    background: rgba(12, 10, 36, 0.95)
+    opacity: 0.8
+
+.progressionRight
+  flex-shrink: 0
+
+.footerWallet
+  display: flex
+  align-items: center
+  gap: 0.5rem
+  background: rgba(0, 0, 0, 0.3)
+  padding: 0.4rem 0.8rem
+  border-radius: 999px
+  border: 1px solid rgba(255, 230, 0, 0.3)
+  color: #ffe600
+  font-family: var(--font-title)
+  font-weight: 800
+  font-size: 0.8rem
+
+.footerCoinIcon
+  font-size: 0.7rem
 
 .levelInfo
   display: flex
