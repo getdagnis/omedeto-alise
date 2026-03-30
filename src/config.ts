@@ -1,3 +1,5 @@
+import { LIBRARY_BASE_SOUNDS } from './library_sounds';
+
 export type SoundAnimation = 'slow' | 'fast' | 'both';
 
 export type SoundCategory = 'voice' | 'beats' | 'drums' | 'animals' | 'melody' | 'creepy' | 'calm' | 'other';
@@ -578,11 +580,12 @@ const HANAKO_BASE_SOUNDS: BaseSoundOption[] = [
   },
 ];
 
-export const ALL_SOUNDS = mapSoundColors([...GUMI_BASE_SOUNDS, ...HANAKO_BASE_SOUNDS]);
+export const ALL_SOUNDS = mapSoundColors([...GUMI_BASE_SOUNDS, ...HANAKO_BASE_SOUNDS, ...LIBRARY_BASE_SOUNDS]);
 
 export const SOUNDS = {
   gumi: mapSoundColors(GUMI_BASE_SOUNDS),
   hanako: mapSoundColors(HANAKO_BASE_SOUNDS),
+  library: mapSoundColors(LIBRARY_BASE_SOUNDS),
   all: ALL_SOUNDS,
 } as const;
 

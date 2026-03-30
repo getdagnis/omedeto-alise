@@ -1,0 +1,467 @@
+.navContainer
+  position: fixed
+  bottom: 0
+  left: 0
+  width: 100%
+  background: rgba(8, 6, 26, 0.85)
+  backdrop-filter: blur(8px)
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  z-index: 100
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1)
+  display: flex
+  flex-direction: column
+
+  &.isExpanded
+    height: 75vh
+    background: #120a30
+    border-radius: 1.5rem 1.5rem 0 0
+    box-shadow: 0 -1rem 3rem rgba(0, 0, 0, 0.6)
+
+.collapsedBar
+  height: 4rem
+  padding: 0 1.5rem
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 1rem
+
+.progressionLeft
+  flex: 1
+  display: flex
+  flex-direction: column
+  align-items: center
+  gap: 0.4rem
+  cursor: pointer
+  transition: opacity 0.2s ease
+  &:hover
+    opacity: 0.8
+
+.levelInfo
+  display: flex
+  justify-content: space-between
+  width: 100%
+  max-width: 40rem
+  color: var(--color-text-strong)
+  font-family: var(--font-title)
+  font-size: 0.7rem
+  text-transform: uppercase
+  letter-spacing: 0.08em
+
+.meters
+  display: flex
+  gap: 0.4rem
+  width: 100%
+  max-width: 40rem
+
+.meterWrap
+  flex: 1
+  height: 0.3rem
+
+.meterTrack
+  height: 100%
+  background: rgba(255, 255, 255, 0.1)
+  border-radius: 999px
+  overflow: hidden
+
+.meterFill
+  height: 100%
+  background: var(--color-mood-tokyo-13)
+  box-shadow: 0 0 8px var(--color-mood-tokyo-13)
+  transition: width 0.3s ease-out
+
+.maxText
+  font-size: 0.7rem
+  color: var(--color-mood-tokyo-15)
+  font-family: var(--font-title)
+
+.barRight
+  display: flex
+  align-items: center
+  gap: 1rem
+
+.footerWallet
+  display: flex
+  align-items: center
+  gap: 0.4rem
+  background: rgba(0, 0, 0, 0.3)
+  padding: 0.35rem 0.75rem
+  border-radius: 999px
+  border: 1px solid rgba(255, 230, 0, 0.3)
+  color: #ffe600
+  font-family: var(--font-title)
+  font-weight: 800
+  font-size: 0.8rem
+
+.footerCoinIcon
+  font-size: 0.7rem
+
+.backBtn, .checkoutBtn, .saveBtnNav
+  background: rgba(255, 255, 255, 0.08)
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  border-radius: 999px
+  color: #fff
+  font-family: var(--font-title)
+  font-size: 0.75rem
+  font-weight: 700
+  padding: 0.4rem 1rem
+  cursor: pointer
+  display: flex
+  align-items: center
+  gap: 0.5rem
+  transition: all 0.2s ease
+  &:hover
+    background: rgba(255, 255, 255, 0.15)
+    transform: translateY(-1px)
+
+.checkoutBtn
+  background: var(--color-mood-tokyo-13)
+  border-color: rgba(255, 255, 255, 0.3)
+  box-shadow: 0 0 10px var(--color-mood-tokyo-13)
+
+.saveBtnNav
+  background: #2ecc71
+  border-color: rgba(255, 255, 255, 0.3)
+
+/* Expanded Styles */
+
+.overlay
+  position: fixed
+  inset: 0
+  background: rgba(0, 0, 0, 0.7)
+  z-index: 90
+  animation: fadeIn 0.3s ease-out
+
+.expandedHeader
+  display: flex
+  align-items: center
+  justify-content: space-between
+  padding: 1.25rem 1.5rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1)
+
+.headerTitle
+  display: flex
+  align-items: center
+  gap: 0.75rem
+  h2
+    margin: 0
+    font-family: var(--font-title)
+    font-size: 1.1rem
+    color: #fff
+
+.starIcon
+  color: #ffe600
+  filter: drop-shadow(0 0 8px #ffe600)
+
+.closeButton
+  background: rgba(255, 255, 255, 0.05)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  color: #fff
+  width: 2.2rem
+  height: 2.2rem
+  border-radius: 50%
+  display: grid
+  place-items: center
+  cursor: pointer
+
+.expandedBody
+  flex: 1
+  overflow-y: auto
+  padding: 1.5rem
+  display: flex
+  flex-direction: column
+  scrollbar-width: thin
+
+/* Cart Styles */
+.cartContent
+  display: flex
+  flex-direction: column
+  height: 100%
+  gap: 1.5rem
+
+.cartList
+  flex: 1
+  display: flex
+  flex-direction: column
+  gap: 0.75rem
+
+.emptyCart
+  text-align: center
+  color: var(--color-text-muted)
+  padding: 4rem 0
+
+.cartItem
+  display: flex
+  align-items: center
+  gap: 1rem
+  background: rgba(255, 255, 255, 0.03)
+  padding: 0.75rem 1rem
+  border-radius: 0.75rem
+  border: 1px solid rgba(255, 255, 255, 0.05)
+
+.cartItemName
+  flex: 1
+  font-weight: 700
+  font-size: 0.8rem
+  color: #fff
+
+.cartItemPrice
+  color: #ffe600
+  font-family: var(--font-title)
+  font-weight: 800
+
+.cartItemDelete
+  background: rgba(255, 77, 77, 0.1)
+  border: none
+  color: #ff4d4d
+  width: 2rem
+  height: 2rem
+  border-radius: 0.5rem
+  cursor: pointer
+  &:hover
+    background: rgba(255, 77, 77, 0.2)
+
+.cartFooter
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  padding-top: 1.5rem
+  display: flex
+  flex-direction: column
+  gap: 1rem
+
+.cartTotal
+  display: flex
+  justify-content: space-between
+  align-items: center
+  font-size: 1.1rem
+  color: #fff
+  strong
+    color: #ffe600
+    font-size: 1.4rem
+
+.purchaseBtn
+  background: var(--color-mood-tokyo-13)
+  color: #fff
+  border: none
+  height: 3.5rem
+  border-radius: 1rem
+  font-weight: 800
+  font-size: 1.1rem
+  cursor: pointer
+  box-shadow: 0 0 20px var(--color-mood-tokyo-13)
+  &:disabled
+    filter: grayscale(1)
+    opacity: 0.5
+    cursor: not-allowed
+
+/* Quick Shop Styles */
+.quickShopContent
+  display: flex
+  flex-direction: column
+  gap: 1.5rem
+
+.quickShopHeader
+  display: flex
+  justify-content: space-between
+  align-items: center
+  gap: 1rem
+
+.quickShopHeaderLeft
+  display: flex
+  align-items: center
+  gap: 1rem
+  h3
+    margin: 0
+    font-family: var(--font-title)
+    font-size: 0.9rem
+    color: var(--color-text-muted)
+
+.headerCheckoutBtn
+  background: rgba(255, 255, 255, 0.05)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  border-radius: 999px
+  color: var(--color-text-muted)
+  font-family: var(--font-title)
+  font-size: 0.65rem
+  padding: 0.3rem 0.75rem
+  cursor: pointer
+  white-space: nowrap
+
+.headerCheckoutBtnActive
+  background: var(--color-mood-tokyo-13)
+  border-color: #fff
+  color: #fff
+  box-shadow: 0 0 10px var(--color-mood-tokyo-13)
+
+.quickShopWallet
+  color: #ffe600
+  font-weight: 800
+
+.quickShopGrid
+  display: grid
+  grid-template-columns: 1fr
+  gap: 0.75rem
+
+.quickItem
+  display: flex
+  align-items: center
+  gap: 1rem
+  background: rgba(255, 255, 255, 0.05)
+  padding: 0.75rem
+  border-radius: 1rem
+  border: 1px solid rgba(255, 255, 255, 0.1)
+
+.quickPreview
+  width: 2.5rem
+  height: 2.5rem
+  border-radius: 0.75rem
+  background: rgba(0, 0, 0, 0.3)
+  border: none
+  color: #fff
+  cursor: pointer
+
+.previewing
+  background: var(--color-mood-tokyo-13)
+  animation: pulse 1s infinite alternate
+
+.quickName
+  flex: 1
+  font-weight: 700
+  font-size: 0.8rem
+  color: #fff
+
+.quickAdd
+  background: #fff
+  color: #000
+  border: none
+  padding: 0.5rem 1rem
+  border-radius: 0.75rem
+  font-weight: 800
+  font-size: 0.75rem
+  cursor: pointer
+
+.quickAddInCart
+  background: #2ecc71
+  color: #fff
+
+.skipBtn
+  margin-top: 1rem
+  background: rgba(255, 255, 255, 0.05)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  color: #fff
+  height: 3rem
+  border-radius: 0.75rem
+  cursor: pointer
+  font-family: var(--font-title)
+  font-size: 0.8rem
+  &:hover
+    background: rgba(255, 255, 255, 0.1)
+
+/* Existing levels styles reused/adapted */
+.levelList
+  display: flex
+  flex-direction: column
+  gap: 1rem
+
+.levelCard
+  background: rgba(255, 255, 255, 0.03)
+  border: 1px solid rgba(255, 255, 255, 0.08)
+  border-radius: 1rem
+  padding: 1rem
+
+.levelCleared
+  opacity: 0.6
+  .levelBadge
+    background: #2ecc71 !important
+
+.levelActive
+  border-color: var(--color-mood-tokyo-13)
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.1)
+
+.cardHeader
+  display: flex
+  align-items: center
+  gap: 1rem
+
+.levelBadge
+  width: 2rem
+  height: 2rem
+  border-radius: 0.5rem
+  background: rgba(255, 255, 255, 0.1)
+  display: grid
+  place-items: center
+  font-weight: 800
+
+.levelMainInfo
+  flex: 1
+  h3
+    margin: 0
+    font-size: 0.8rem
+  .levelDesc
+    margin: 0
+    font-size: 0.7rem
+    color: var(--color-text-muted)
+
+.clearedTag
+  font-size: 0.6rem
+  color: #2ecc71
+  border: 1px solid #2ecc71
+  padding: 0.1rem 0.3rem
+  border-radius: 4px
+
+.benefitBox
+  display: flex
+  gap: 0.75rem
+  background: rgba(0, 0, 0, 0.2)
+  padding: 0.75rem
+  border-radius: 0.75rem
+  margin-top: 0.75rem
+
+.benefitIcon
+  font-size: 1.2rem
+
+.benefitText
+  display: flex
+  flex-direction: column
+  strong
+    font-size: 0.75rem
+    color: #fff
+  span
+    font-size: 0.65rem
+    color: var(--color-text-muted)
+
+.activeProgress
+  margin-top: 1rem
+  display: grid
+  gap: 0.5rem
+
+.detailedMeter
+  display: grid
+  gap: 0.25rem
+
+.detailedLabels
+  display: flex
+  justify-content: space-between
+  font-size: 0.6rem
+  font-weight: 700
+  color: var(--color-text-muted)
+
+.detailedTrack
+  height: 0.4rem
+  background: rgba(255, 255, 255, 0.05)
+  border-radius: 999px
+  overflow: hidden
+
+.detailedFill
+  height: 100%
+  background: linear-gradient(90deg, var(--color-mood-tokyo-13), #00f5ff)
+
+@keyframes fadeIn
+  from
+    opacity: 0
+  to
+    opacity: 1
+
+@keyframes pulse
+  from
+    opacity: 0.7
+  to
+    opacity: 1

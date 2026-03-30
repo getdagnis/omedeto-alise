@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVolumeHigh, faXmark, faCheck, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faVolumeHigh, faXmark, faCheck, faRotateLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
 import styles from './Admin.module.sass';
 import { ALL_SOUNDS } from '../../config';
 import type { SoundOption } from '../../config';
@@ -104,14 +104,21 @@ export default function Admin({
                     <td>
                       <input 
                         type="number" 
-                        defaultValue={sound.price}
+                        defaultValue={edits.price ?? sound.price}
                         className={styles.inlineInputSmall}
+                        onChange={(e) => setSoundEdits(prev => ({ 
+                          ...prev, 
+                          [sound.id]: { ...prev[sound.id], price: parseInt(e.target.value) || 0 } 
+                        }))}
                       />
                     </td>
                     <td>
                       <div className={styles.rowActions}>
                         <button className={styles.saveBtn} title="Save Changes">
                           <FontAwesomeIcon icon={faCheck} />
+                        </button>
+                        <button className={styles.deleteBtn} title="Delete">
+                          <FontAwesomeIcon icon={faTrash} />
                         </button>
                         <button className={styles.resetBtn} title="Reset">
                           <FontAwesomeIcon icon={faRotateLeft} />
