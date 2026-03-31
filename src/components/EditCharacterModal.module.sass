@@ -89,8 +89,8 @@
   gap: 0.75rem
   margin-top: 1.25rem
 
-// Mobile/Portrait: Fix buttons to bottom of screen
-@media (max-width: 63.99rem) or (orientation: portrait)
+  // Mobile/Portrait: Fix buttons to bottom of screen
+  @media (max-width: 63.99rem) or (orientation: portrait)
   .modalActions
     position: fixed
     bottom: 0
@@ -104,7 +104,7 @@
     z-index: 70
     border-top: 1px solid rgba(255, 255, 255, 0.1)
 
-@media (min-width: 64rem)
+    @media (min-width: 64rem)
   .layoutColumns
     grid-template-columns: 1.2fr 2fr 1fr
 
@@ -227,7 +227,7 @@
   background: rgba(45, 45, 75, 0.95)
   transform: scale(0.98)
 
-@media (min-width: 40rem)
+  @media (min-width: 40rem)
   .modalCard
     padding: 1.2rem 1.3rem
 
@@ -382,7 +382,7 @@
   overflow-y: auto
   padding-right: 0.5rem
 
-@media (min-width: 40rem)
+  @media (min-width: 40rem)
   .soundGrid
     grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr))
 

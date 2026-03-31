@@ -18,6 +18,7 @@ import {
   CHARACTERS,
   LOCALIZATIONS,
 } from './config';
+import { Button } from './components-ui';
 
 const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
 const DEFAULT_GLITCH_MODE: 'stable' | 'glitch' = 'stable';
@@ -759,6 +760,11 @@ function App() {
             onOpenSoundPicker={(characterId) => setPickingSoundsCharacterId(characterId)}
           />
         </section>
+
+        <div className={styles.testDiv}>
+          <button>test</button>
+          <Button aria-label="this">this</Button>
+        </div>
 
         <EditCharacterModal
           isOpen={Boolean(editingCharacterId)}

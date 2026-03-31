@@ -1,8 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faXmark, faLock, faCheck, faStar, faCoins, 
-  faArrowLeft, faCartShopping, faTrash, faBolt, faVolumeHigh 
+import {
+  faXmark,
+  faLock,
+  faCheck,
+  faStar,
+  faCoins,
+  faArrowLeft,
+  faCartShopping,
+  faTrash,
+  faBolt,
+  faVolumeHigh,
 } from '@fortawesome/free-solid-svg-icons';
 import styles from './BottomNav.module.sass';
 import type { ProgressionState, ProgressionLevel } from '../../progression';
@@ -54,13 +62,16 @@ export default function BottomNav({
   onCloseExpanded,
 }: BottomNavProps) {
   const [expandedView, setExpandedView] = useState<'NONE' | 'CHALLENGES' | 'CART' | 'QUICK_SHOP'>(
-    isQuickShopActive ? 'QUICK_SHOP' : 'NONE'
+    isQuickShopActive ? 'QUICK_SHOP' : 'NONE',
   );
 
-  // Sync with external force expansion
-  useMemo(() => {
-    if (forceExpandCart) setExpandedView('CART');
-  }, [forceExpandCart]);
+  const derivedExpandedView = forceExpandCart
+    ? 'CART'
+    : isQuickShopActive
+      ? 'QUICK_SHOP'
+      : expandedView === 'QUICK_SHOP'
+        ? 'NONE'
+        : expandedView;
 
   const handleClose = () => {
     setExpandedView('NONE');
@@ -106,25 +117,40 @@ export default function BottomNav({
     return cartIds.reduce((sum, id) => sum + (soundCatalogById.get(id)?.price ?? 0), 0);
   }, [cartIds, soundCatalogById]);
 
-  // Handle auto-expansion for quick shop
-  useMemo(() => {
-    if (isQuickShopActive) setExpandedView('QUICK_SHOP');
-    else if (expandedView === 'QUICK_SHOP') setExpandedView('NONE');
-  }, [isQuickShopActive]);
+  // Auto-advance if all 3 are in cart
+  useEffect(() => {
+    if (
+      derivedExpandedView === 'QUICK_SHOP' &&
+      quickShopSounds.length > 0 &&
+      quickShopSounds.every((s) => cartIds.includes(s.id))
+    ) {
+      const timer = setTimeout(() => {
+        onQuickShopSkip();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [derivedExpandedView, quickShopSounds, cartIds, onQuickShopSkip]);
 
   const renderExpandedContent = () => {
-    if (expandedView === 'CHALLENGES') {
+    if (derivedExpandedView === 'CHALLENGES') {
       return (
         <div className={styles.levelList}>
           {PROGRESSION_LEVELS.map((level: ProgressionLevel) => {
             const isCleared = state.unlockedLevel > level.level || (level.level === 0 && state.unlockedLevel > 0);
-            const isActive = (nextLevelInfo?.level === level.level) || (nextLevelInfo === null && level.level === PROGRESSION_LEVELS.length - 1);
+            const isActive =
+              nextLevelInfo?.level === level.level ||
+              (nextLevelInfo === null && level.level === PROGRESSION_LEVELS.length - 1);
             const isLocked = !isCleared && !isActive;
 
             return (
-              <div key={level.level} className={`${styles.levelCard} ${isCleared ? styles.levelCleared : ''} ${isActive ? styles.levelActive : ''} ${isLocked ? styles.levelLocked : ''}`}>
+              <div
+                key={level.level}
+                className={`${styles.levelCard} ${isCleared ? styles.levelCleared : ''} ${isActive ? styles.levelActive : ''} ${isLocked ? styles.levelLocked : ''}`}
+              >
                 <div className={styles.cardHeader}>
-                  <div className={styles.levelBadge}>{isCleared ? <FontAwesomeIcon icon={faCheck} /> : level.level}</div>
+                  <div className={styles.levelBadge}>
+                    {isCleared ? <FontAwesomeIcon icon={faCheck} /> : level.level}
+                  </div>
                   <div className={styles.levelMainInfo}>
                     <h3>{level.name.toUpperCase()}</h3>
                     {!isCleared && <p className={styles.levelDesc}>{level.description}</p>}
@@ -144,8 +170,13 @@ export default function BottomNav({
                     <div className={styles.activeProgress}>
                       {getMetersForLevel(level).map((m, idx) => (
                         <div key={idx} className={styles.detailedMeter}>
-                          <div className={styles.detailedLabels}><span>{m.label}</span><span>{m.value}</span></div>
-                          <div className={styles.detailedTrack}><div className={styles.detailedFill} style={{ width: `${m.percent}%` }} /></div>
+                          <div className={styles.detailedLabels}>
+                            <span>{m.label}</span>
+                            <span>{m.value}</span>
+                          </div>
+                          <div className={styles.detailedTrack}>
+                            <div className={styles.detailedFill} style={{ width: `${m.percent}%` }} />
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -158,14 +189,14 @@ export default function BottomNav({
       );
     }
 
-    if (expandedView === 'CART') {
+    if (derivedExpandedView === 'CART') {
       return (
         <div className={styles.cartContent}>
           <div className={styles.cartList}>
             {cartIds.length === 0 ? (
               <p className={styles.emptyCart}>YOUR BASKET IS EMPTY</p>
             ) : (
-              cartIds.map(id => {
+              cartIds.map((id) => {
                 const sound = soundCatalogById.get(id);
                 return (
                   <div key={id} className={styles.cartItem}>
@@ -184,8 +215,8 @@ export default function BottomNav({
               <span>TOTAL:</span>
               <strong>{cartTotal}Y</strong>
             </div>
-            <button 
-              className={styles.purchaseBtn} 
+            <button
+              className={styles.purchaseBtn}
               disabled={cartIds.length === 0 || state.walletBalance < cartTotal}
               onClick={onCheckout}
             >
@@ -196,22 +227,13 @@ export default function BottomNav({
       );
     }
 
-    if (expandedView === 'QUICK_SHOP') {
-      const allInCart = quickShopSounds.length > 0 && quickShopSounds.every(s => cartIds.includes(s.id));
-      
-      // Auto-advance if all 3 are in cart
-      if (allInCart) {
-        setTimeout(() => {
-          onQuickShopSkip();
-        }, 800);
-      }
-
+    if (derivedExpandedView === 'QUICK_SHOP') {
       return (
         <div className={styles.quickShopContent}>
           <header className={styles.quickShopHeader}>
             <div className={styles.quickShopHeaderLeft}>
               <h3>DISCOVER SOUNDS</h3>
-              <button 
+              <button
                 className={`${styles.headerCheckoutBtn} ${cartIds.length > 0 ? styles.headerCheckoutBtnActive : ''}`}
                 onClick={() => setExpandedView('CART')}
                 disabled={cartIds.length === 0}
@@ -229,14 +251,14 @@ export default function BottomNav({
               const inCart = cartIds.includes(sound.id);
               return (
                 <div key={sound.id} className={styles.quickItem}>
-                  <button 
+                  <button
                     className={`${styles.quickPreview} ${isPreviewing ? styles.previewing : ''}`}
                     onClick={() => onPreviewSound(sound.id, sound.path)}
                   >
                     <FontAwesomeIcon icon={faVolumeHigh} />
                   </button>
                   <span className={styles.quickName}>{sound.name.toUpperCase()}</span>
-                  <button 
+                  <button
                     className={`${styles.quickAdd} ${inCart ? styles.quickAddInCart : ''}`}
                     onClick={() => onQuickShopAdd(sound.id)}
                   >
@@ -256,7 +278,7 @@ export default function BottomNav({
     return null;
   };
 
-  const isExpanded = expandedView !== 'NONE';
+  const isExpanded = derivedExpandedView !== 'NONE';
 
   const isDesktop = typeof window !== 'undefined' && !window.matchMedia('(pointer: coarse)').matches;
   if (isDesktop && mode === 'EDIT' && !isExpanded) return null;
@@ -264,13 +286,16 @@ export default function BottomNav({
   return (
     <>
       {isExpanded && <div className={styles.overlay} onClick={handleClose} />}
-      
+
       <div className={`${styles.navContainer} ${isExpanded ? styles.isExpanded : ''}`}>
         {isExpanded && (
           <header className={styles.expandedHeader}>
             <div className={styles.headerTitle}>
-              <FontAwesomeIcon icon={expandedView === 'CHALLENGES' ? faStar : faCartShopping} className={styles.starIcon} />
-              <h2>{expandedView.replace('_', ' ')}</h2>
+              <FontAwesomeIcon
+                icon={derivedExpandedView === 'CHALLENGES' ? faStar : faCartShopping}
+                className={styles.starIcon}
+              />
+              <h2>{derivedExpandedView.replace('_', ' ')}</h2>
             </div>
             <button className={styles.closeButton} onClick={handleClose}>
               <FontAwesomeIcon icon={faXmark} />
@@ -279,21 +304,25 @@ export default function BottomNav({
         )}
 
         {isExpanded ? (
-          <div className={styles.expandedBody}>
-            {renderExpandedContent()}
-          </div>
+          <div className={styles.expandedBody}>{renderExpandedContent()}</div>
         ) : (
           <div className={styles.collapsedBar}>
             {mode === 'HOME' ? (
               <div className={styles.progressionLeft} onClick={() => setExpandedView('CHALLENGES')}>
                 <div className={styles.levelInfo}>
                   <span>{currentLevelInfo.name}</span>
-                  {nextLevelInfo ? <span>NEXT: {nextLevelInfo.name}</span> : <span className={styles.maxText}>ULTRA MODE</span>}
+                  {nextLevelInfo ? (
+                    <span>NEXT: {nextLevelInfo.name}</span>
+                  ) : (
+                    <span className={styles.maxText}>ULTRA MODE</span>
+                  )}
                 </div>
                 <div className={styles.meters}>
                   {currentMeters.map((meter, idx) => (
                     <div key={idx} className={styles.meterWrap}>
-                      <div className={styles.meterTrack}><div className={styles.meterFill} style={{ width: `${meter.percent}%` }} /></div>
+                      <div className={styles.meterTrack}>
+                        <div className={styles.meterFill} style={{ width: `${meter.percent}%` }} />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -311,7 +340,9 @@ export default function BottomNav({
                 </button>
               )}
               {mode === 'EDIT' && (
-                <button className={styles.saveBtnNav} onClick={onAction}>SAVE</button>
+                <button className={styles.saveBtnNav} onClick={onAction}>
+                  SAVE
+                </button>
               )}
               <div className={styles.footerWallet}>
                 <FontAwesomeIcon icon={faCoins} className={styles.footerCoinIcon} />
