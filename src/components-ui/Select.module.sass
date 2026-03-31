@@ -1,31 +1,31 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-Select 
+.react-aria-Select
   color: var(--text-color)
   position: relative
   width: 200px
-  .react-aria-Button 
+  .react-aria-Button
     --button-color: var(--gray)
     padding: 0 var(--spacing-2) 0 var(--spacing-3)
     width: 100%
     min-width: 0
-  &[data-pressed] 
+  &[data-pressed]
     scale: 1
-  .react-aria-SelectValue 
+  .react-aria-SelectValue
     flex: 1
     text-align: start
     overflow: hidden
     text-overflow: ellipsis
     white-space: nowrap
-  &[data-placeholder] 
+  &[data-placeholder]
     color: var(--text-color-placeholder)
     font-weight: normal
-  .lucide-chevron-down 
+  .lucide-chevron-down
     margin-inline-start: var(--spacing-2)
-  .react-aria-SelectValue 
-  [slot=description] 
-  display: none
-.select-popover[data-trigger=Select] 
+  .react-aria-SelectValue
+  [slot=description]
+    display: none
+.select-popover[data-trigger=Select]
   width: var(--trigger-width)
   padding: 0

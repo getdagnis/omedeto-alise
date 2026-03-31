@@ -1,29 +1,29 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-Calendar 
+.react-aria-Calendar
   width: calc(var(--spacing-9) * 7)
   max-width: 100%
   container-type: inline-size
   color: var(--text-color)
   font: var(--font-size) system-ui
-  header 
+  header
     display: flex
     align-items: center
     margin: 0 var(--spacing-1) var(--spacing-4) var(--spacing-1)
-  .react-aria-Heading 
+  .react-aria-Heading
     flex: 1
     margin: 0
     text-align: center
     font-size: var(--font-size-lg)
-  .react-aria-CalendarGrid 
+  .react-aria-CalendarGrid
     border-spacing: 0
-  [slot=errorMessage] 
-  font: var(--font-size-sm) system-ui
-  color: var(--invalid-color)
-.react-aria-CalendarHeaderCell 
+  [slot=errorMessage]
+    font: var(--font-size-sm) system-ui
+    color: var(--invalid-color)
+.react-aria-CalendarHeaderCell
   font-size: var(--font-size-sm)
-.react-aria-CalendarCell 
+.react-aria-CalendarCell
   --gap: var(--spacing-1)
   width: calc((100cqw / 7) - var(--gap))
   aspect-ratio: 1
@@ -38,15 +38,15 @@
   forced-color-adjust: none
   transition: scale 200ms
   -webkit-tap-highlight-color: transparent
-  @media (min-resolution: 200dpi) 
-  @container (width < 300px) 
+  @media (min-resolution: 200dpi)
+  @container (width < 300px)
     --gap: 0px
-  &[data-outside-month] 
+  &[data-outside-month]
     display: none
-  &[data-pressed] 
+  &[data-pressed]
     scale: 0.9
-  &[data-unavailable] 
+  &[data-unavailable]
     text-decoration: line-through
     color: var(--invalid-color)
-  &[data-invalid] 
+  &[data-invalid]
     --button-color: var(--invalid-color)

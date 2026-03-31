@@ -1,11 +1,11 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.segmented-control 
+.segmented-control
   display: flex
   width: fit-content
   border-radius: 9999px
-  .react-aria-SelectionIndicator 
+  .react-aria-SelectionIndicator
     position: absolute
     top: 0
     left: 0
@@ -17,7 +17,7 @@
     border-radius: 9999px
     @media (prefers-reduced-motion: reduce)
       transition: none
-  .segmented-control-item 
+  .segmented-control-item
     all: unset
     display: block
     color: var(--gray-1200)
@@ -30,14 +30,14 @@
     z-index: 1
     transition: color 200ms
     -webkit-tap-highlight-color: transparent
-  span 
+  span
     display: inline-block
     transition: scale 200ms
-  &[data-pressed] span 
+  &[data-pressed] span
     scale: 0.9
-  &[data-selected] 
+  &[data-selected]
     z-index: 0
     color: var(--highlight-foreground)
-  &[data-focus-visible] 
+  &[data-focus-visible]
     outline: 2px solid var(--focus-ring-color)
     outline-offset: 4px

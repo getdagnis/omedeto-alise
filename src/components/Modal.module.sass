@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-ModalOverlay 
+.react-aria-ModalOverlay
   position: absolute
   top: 0
   left: 0
@@ -11,11 +11,11 @@
   z-index: 100
   font-family: system-ui
   font-size: var(--font-size)
-  &[data-entering] 
+  &[data-entering]
     animation: modal-fade 200ms
-  &[data-exiting] 
+  &[data-exiting]
     animation: modal-fade 150ms reverse ease-in
-.react-aria-Modal 
+.react-aria-Modal
   position: sticky
   max-height: calc(var(--visual-viewport-height) * 0.9)
   top: calc(var(--visual-viewport-height) / 2)
@@ -28,17 +28,17 @@
   outline: 1px solid var(--overlay-border)
   width: max-content
   max-width: min(500px, 90vw)
-  &[data-entering] 
+  &[data-entering]
     animation: modal-zoom 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275)
-  .react-aria-TextField 
+  .react-aria-TextField
     margin-bottom: 8px
-@keyframes modal-fade 
-  from 
+@keyframes modal-fade
+  from
     opacity: 0
-  to 
+  to
     opacity: 1
-@keyframes modal-zoom 
-  from 
+@keyframes modal-zoom
+  from
     transform: scale(0.8)
-  to 
+  to
     transform: scale(1)

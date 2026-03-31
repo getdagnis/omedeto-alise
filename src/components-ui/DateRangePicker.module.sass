@@ -1,10 +1,10 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-DateRangePicker 
+.react-aria-DateRangePicker
   color: var(--text-color)
   max-width: 100%
-  .react-aria-Group 
+  .react-aria-Group
     display: flex
     align-items: center
     width: fit-content
@@ -20,12 +20,12 @@
     color: var(--field-text-color)
     white-space: nowrap
     cursor: text
-  &[data-focus-within] 
+  &[data-focus-within]
     outline: 2px solid var(--focus-ring-color)
     outline-offset: -1px
-  &[data-disabled] 
+  &[data-disabled]
     color: var(--text-color-disabled)
-  .date-fields 
+  .date-fields
     flex: 1
     display: flex
     align-items: center
@@ -33,14 +33,14 @@
     overflow-x: auto
     overflow-y: clip
     scrollbar-width: none
-  .field-Button 
+  .field-Button
     margin-left: auto
-  [slot=start] ~ span 
-  padding: 0 4px
-  [slot=end] 
-  margin-right: 1.75rem
-  flex: 1
-  .react-aria-DateInput 
+  [slot=start] ~ span
+    padding: 0 4px
+  [slot=end]
+    margin-right: 1.75rem
+    flex: 1
+  .react-aria-DateInput
     width: unset
     min-width: unset
     padding: unset
@@ -49,5 +49,5 @@
     background: none
     height: auto
     line-height: normal
-  &[data-focus-within] 
+  &[data-focus-within]
     outline: unset

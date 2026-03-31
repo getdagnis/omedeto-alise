@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-Switch 
+.react-aria-Switch
   display: flex
   /* This is needed so the HiddenInput is positioned correctly */
   position: relative
@@ -11,14 +11,14 @@
   color: var(--text-color)
   forced-color-adjust: none
   -webkit-tap-highlight-color: transparent
-  .track 
+  .track
     --height: calc(var(--spacing) * 5.5)
     height: var(--height)
     width: calc(var(--spacing) * 9.5)
     border-radius: var(--height)
     transition: all 200ms
     scale: 1
-  .handle 
+  .handle
     display: block
     height: 100%
     aspect-ratio: 1
@@ -27,13 +27,13 @@
     transform-origin: 0 50%
     will-change: transform
     --indicator-color: var(--tint)
-  &[data-pressed] .handle 
+  &[data-pressed] .handle
     scale: 1.2 1
     border-radius: var(--height) / calc(var(--height) * 1.2)
     background: var(--button-background-pressed)
-  &[data-selected] 
+  &[data-selected]
     --border-color: var(--highlight-background-pressed)
-  .handle 
+  .handle
     transform: translateX(var(--spacing-4))
     transform-origin: var(--spacing-9) 50%
     background: white
@@ -41,14 +41,14 @@
     @media (forced-colors: active)
       background: HighlightText
       box-shadow: inset 0 0 0 1px Highlight
-  &[data-focus-visible] .track 
+  &[data-focus-visible] .track
     outline: 2px solid var(--focus-ring-color)
     outline-offset: 2px
-  &[data-disabled] 
+  &[data-disabled]
     color: var(--text-color-disabled)
     --border-color: var(--border-color-disabled)
-  .track 
+  .track
     box-shadow: 0 0 0 1px var(--border-color)
-  &[data-selected] .handle 
+  &[data-selected] .handle
     background: var(--gray-200)
     box-shadow: none

@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.command-palette-dialog 
+.command-palette-dialog
   width: min(90vw, 500px)
   height: min(90vh, 356px)
   max-height: inherit
@@ -10,7 +10,7 @@
   display: flex
   flex-direction: column
   gap: var(--spacing-2)
-  > * 
-  zoom: 1.125
-  .react-aria-Menu 
+  > *
+    zoom: 1.125
+  .react-aria-Menu
     flex: 1

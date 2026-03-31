@@ -1,21 +1,21 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-ColorSwatchPicker 
+.react-aria-ColorSwatchPicker
   display: flex
   gap: 8px
   flex-wrap: wrap
-.react-aria-ColorSwatchPickerItem 
+.react-aria-ColorSwatchPickerItem
   position: relative
   outline: none
   border-radius: 9999px
   width: fit-content
   forced-color-adjust: none
   -webkit-tap-highlight-color: transparent
-  &[data-focus-visible] 
+  &[data-focus-visible]
     outline: 2px solid var(--focus-ring-color)
     outline-offset: 2px
-  &[data-selected]::after 
+  &[data-selected]::after
     content: ''
     position: absolute
     inset: 0
@@ -23,8 +23,8 @@
     outline: 2px solid white
     outline-offset: -4px
     border-radius: inherit
-  &[data-disabled] 
+  &[data-disabled]
     opacity: 0.2
-.react-aria-ColorSwatchPicker 
-  &[data-layout=stack] 
+.react-aria-ColorSwatchPicker
+  &[data-layout=stack]
     flex-direction: column

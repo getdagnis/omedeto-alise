@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-DropZone 
+.react-aria-DropZone
   color: var(--text-color)
   background: var(--overlay-background)
   border: 1px solid var(--border-color)
@@ -22,8 +22,8 @@
   justify-content: center
   text-wrap: balance
   &[data-focus-visible],
-  &[data-drop-target] 
+  &[data-drop-target]
     outline: 2px solid var(--focus-ring-color)
     outline-offset: -1px
-  &[data-drop-target] 
+  &[data-drop-target]
     background: var(--highlight-overlay)

@@ -1,10 +1,10 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-DateField 
+.react-aria-DateField
   display: flex
   flex-direction: column
-.react-aria-DateInput 
+.react-aria-DateInput
   display: inline
   padding: 0 var(--spacing-3)
   box-sizing: border-box
@@ -18,34 +18,34 @@
   white-space: nowrap
   forced-color-adjust: none
   cursor: text
-  &[data-focus-within] 
+  &[data-focus-within]
     outline: 2px solid var(--focus-ring-color)
     outline-offset: -1px
-  &[data-disabled] 
+  &[data-disabled]
     color: var(--text-color-disabled)
     cursor: default
-.react-aria-DateSegment 
+.react-aria-DateSegment
   padding: 2px
   font-size: var(--font-size)
   font-variant-numeric: tabular-nums
   text-align: end
   color: var(--field-text-color)
   -webkit-tap-highlight-color: transparent
-  &[data-type=literal] 
+  &[data-type=literal]
     padding: 0
-  &[data-placeholder] 
+  &[data-placeholder]
     color: var(--text-color-placeholder)
-  &:focus 
+  &:focus
     color: var(--highlight-foreground)
     background: var(--highlight-background)
     outline: none
     border-radius: 4px
     caret-color: transparent
-  &[data-invalid] 
+  &[data-invalid]
     color: var(--invalid-color)
-  &:focus 
+  &:focus
     background: var(--highlight-background-invalid)
     color: var(--highlight-foreground)
-  &[data-disabled] 
+  &[data-disabled]
     color: var(--text-color-disabled)
     cursor: default

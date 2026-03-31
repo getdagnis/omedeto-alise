@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-Tree 
+.react-aria-Tree
   display: flex
   flex-direction: column
   overflow: auto
@@ -16,34 +16,34 @@
   box-sizing: border-box
   --drag-button-width: 0px
   --checkbox-width: 0px
-  .react-aria-TreeSection:not(:first-child) 
+  .react-aria-TreeSection:not(:first-child)
     margin-top: var(--spacing-4)
-  .react-aria-TreeHeader 
+  .react-aria-TreeHeader
     font-size: var(--font-size-lg)
     font-weight: 500
     padding: var(--spacing-1) var(--spacing-2)
     color: var(--text-color)
-  &[data-focus-visible] 
+  &[data-focus-visible]
     outline: 2px solid var(--focus-ring-color)
     outline-offset: -1px
-  &[data-empty] 
+  &[data-empty]
     align-items: center
     justify-content: center
     font-style: italic
     min-height: 100px
-  &[data-selection-mode=multiple] 
+  &[data-selection-mode=multiple]
     --checkbox-width: calc(var(--spacing) * 6.5)
-  &[data-allows-dragging] 
+  &[data-allows-dragging]
     --drag-button-width: var(--spacing-6)
-  &[data-drop-target] 
+  &[data-drop-target]
     outline: 2px solid var(--highlight-background)
     outline-offset: -1px
     background: var(--highlight-overlay)
-  .react-aria-DropIndicator 
-  &[data-drop-target] 
+  .react-aria-DropIndicator
+  &[data-drop-target]
     outline: 1px solid var(--highlight-background)
     margin-left: calc(var(--spacing-2) + var(--checkbox-width) + var(--drag-button-width) + var(--spacing-5) + (var(--tree-item-level) - 1) * var(--spacing-4))
-.react-aria-TreeItem 
+.react-aria-TreeItem
   display: flex
   align-items: center
   gap: var(--spacing-2)
@@ -62,10 +62,10 @@
   transition-duration: 200ms
   -webkit-tap-highlight-color: transparent
   --chevron-width: var(--spacing-5)
-  &[data-has-child-items] 
+  &[data-has-child-items]
     --chevron-width: 0px
     --border-color: var(--gray-300)
-  &:not(:last-child)::after 
+  &:not(:last-child)::after
     content: ''
     display: block
     position: absolute
@@ -73,42 +73,42 @@
     inset-inline-start: calc(var(--spacing-2) + var(--checkbox-width) + var(--drag-button-width) + var(--chevron-width) + (var(--tree-item-level) - 1) * var(--padding))
     inset-inline-end: var(--spacing-2)
     border-bottom: 0.5px solid var(--border-color)
-  &[data-focus-visible] 
+  &[data-focus-visible]
     outline: 2px solid var(--focus-ring-color)
     outline-offset: -2px
-  &[data-pressed] 
+  &[data-pressed]
     background: var(--highlight-hover)
-  &[data-selected] 
+  &[data-selected]
     background: var(--highlight-background)
     color: var(--highlight-foreground)
     --focus-ring-color: var(--highlight-foreground)
     --border-color: transparent
-  &[data-focus-visible] 
+  &[data-focus-visible]
     outline-color: var(--highlight-foreground)
     outline-offset: -4px
   &:has(+ [data-selected]),
-  &:has(+ .react-aria-DropIndicator + [data-selected]) 
+  &:has(+ .react-aria-DropIndicator + [data-selected])
     border-end-start-radius: 0
     border-end-end-radius: 0
     --border-color: rgb(255 255 255 / 0.3)
   + [data-selected],
-  + .react-aria-DropIndicator + [data-selected] 
-  border-start-start-radius: 0
-  border-start-end-radius: 0
-  &[data-href] 
+  + .react-aria-DropIndicator + [data-selected]
+    border-start-start-radius: 0
+    border-start-end-radius: 0
+  &[data-href]
     cursor: pointer
-  &[data-disabled] 
+  &[data-disabled]
     color: var(--text-color-disabled)
-  .react-aria-Button:not([slot]) 
+  .react-aria-Button:not([slot])
     margin-left: auto
-  &[data-allows-dragging] 
+  &[data-allows-dragging]
     padding-left: 4px
-  &[data-dragging] 
+  &[data-dragging]
     opacity: 0.6
-  &[data-drop-target] 
+  &[data-drop-target]
     outline: 2px solid var(--highlight-background)
     background: var(--highlight-overlay)
-  .react-aria-Button[slot=chevron] 
+  .react-aria-Button[slot=chevron]
     all: unset
     display: flex
     visibility: hidden
@@ -117,32 +117,32 @@
     width: var(--spacing-4)
     height: 100%
     padding-left: calc((var(--tree-item-level) - 1) * var(--padding))
-  svg 
+  svg
     rotate: 0deg
     transition: rotate 200ms
     fill: none
     stroke: currentColor
     stroke-width: 3px
-  &[data-has-child-items] .react-aria-Button[slot=chevron] 
+  &[data-has-child-items] .react-aria-Button[slot=chevron]
     visibility: visible
-  &[data-expanded] .react-aria-Button[slot=chevron] svg 
+  &[data-expanded] .react-aria-Button[slot=chevron] svg
     rotate: 90deg
-  .react-aria-Button[slot=drag] 
+  .react-aria-Button[slot=drag]
     all: unset
     display: inline-flex
     align-items: center
     justify-content: center
     width: var(--spacing-4)
     text-align: center
-  &[data-focus-visible] 
+  &[data-focus-visible]
     border-radius: 4px
     outline: 2px solid var(--focus-ring-color)
-:where(.react-aria-TreeItem) .react-aria-Checkbox 
+:where(.react-aria-TreeItem) .react-aria-Checkbox
   --checkmark-color: var(--highlight-background)
-  &[data-selected] .indicator 
+  &[data-selected] .indicator
     --indicator-color: var(--highlight-foreground)
     --indicator-shadow: transparent
-.react-aria-TreeLoader 
+.react-aria-TreeLoader
   display: flex
   align-items: center
   justify-content: center

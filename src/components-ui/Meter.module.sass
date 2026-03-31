@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-Meter 
+.react-aria-Meter
   display: grid
   grid-template-areas: "label value"
   "bar bar"
@@ -9,15 +9,15 @@
   width: 250px
   color: var(--text-color)
   font: var(--font-size) system-ui
-  .value 
+  .value
     grid-area: value
-  .track 
+  .track
     grid-area: bar
     forced-color-adjust: none
     height: calc(var(--spacing-2) + 2px)
     border-radius: 9999px
     overflow: hidden
-  .fill 
+  .fill
     --fill-color: var(--green)
     background: oklch(from var(--fill-color) var(--lightness-700) c h)
     height: calc(100% - 2px)

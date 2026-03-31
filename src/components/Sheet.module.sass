@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.sheet-overlay 
+.sheet-overlay
   position: absolute
   top: 0
   left: 0
@@ -10,11 +10,11 @@
   background: rgba(0 0 0 / .3)
   backdrop-filter: blur(10px)
   z-index: 100
-  &[data-entering] 
+  &[data-entering]
     animation: sheet-blur 300ms
-  &[data-exiting] 
+  &[data-exiting]
     animation: sheet-blur 300ms reverse ease-in
-.sheet 
+.sheet
   position: sticky
   left: 0
   width: 300px
@@ -29,19 +29,19 @@
   box-shadow: -8px 0 20px rgba(0 0 0 / 0.1)
   font-family: system-ui
   font-size: 0.875rem
-  &[data-entering] 
+  &[data-entering]
     animation: sheet-slide 300ms
-  &[data-exiting] 
+  &[data-exiting]
     animation: sheet-slide 300ms reverse ease-in
-@keyframes sheet-blur 
-  from 
+@keyframes sheet-blur
+  from
     background: rgba(0 0 0 / 0)
     backdrop-filter: blur(0)
-  to 
+  to
     background: rgba(0 0 0 / .3)
     backdrop-filter: blur(10px)
-@keyframes sheet-slide 
-  from 
+@keyframes sheet-slide
+  from
     transform: translateX(100%)
-  to 
+  to
     transform: translateX(0)

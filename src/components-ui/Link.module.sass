@@ -1,7 +1,7 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-Link 
+.react-aria-Link
   color: var(--link-color)
   font-size: var(--font-size)
   transition-property: color, text-decoration-thickness
@@ -12,12 +12,12 @@
   position: relative
   border-radius: var(--radius-sm)
   -webkit-tap-highlight-color: transparent
-  &[data-hovered] 
+  &[data-hovered]
     text-decoration-thickness: 1.5px
-  &[data-pressed] 
+  &[data-pressed]
     color: var(--link-color-pressed)
-  &[data-focus-visible] 
+  &[data-focus-visible]
     outline: 2px solid var(--focus-ring-color)
-  &[data-disabled] 
+  &[data-disabled]
     cursor: default
     color: var(--text-color-disabled)

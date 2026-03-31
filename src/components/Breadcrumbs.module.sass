@@ -1,17 +1,17 @@
-@use "../styles/ui-theme/theme.css"
-@use "../styles/ui-theme/utilities.css"
+@import "../styles/ui-theme/theme.css"
+@import "../styles/ui-theme/utilities.css"
 
-.react-aria-Breadcrumbs 
+.react-aria-Breadcrumbs
   display: flex
   align-items: center
   list-style: none
   margin: 0
   padding: 0
   color: var(--text-color)
-  .react-aria-Breadcrumb 
+  .react-aria-Breadcrumb
     display: flex
     align-items: center
-  .react-aria-Link 
+  .react-aria-Link
     font: var(--font-size) system-ui
     color: var(--link-color-secondary)
     outline: none
@@ -20,15 +20,15 @@
     cursor: pointer
     -webkit-tap-highlight-color: transparent
   &[data-hovered],
-  &[data-focus-visible] 
+  &[data-focus-visible]
     text-decoration: underline
-  &[data-current] 
+  &[data-current]
     color: var(--text-color)
     font-weight: 600
-  &[data-focus-visible] 
+  &[data-focus-visible]
     border-radius: var(--radius-sm)
     outline: 2px solid var(--focus-ring-color)
-  &[data-disabled] 
+  &[data-disabled]
     cursor: default
-  &:not([data-current]) 
+  &:not([data-current])
     color: var(--text-color-disabled)
