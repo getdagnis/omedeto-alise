@@ -1,228 +1,576 @@
-# Omedeto-Alise Platform Roadmap and `AGENTS.md` Spec
+# AGENTS.md — Alise in Tokyo
 
-## Summary
+This document defines how AI agents should understand, extend, and evolve the **Alise in Tokyo** platform.
 
-Build a phased migration from the current Vite single-page app into a production-ready social soundboard platform for anime/vocaloid-style characters, using **Next.js on Cloudflare** with a **Supabase-first backend**.  
-MVP will ship: private-beta accounts, username/password auth, invite codes, one customizable preset character per user, 15 selectable sounds, saved mixes, visitor-submitted mixes, upvote ranking, public/unlisted profiles, basic moderation/reporting, and admin reset flow.
+It explains:
 
-## Locked Decisions (from this planning session)
+- conceptual identity
+- architectural direction
+- interaction priorities
+- technology migration path
+- system boundaries
+- content rules
+- expansion logic
+- long-term platform intent
 
-1. MVP scope: Profiles + Mixes + Voting.
-2. Backend core: Supabase-first.
-3. Auth: Username + password with server-side auth.
-4. Frontend architecture: Early migration to Next.js.
-5. Moderation: Auto filters + report queue.
-6. Access policy: Private beta/invite-only.
-7. Character MVP: One preset character + color/wallpaper tuning.
-8. Mix rules: Up to 15 selected sounds, save named mixes.
-9. Voting: One upvote per user per mix.
-10. Invite system: Invite codes.
-11. Password recovery: Admin reset only.
-12. Deployment: Vercel (initially) + Cloudflare Pages (to scale) + Workers + Supabase.
-13. AI future path: Provider-agnostic adapter.
-14. Sound governance: Owned/approved assets only.
-15. New profile default visibility: Unlisted.
+Agents should treat this file as the **operational compass** for decision-making inside the repository.
 
-## Architecture Blueprint
+---
 
-1. Frontend:
-   - Next.js App Router (TypeScript), replacing Vite SPA.
-   - UI keeps current visual identity/components; logic moved into modular feature folders.
-   - Public profile routes are server-rendered for indexability.
-2. Runtime:
-   - Vercel (initially) + Cloudflare Pages (planned) + Cloudflarers Workers runtime for Next.js.
-   - Edge middleware for session check and basic anti-abuse gates.
-3. Backend:
-   - Supabase Postgres for core data.
-   - Supabase Storage for character/wallpaper/sound assets.
-   - Sanity.io to manage Users, Invites, Sounds and Character Image libraries
-   - Server-only writes through Next route handlers using Supabase service role.
-   - Public reads through controlled APIs and selective direct reads.
-4. Auth (custom):
-   - Username/password stored in custom tables, not social auth.
-   - Password hashing/verification handled in Postgres (`pgcrypto` functions).
-   - Opaque session token in secure HttpOnly cookie; hashed token in DB session table.
-5. Moderation:
-   - Server-side blocked-word/profanity checks.
-   - Report queue table + admin moderation endpoints.
-6. Future AI:
-   - Internal `CharacterGenerationProvider` interface; no provider lock-in.
+# Platform Identity
 
-## Data Model (MVP, decision-complete)
+**Alise in Tokyo** is not a traditional game.
 
-1. `users`
-   - `id uuid pk`, `username citext unique`, `display_name text`, `password_hash text`, `is_admin bool`, `status text`, `created_at`.
-2. `user_profiles`
-   - `user_id uuid pk fk users`, `bio text`, `visibility enum('private','unlisted','public') default 'unlisted'`, `wallpaper_asset_id uuid nullable`, `theme_title_color text`, `theme_primary_color text`, `theme_secondary_color text`, `theme_soundboard_color text`, `updated_at`.
-3. `character_presets`
-   - `id text pk`, `name text`, `image_asset_id uuid`, `is_active bool`.
-4. `user_character_config`
-   - `user_id uuid pk fk users`, `preset_id text fk character_presets`, `is_primary bool default true`.
-5. `sound_assets`
-   - `id uuid pk`, `slug text unique`, `name text`, `path text`, `duration_ms int`, `license_type text`, `license_notes text`, `is_active bool`, `category text`, `created_at`.
-6. `user_sound_selection`
-   - `user_id uuid`, `sound_id uuid`, `slot_index int`, `created_at`, unique `(user_id, sound_id)`, unique `(user_id, slot_index)`, max 15 enforced via trigger.
-7. `mixes`
-   - `id uuid pk`, `profile_user_id uuid fk users`, `author_user_id uuid fk users`, `type enum('owner','visitor')`, `name text`, `description text`, `is_published bool`, `created_at`, `updated_at`.
-8. `mix_items`
-   - `mix_id uuid fk mixes`, `sound_id uuid fk sound_assets`, `order_index int`, unique `(mix_id, sound_id)`.
-9. `mix_votes`
-   - `mix_id uuid fk mixes`, `voter_user_id uuid fk users`, `created_at`, unique `(mix_id, voter_user_id)`.
-10. `invite_codes`
-    - `id uuid pk`, `code text unique`, `created_by uuid fk users`, `max_uses int`, `used_count int`, `expires_at`, `is_active bool`.
-11. `invite_redemptions`
-    - `invite_code_id uuid fk invite_codes`, `redeemed_by uuid fk users`, `redeemed_at`.
-12. `reports`
-    - `id uuid pk`, `reporter_user_id uuid fk users`, `target_type enum('profile','mix','user')`, `target_id uuid`, `reason text`, `status enum('open','reviewing','resolved','dismissed')`, `created_at`.
+It is a layered creative system evolving toward:
 
-## Important Public Interfaces and Type Changes
+```
+sound playground
 
-1. New shared contracts file: `src/lib/contracts.ts`.
-2. Core exported interfaces:
-   - `UserProfilePublic`
-   - `CharacterPreset`
-   - `UserCharacterConfig`
-   - `SoundAsset`
-   - `UserSoundSelection`
-   - `MixSummary`
-   - `MixDetail`
-   - `VoteState`
-3. API response envelope:
-   - `ApiSuccess<T> = { ok: true; data: T }`
-   - `ApiError = { ok: false; code: string; message: string }`
-4. New auth/session types:
-   - `SessionUser { id: string; username: string; isAdmin: boolean }`
-   - `SessionContext { user: SessionUser | null }`
-5. Existing character config in frontend migrates from static-only `config.ts` to DB-driven presets plus local fallback seed data.
+- character collector
+- combo discovery engine
+- profile identity platform
+- story participation system
+- social board network
+- creator ecosystem
+- persistent cyberpunk Tokyo night universe
+```
 
-## Route and API Plan (MVP)
+Agents should preserve this trajectory when making decisions.
 
-1. Web routes:
-   - `/` landing/discovery preview.
-   - `/auth/login`
-   - `/auth/signup`
-   - `/me` profile editor + sound selection + mix manager.
-   - `/u/[username]` public/unlisted profile page.
-   - `/admin` moderation + invite controls (admin only).
-2. API routes:
-   - `POST /api/auth/signup` (username, password, inviteCode)
-   - `POST /api/auth/login`
-   - `POST /api/auth/logout`
-   - `POST /api/auth/reset-password` (admin action)
-   - `GET /api/me`
-   - `PATCH /api/me/profile`
-   - `PUT /api/me/character`
-   - `PUT /api/me/sounds` (exactly 15 IDs)
-   - `POST /api/mixes`
-   - `PATCH /api/mixes/:id`
-   - `POST /api/mixes/:id/vote`
-   - `DELETE /api/mixes/:id/vote`
-   - `GET /api/users/:username/profile`
-   - `GET /api/users/:username/mixes`
-   - `POST /api/reports`
-   - `POST /api/admin/invites`
-   - `GET /api/admin/reports`
-   - `PATCH /api/admin/reports/:id`
+Avoid implementing features that push the platform toward:
 
-## Implementation Phases
+- rhythm-game cloning
+- chat-app cloning
+- social-media feed cloning
+- generic avatar collectors
 
-1. Phase 0: Platform migration and foundation.
-   - Create Next.js app structure in current repo.
-   - Port current interactive soundboard UI into feature modules.
-   - Configure Cloudflare deployment target.
-   - Add Supabase client/server utilities and env validation.
-2. Phase 1: Auth + account bootstrap.
-   - Implement invite code issuance and redemption flow.
-   - Build signup/login/logout with custom username/password auth.
-   - Implement secure session cookie lifecycle and session revocation.
-   - Build admin reset-password endpoint and admin UI action.
-3. Phase 2: Character/profile customization.
-   - Implement profile editor: colors, wallpaper, visibility.
-   - Implement one preset character selection and primary flag.
-   - Implement 15-sound library selection with validation.
-4. Phase 3: Mixes and social interaction.
-   - Implement owner mixes and visitor mixes.
-   - Implement upvote constraints and counters.
-   - Build public profile with tabs: owner mixes / visitor mixes.
-5. Phase 4: Moderation and discovery.
-   - Add server-side content filters.
-   - Add report queue and admin moderation actions.
-   - Add discovery feeds for beta: New, Top, Trending (initial simple ranking).
-6. Phase 5: Future-proof extensions.
-   - Add multi-character schema compatibility migration.
-   - Add AI provider adapter scaffolding and job table.
-   - Keep current MVP behavior unchanged while enabling extension points.
+The platform grows through **interaction → identity → community → world → ecosystem**
 
-## `AGENTS.md` File Plan (to create at repo root)
+---
 
-1. Purpose:
-   - Define product intent and strict engineering rules for all future agents.
-2. Required sections:
-   - Project vision and MVP boundaries.
-   - Canonical architecture and deployment topology.
-   - Data ownership map (frontend, API layer, DB, storage).
-   - Auth/session invariants and security requirements.
-   - Moderation and child-safety constraints.
-   - API contract conventions and error code taxonomy.
-   - DB migration and rollback policy.
-   - Test strategy and required checks before merge.
-   - Release checklist and incident response basics.
-3. Non-negotiable guardrails:
-   - Use separate components where possible; keep main files like `App.tsx` from bloating.
-   - No plaintext passwords or reversible secrets.
-   - No direct client writes to sensitive tables.
-   - No public profile indexing unless visibility is `public`.
-   - Sound assets must include license metadata.
-   - Invite-only gate must stay enforceable in MVP.
+# Core Interaction Model
 
-## Testing and Acceptance Scenarios
+Primary interaction loop:
 
-1. Auth:
-   - Signup fails without valid invite code.
-   - Duplicate username rejected.
-   - Login success creates secure session cookie.
-   - Invalid password attempts trigger rate limit lock.
-2. Profile/character:
-   - User can save colors + wallpaper + visibility.
-   - User can select exactly 15 sounds; 14/16 rejected.
-   - Public profile returns data only when visibility rules allow.
-3. Mixes:
-   - Owner can create/update own mixes.
-   - Visitor can propose mix on another profile.
-   - One user can upvote a mix only once.
-4. Moderation:
-   - Profanity filter blocks disallowed mix/profile text.
-   - Reports can be created by authenticated users.
-   - Admin can resolve/dismiss reports.
-5. Security:
-   - Session invalid after logout.
-   - Admin endpoints reject non-admin users.
-   - Service role key never exposed to client bundle.
-6. Performance:
-   - Profile page server-render latency within target budget.
-   - Mix listing paginates correctly under load.
-7. E2E beta flow:
-   - Invite -> signup -> configure profile -> save mix -> share link -> visitor vote/report.
+```
+select character
+→ trigger sound
+→ discover combo
+→ unlock feedback
+→ gain credits
+→ expand board
+→ evolve profile identity
+```
 
-## Rollout and Operations
+Agents must protect this loop from unnecessary complexity.
 
-1. Environments:
-   - `dev`, `staging`, `prod` with separate Supabase projects.
-2. CI gates:
-   - typecheck, lint, unit tests, integration tests, e2e smoke.
-3. Observability:
-   - Structured logs for auth, mix writes, moderation actions.
-   - Error tracking with route and user context redaction.
-4. Beta controls:
-   - Feature flags for discovery feeds and visitor mix submission.
-   - Ability to disable registration globally while keeping login active.
+Interaction responsiveness always has priority over feature expansion.
 
-## Assumptions and Defaults Chosen
+---
 
-1. Private beta remains invite-only until explicitly changed.
-2. New profiles default to `unlisted`.
-3. Visitor mix submission requires authenticated account.
-4. Password reset is admin-managed only in MVP.
-5. Discovery pages include only `public` profiles.
-6. AI generation and advanced character customization are explicitly post-MVP.
-7. Current visual design/language direction is preserved during migration.
+# Tokyo Cyber Night Concept Layer
+
+The entire platform exists inside a fictional setting:
+
+```
+a living cyberpunk Tokyo night
+```
+
+Important characteristics:
+
+- neon atmosphere
+- anime-inspired personality tone
+- district identity differences
+- sound-reactive environment feel
+- quiet social presence rather than noisy chat dominance
+- collectible emotional fragments instead of loud progression mechanics
+
+Agents should treat atmosphere as a system constraint.
+
+Every feature should feel like it belongs inside this world.
+
+---
+
+# Visual & Emotional Direction
+
+Tone references:
+
+- late-night Tokyo sidewalks
+- metro platform ambience
+- rain reflections
+- Akihabara neon energy
+- Shibuya crossing density
+- convenience store glow at 02:00
+
+UI should feel:
+
+```
+calm
+neon
+precise
+layered
+alive
+```
+
+Never noisy or overloaded.
+
+Avoid dashboard-style layouts unless explicitly requested.
+
+---
+
+# Platform Structure Overview
+
+System layers:
+
+```
+interaction layer
+progression layer
+identity layer
+social layer
+story layer
+economy layer
+creator layer
+world layer
+```
+
+Agents should extend the **lowest incomplete layer first** before building higher ones.
+
+Example:
+
+Do NOT implement marketplace features before identity persistence exists.
+
+---
+
+# Repository Architectural Phase (Current)
+
+Current stage:
+
+```
+offline-first prototype
+```
+
+Implemented technologies:
+
+- React
+- Vite
+- TypeScript
+- React Aria Components
+- Sass modules
+
+Agents must respect:
+
+Accessibility-first component architecture.
+
+Do not replace React Aria patterns unless justified.
+
+---
+
+# Migration Direction (Planned)
+
+Platform evolves gradually toward:
+
+```
+offline prototype
+→ Supabase persistence
+→ Sanity story engine
+→ social graph layer
+→ creator ecosystem
+→ React Native expansion
+→ persistent Tokyo universe
+```
+
+Agents must not prematurely introduce backend assumptions.
+
+Persistence should remain abstractable.
+
+---
+
+# Slot System Logic
+
+Board slots represent progression identity.
+
+Expected evolution:
+
+```
+1 slot
+→ 3 slots
+→ 6 slots
+→ 12 slots
+```
+
+Future boards include:
+
+```
+player characters
+
+- friend characters
+```
+
+Agents must treat slots as identity surface, not layout decoration.
+
+---
+
+# Combo System Logic
+
+Combos are discovery mechanics.
+
+They evolve into:
+
+```
+unlockables
+collectibles
+story fragments
+economy triggers
+profile signals
+```
+
+Agents should structure combo logic as reusable schema objects.
+
+Avoid hardcoding combo relationships.
+
+---
+
+# Credits Economy Logic
+
+Credits represent forward motion energy.
+
+Credits are earned through:
+
+- combo discovery
+- Ultra Mode challenges
+- social visibility
+- board ranking presence
+- story participation
+- weekly goals
+- passive friend activity
+
+Credits are spent on:
+
+- slot unlocks
+- sound packs
+- combo packs
+- cosmetics
+- profile upgrades
+
+Agents must treat economy as:
+
+```txt
+motivation infrastructure
+```
+
+not monetization infrastructure.
+
+---
+
+# Shop Architecture Expectations
+
+Shop exists as dedicated route:
+
+```
+/shop
+```
+
+Shop responsibilities:
+
+- distribute sound packs
+- distribute combo packs
+- distribute character upgrades
+- distribute cosmetics
+
+Agents must avoid embedding shop logic inside edit modals.
+
+Shop is platform surface, not tool surface.
+
+---
+
+# Character Evolution Logic
+
+Characters are long-term companions.
+
+Characters may eventually support:
+
+```
+leveling
+visual upgrades
+sound expansion
+capability modifiers
+micro-story fragments
+identity metadata
+```
+
+Agents should keep character schema extensible.
+
+Never assume characters are static assets.
+
+---
+
+# Social Board System
+
+Boards evolve from:
+
+```
+personal interaction surface
+→ shared social presence surface
+```
+
+Future board logic includes:
+
+- friend slot population
+- ranking-based placement
+- passive reward loops
+- mix sharing
+- gifting mechanics
+- featured board signals
+
+Agents must treat boards as **ambient multiplayer space**, not chat interface replacement.
+
+---
+
+# Ranking & Metadata Systems
+
+Ranking systems provide prestige signals without pressure mechanics.
+
+Possible ranking types:
+
+```
+global rankings
+friend rankings
+circle rankings
+district rankings (future)
+```
+
+Metadata signals may include:
+
+```
+combo rarity index
+board influence score
+story participation weight
+discovery contribution score
+```
+
+Agents should structure ranking systems as optional overlays.
+
+Never mandatory progression gates.
+
+---
+
+# Story Engine Direction
+
+Story system evolves gradually:
+
+Phase 1:
+
+```
+static lore
+character bios
+district descriptions
+```
+
+Phase 2:
+
+```
+weekly story prompts
+branch voting
+rewarded participation
+```
+
+Phase 3:
+
+```
+community-authored fragments
+animated panels
+sound-reactive scenes
+world timeline influence
+```
+
+Story content managed through:
+
+```
+Sanity CMS
+```
+
+Agents should not embed story text inside source files.
+
+---
+
+# Combo Card Ecosystem
+
+Combo cards represent structured collectible interaction recipes.
+
+Card packs may include:
+
+```
+Tokyo Streets Pack
+Rain Pack
+Metro Pack
+Neon Pack
+District Packs
+Character Packs
+Seasonal Packs
+```
+
+Cards may evolve into:
+
+```
+rarity tiers
+animated variants
+foil variants
+district-exclusive unlockables
+```
+
+Agents must model cards as content-layer objects.
+
+---
+
+# Notification & Presence Engine
+
+Future presence signals include:
+
+```
+friend triggered combo
+board ranking change
+story vote completed
+district event unlocked
+new pack released
+```
+
+Delivery channels:
+
+```
+HUD signals
+activity timeline
+push notifications (mobile phase)
+```
+
+Agents should avoid intrusive notification styles.
+
+Signals must feel atmospheric.
+
+---
+
+# Content Curation Model
+
+Platform identity depends on curated tone consistency.
+
+Content sources:
+
+```
+admin-curated
+seasonal releases
+event releases
+community contributions (moderated)
+```
+
+Agents must assume moderation layer always exists.
+
+---
+
+# User Generated Content Layer (Future)
+
+Possible UGC categories:
+
+```
+sounds
+combo packs
+character skins
+story fragments
+visual overlays
+profile themes
+```
+
+Moderation pipeline:
+
+```
+AI-assisted filtering
+manual approval fallback
+curation scoring
+```
+
+Agents must design storage structures compatible with moderation queues.
+
+---
+
+# Marketplace Layer (Future)
+
+Marketplace supports creator participation.
+
+Creators may publish:
+
+```
+combo packs
+skins
+animations
+story modules
+district themes
+```
+
+Marketplace requires:
+
+```
+ownership tracking
+licensing metadata
+approval pipelines
+creator attribution
+```
+
+Agents must not assume marketplace exists yet.
+
+Prepare schemas only when persistence layer exists.
+
+---
+
+# Tokyo District Expansion Logic
+
+Future world structure may include:
+
+```
+Shibuya
+Akihabara
+Shinjuku
+Metro Layer
+Night Rooftops
+Hidden Backstreets
+```
+
+Districts may affect:
+
+```
+sound palettes
+story arcs
+unlock conditions
+seasonal events
+visual overlays
+```
+
+Agents should keep environment logic location-aware where possible.
+
+---
+
+# Cross-Platform Expansion Direction
+
+Future supported environments:
+
+```
+web platform
+React Native mobile app
+interactive installation builds
+festival playable builds
+gallery exhibition builds
+```
+
+Agents must keep logic portable across platforms.
+
+Avoid browser-only assumptions unless required.
+
+---
+
+# Long-Term Platform Goal
+
+Final identity target:
+
+```
+persistent cyberpunk Tokyo night
+as a playable creative universe
+```
+
+Agents should treat every feature decision as movement toward this world.
