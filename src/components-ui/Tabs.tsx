@@ -2,16 +2,16 @@
 import {
   Tabs as RACTabs,
   TabList as RACTabList,
-  TabListProps,
-  TabProps,
+  type TabListProps,
+  type TabProps,
   Tab as RACTab,
-  TabsProps,
+  type TabsProps,
   TabPanels as RACTabPanels,
-  TabPanelProps,
+  type TabPanelProps,
   TabPanel as RACTabPanel,
   composeRenderProps,
   SelectionIndicator,
-  TabPanelsProps
+  type TabPanelsProps,
 } from 'react-aria-components';
 import './Tabs.css';
 
@@ -26,10 +26,12 @@ export function TabList<T extends object>(props: TabListProps<T>) {
 export function Tab(props: TabProps) {
   return (
     <RACTab {...props}>
-      {composeRenderProps(props.children, children => (<>
-        {children}
-        <SelectionIndicator />
-      </>))}
+      {composeRenderProps(props.children, (children) => (
+        <>
+          {children}
+          <SelectionIndicator />
+        </>
+      ))}
     </RACTab>
   );
 }

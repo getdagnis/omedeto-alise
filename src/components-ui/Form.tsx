@@ -1,14 +1,14 @@
 'use client';
 import {
   Form as RACForm,
-  FormProps,
-  LabelProps,
+  type FormProps,
+  type LabelProps,
   Label as RACLabel,
-  FieldErrorProps,
+  type FieldErrorProps,
   FieldError as RACFieldError,
-  ButtonProps,
+  type ButtonProps,
   Button,
-  TextProps
+  type TextProps,
 } from 'react-aria-components';
 import './Form.css';
 import { Text } from './Content';
@@ -26,7 +26,7 @@ export function FieldError(props: FieldErrorProps) {
 }
 
 export function Description(props: TextProps) {
-  return <Text slot="description" className="field-description" {...props} />
+  return <Text slot="description" className="field-description" {...props} />;
 }
 
 export function FieldButton(props: ButtonProps) {

@@ -4,14 +4,14 @@ import {
   UNSTABLE_Toast as Toast,
   UNSTABLE_ToastQueue as ToastQueue,
   UNSTABLE_ToastContent as ToastContent,
-  ToastProps,
-  Text
+  type ToastProps,
+  Text,
 } from 'react-aria-components';
-import {Button} from './Button';
-import {X} from 'lucide-react';
+import { Button } from './Button';
+import { X } from 'lucide-react';
 import './Toast.css';
-import {flushSync} from 'react-dom';
-import { CSSProperties } from 'react';
+import { flushSync } from 'react-dom';
+import { type CSSProperties } from 'react';
 
 // Define the type for your toast content. This interface defines the properties of your toast content, affecting what you
 // pass to the queue calls as arguments.
@@ -21,6 +21,7 @@ interface MyToastContent {
 }
 
 // This is a global toast queue, to be imported and called where ever you want to queue a toast via queue.add().
+// eslint-disable-next-line react-refresh/only-export-components
 export const queue = new ToastQueue<MyToastContent>({
   // Wrap state updates in a CSS view transition.
   wrapUpdate(fn) {
@@ -31,20 +32,18 @@ export const queue = new ToastQueue<MyToastContent>({
     } else {
       fn();
     }
-  }
+  },
 });
 
 export function MyToastRegion() {
   return (
     // The ToastRegion should be rendered at the root of your app.
     <ToastRegion queue={queue}>
-      {({toast}) => (
-        <MyToast toast={toast} style={{viewTransitionName: toast.key} as CSSProperties}>
+      {({ toast }) => (
+        <MyToast toast={toast} style={{ viewTransitionName: toast.key } as CSSProperties}>
           <ToastContent>
             <Text slot="title">{toast.content.title}</Text>
-            {toast.content.description && (
-              <Text slot="description">{toast.content.description}</Text>
-            )}
+            {toast.content.description && <Text slot="description">{toast.content.description}</Text>}
           </ToastContent>
           <Button slot="close" aria-label="Close" variant="quiet">
             <X size={16} />

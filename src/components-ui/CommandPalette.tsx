@@ -1,28 +1,29 @@
 'use client';
 import {
   Autocomplete as AriaAutocomplete,
-  AutocompleteProps as AriaAutocompleteProps,
-  MenuProps as AriaMenuProps,
+  type AutocompleteProps as AriaAutocompleteProps,
+  type MenuProps as AriaMenuProps,
   useFilter,
-  Dialog
+  Dialog,
 } from 'react-aria-components';
-import {Menu} from './Menu';
-import {SearchField} from './SearchField';
+import { Menu } from './Menu';
+import { SearchField } from './SearchField';
 import { Modal } from './Modal';
 import { useEffect } from 'react';
 import './CommandPalette.css';
 
-export interface CommandPaletteProps<T extends object> extends Omit<AriaAutocompleteProps, 'children'>, AriaMenuProps<T> {
-  isOpen: boolean,
-  onOpenChange: (isOpen?: boolean) => void
+export interface CommandPaletteProps<T extends object>
+  extends Omit<AriaAutocompleteProps, 'children'>, AriaMenuProps<T> {
+  isOpen: boolean;
+  onOpenChange: (isOpen?: boolean) => void;
 }
 
 export function CommandPalette<T extends object>(props: CommandPaletteProps<T>) {
-  let {isOpen, onOpenChange} = props;
-  let {contains} = useFilter({sensitivity: 'base'});
+  const { isOpen, onOpenChange } = props;
+  const { contains } = useFilter({ sensitivity: 'base' });
 
   useEffect(() => {
-    let isMacUA = /mac(os|intosh)/i.test(navigator.userAgent);
+    const isMacUA = /mac(os|intosh)/i.test(navigator.userAgent);
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'j' && (isMacUA ? e.metaKey : e.ctrlKey)) {
         e.preventDefault();
@@ -41,13 +42,8 @@ export function CommandPalette<T extends object>(props: CommandPaletteProps<T>) 
     <Modal isDismissable isOpen={isOpen} onOpenChange={onOpenChange}>
       <Dialog className="command-palette-dialog">
         <AriaAutocomplete filter={contains} {...props}>
-          <SearchField
-            autoFocus
-            aria-label="Search commands"
-            placeholder="Search commands" />
-          <Menu
-            {...props}
-            renderEmptyState={() => 'No results found.'} />
+          <SearchField autoFocus aria-label="Search commands" placeholder="Search commands" />
+          <Menu {...props} renderEmptyState={() => 'No results found.'} />
         </AriaAutocomplete>
       </Dialog>
     </Modal>

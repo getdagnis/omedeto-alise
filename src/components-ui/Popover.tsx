@@ -1,9 +1,5 @@
 'use client';
-import {
-  OverlayArrow,
-  Popover as AriaPopover,
-  PopoverProps as AriaPopoverProps
-} from 'react-aria-components';
+import { OverlayArrow, Popover as AriaPopover, type PopoverProps as AriaPopoverProps } from 'react-aria-components';
 import clsx from 'clsx';
 
 import './Popover.css';
@@ -15,9 +11,9 @@ export interface PopoverProps extends Omit<AriaPopoverProps, 'children'> {
 
 export function Popover({ children, hideArrow, ...props }: PopoverProps) {
   return (
-    (
-      <AriaPopover {...props} className={clsx("react-aria-Popover", props.className)}>
-        {({trigger}) => <>
+    <AriaPopover {...props} className={clsx('react-aria-Popover', props.className)}>
+      {({ trigger }) => (
+        <>
           {!hideArrow && trigger !== 'MenuTrigger' && trigger !== 'SubmenuTrigger' && (
             <OverlayArrow>
               <svg width={12} height={12} viewBox="0 0 12 12">
@@ -26,8 +22,8 @@ export function Popover({ children, hideArrow, ...props }: PopoverProps) {
             </OverlayArrow>
           )}
           {children}
-        </>}
-      </AriaPopover>
-    )
+        </>
+      )}
+    </AriaPopover>
   );
 }
