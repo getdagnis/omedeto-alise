@@ -1,5 +1,6 @@
 import styles from './Menu.module.sass';
 import { useEffect, useState } from 'react';
+import { Separator } from '../../components-ui/Separator';
 
 export interface MenuProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export function Menu({ isOpen, onClose, renderMode, onToggleGlitch, onNavigate }
             SHOP
           </div>
         </li>
-
+        <Separator />
         <li className={styles.menuItem}>
           <div
             className={styles.liInner}
@@ -58,8 +59,19 @@ export function Menu({ isOpen, onClose, renderMode, onToggleGlitch, onNavigate }
             ADMIN
           </div>
         </li>
-
         <li className={styles.menuItem}>
+          <div
+            className={styles.liInner}
+            onClick={() => {
+              onNavigate('/sandbox');
+              onClose();
+            }}
+          >
+            UI Sandbox
+          </div>
+        </li>
+
+        {/* <li className={styles.menuItem}>
           <div
             className={styles.liInner}
             onClick={() => {
@@ -68,14 +80,7 @@ export function Menu({ isOpen, onClose, renderMode, onToggleGlitch, onNavigate }
           >
             GLITCH: {renderMode === 'glitch' ? 'OFF' : 'ON'}
           </div>
-        </li>
-
-        {/* Placeholder for other items if needed */}
-        <li className={styles.menuItem}>
-          <div className={styles.liInner} onClick={onClose}>
-            CLOSE
-          </div>
-        </li>
+        </li> */}
       </ul>
     </div>
   );
