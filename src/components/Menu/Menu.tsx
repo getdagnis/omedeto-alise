@@ -5,12 +5,10 @@ import { Separator } from '../../components-ui/Separator';
 export interface MenuProps {
   isOpen: boolean;
   onClose: () => void;
-  renderMode: 'stable' | 'glitch';
-  onToggleGlitch: () => void;
   onNavigate: (path: string) => void;
 }
 
-export function Menu({ isOpen, onClose, renderMode, onToggleGlitch, onNavigate }: MenuProps) {
+export function Menu({ isOpen, onClose, onNavigate }: MenuProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -70,17 +68,6 @@ export function Menu({ isOpen, onClose, renderMode, onToggleGlitch, onNavigate }
             UI Sandbox
           </div>
         </li>
-
-        {/* <li className={styles.menuItem}>
-          <div
-            className={styles.liInner}
-            onClick={() => {
-              onToggleGlitch();
-            }}
-          >
-            GLITCH: {renderMode === 'glitch' ? 'OFF' : 'ON'}
-          </div>
-        </li> */}
       </ul>
     </div>
   );

@@ -13,16 +13,6 @@
   z-index: 99
   transition: opacity 0.15s ease
 
-.pageGlitch::before
-  opacity: 0.015
-  background: repeating-linear-gradient( 0deg, rgba(255, 255, 255, 0.2) 0 1px, rgba(255, 255, 255, 0.05) 1px 2px, transparent 2px 7px ), linear-gradient(90deg, rgba(255, 42, 212, 0.1), rgba(0, 245, 255, 0.1))
-
-.pageGlitch::after
-  opacity: 0.015
-  background: repeating-linear-gradient( 90deg, var(--glitch-dark-a, rgba(0, 0, 0, 0.2)) 0 var(--glitch-stripe-width, 11px), var(--glitch-dark-b, rgba(0, 0, 0, 0.14)) var(--glitch-stripe-width, 11px) calc(var(--glitch-stripe-width, 11px) * 2), var(--glitch-light, rgba(255, 255, 255, 0.08)) calc(var(--glitch-stripe-width, 11px) * 2) calc(var(--glitch-stripe-width, 11px) * 3) ), repeating-linear-gradient( 90deg, transparent 0 var(--glitch-thick-gap, 180px), rgba(0, 0, 0, var(--glitch-thick-opacity, 0.05)) var(--glitch-thick-gap, 180px) calc(var(--glitch-thick-gap, 180px) + var(--glitch-thick-width, 24px)), transparent calc(var(--glitch-thick-gap, 180px) + var(--glitch-thick-width, 24px)) calc(var(--glitch-thick-gap, 180px) * 2) )
-  background-position: var(--glitch-offset-x, 0px) 0, calc(var(--glitch-offset-x, 0px) / 2) 0
-  animation: glitchPulse 0.3s ease infinite
-
 .background
   position: fixed
   inset: 0
@@ -443,20 +433,6 @@
   .panel
     padding: 1.35rem 2rem 1.6rem
     max-width: 80rem
-
-@keyframes glitchPulse
-  0%,
-  100%
-    opacity: 0.1
-    transform: translateX(0)
-
-  45%,
-  55%
-    transform: translateX(0)
-
-  50%
-    opacity: 0.2
-    transform: translateX(15px)
 
 .styleGuideOverlay
   position: fixed

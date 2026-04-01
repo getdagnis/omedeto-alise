@@ -20,8 +20,6 @@ import {
   LOCALIZATIONS,
 } from './config';
 
-const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
-const DEFAULT_GLITCH_MODE: 'stable' | 'glitch' = 'stable';
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const BG_DESKTOP_SUFFIX = '1920';
 const BG_MOBILE_SUFFIX = 'mob';
@@ -50,44 +48,6 @@ const COMBO_WORDS = [
     soundIds: ['beat-1', 'beat-2', 'beat-3'],
   },
 ] as const;
-
-const getStoredGlitchMode = (): 'stable' | 'glitch' => {
-  if (typeof window === 'undefined') {
-    return DEFAULT_GLITCH_MODE;
-  }
-
-  try {
-    const stored = window.localStorage.getItem(GLITCH_PREF_KEY);
-    if (stored === 'stable' || stored === 'glitch') {
-      return stored;
-    }
-    return DEFAULT_GLITCH_MODE;
-  } catch {
-    return DEFAULT_GLITCH_MODE;
-  }
-};
-
-const createGlitchOverlayVars = (): CSSProperties => {
-  const stripeWidth = 7 + Math.random() * 7;
-  const darkA = 0.16 + Math.random() * 0.1;
-  const darkB = 0.11 + Math.random() * 0.09;
-  const light = 0.03 + Math.random() * 0.04;
-  const thickWidth = 16 + Math.random() * 24;
-  const thickGap = 180 + Math.random() * 150;
-  const thickOpacity = 0.07 + Math.random() * 0.08;
-  const offsetX = Math.floor(Math.random() * 42);
-
-  return {
-    '--glitch-stripe-width': `${stripeWidth.toFixed(2)}px`,
-    '--glitch-dark-a': `rgba(0, 0, 0, ${darkA.toFixed(3)})`,
-    '--glitch-dark-b': `rgba(0, 0, 0, ${darkB.toFixed(3)})`,
-    '--glitch-light': `rgba(255, 255, 255, ${light.toFixed(3)})`,
-    '--glitch-thick-width': `${thickWidth.toFixed(2)}px`,
-    '--glitch-thick-gap': `${thickGap.toFixed(2)}px`,
-    '--glitch-thick-opacity': `${thickOpacity.toFixed(3)}`,
-    '--glitch-offset-x': `${offsetX}px`,
-  } as CSSProperties;
-};
 
 const preloadImage = (src: string) =>
   new Promise<void>((resolve) => {
@@ -238,9 +198,7 @@ function App() {
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
-  const [renderMode, setRenderMode] = useState<'stable' | 'glitch'>(() => getStoredGlitchMode());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [glitchOverlayVars, setGlitchOverlayVars] = useState<CSSProperties>(() => createGlitchOverlayVars());
 
   const savedScrollPositionRef = useRef<number>(0);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -540,15 +498,6 @@ function App() {
     setComboWord(null);
   }, [stopAllAudio]);
 
-  const toggleRenderMode = useCallback(() => {
-    if (renderMode === 'glitch') {
-      setRenderMode('stable');
-      return;
-    }
-    setGlitchOverlayVars(createGlitchOverlayVars());
-    setRenderMode('glitch');
-  }, [renderMode]);
-
   useEffect(() => {
     if (!isBackgroundRotationReady || BACKGROUND_IMAGE_KEYS.length < 2) return;
     const interval = window.setInterval(() => {
@@ -598,14 +547,6 @@ function App() {
   }, [isMobileVerticalDevice]);
 
   useEffect(() => () => stopAllAudio(), [stopAllAudio]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(GLITCH_PREF_KEY, renderMode);
-    } catch {
-      // Ignore storage errors
-    }
-  }, [renderMode]);
 
   useEffect(() => {
     const total = Object.values(activeSoundsByCharacter).reduce((sum, ids) => sum + ids.length, 0);
@@ -708,13 +649,8 @@ function App() {
     soundboardColor: '#29063acc',
   };
 
-  const handleGlitchMenuAction = () => {
-    toggleRenderMode();
-    setIsMenuOpen(false);
-  };
-
   return (
-    <div className={`${styles.page} ${renderMode === 'glitch' ? styles.pageGlitch : ''}`} style={glitchOverlayVars}>
+    <div className={styles.page}>
       <div className={styles.background} style={{ backgroundImage: `url(${activeBackgroundImage})` }} />
       <div className={styles.backgroundOverlay} />
 
@@ -748,18 +684,18 @@ function App() {
             comboWord={comboWord}
             onSelectCharacter={handleCharacterClick}
             onToggleFavorite={handleToggleFavorite}
-            onDropSound={(event, characterId) => {
+            onDropSound={(event: React.DragEvent<HTMLDivElement>, characterId: string) => {
               event.preventDefault();
               const soundId = event.dataTransfer.getData('text/plain');
               if (soundId) setSingleSound(characterId, soundId);
             }}
             onImageLoad={handleCharacterImageLoad}
-            onEditCharacter={(characterId) => {
+            onEditCharacter={(characterId: string) => {
               setInitialEditTab('colors');
               navigate(`/${characterId}/edit`);
             }}
             onResetCharacter={resetCharacter}
-            onOpenSoundPicker={(characterId) => setPickingSoundsCharacterId(characterId)}
+            onOpenSoundPicker={(characterId: string) => setPickingSoundsCharacterId(characterId)}
           />
         </section>
 
@@ -781,8 +717,8 @@ function App() {
           initialTab={initialEditTab}
           unlockedLevel={progressionState.unlockedLevel}
           onClose={() => navigate('/')}
-          onSelectCharacter={(id) => navigate(`/${id}/edit`)}
-          onUpdateCustomization={(id, patch) => updateCharacterCustomization(id, patch)}
+          onSelectCharacter={(id: string) => navigate(`/${id}/edit`)}
+          onUpdateCustomization={(id: string, patch: CharacterCustomization) => updateCharacterCustomization(id, patch)}
           onOpenShop={() => navigate('/shop')}
         />
 
@@ -954,13 +890,7 @@ function App() {
           </div>
         </div>
 
-        <Menu
-          isOpen={isMenuOpen}
-          onClose={() => setIsMenuOpen(false)}
-          renderMode={renderMode}
-          onToggleGlitch={handleGlitchMenuAction}
-          onNavigate={navigate}
-        />
+        <Menu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onNavigate={navigate} />
         <ProgressionMeter state={progressionState} currentLevelInfo={currentLevelInfo} nextLevelInfo={nextLevelInfo} />
       </main>
     </div>
