@@ -42,78 +42,78 @@
     forced-color-adjust: none
     -webkit-tap-highlight-color: transparent
 
-  > svg:not(.lucide-check, .lucide-dot, .lucide-chevron-right)
-    grid-area: icon
-    width: var(--spacing-4)
-    height: var(--spacing-4)
-    justify-self: center
-    margin-inline-end: var(--spacing-2)
-
-  &:first-of-type
-    margin-top: var(--spacing)
-
-  &:last-of-type
-    margin-bottom: var(--spacing)
-
-  &[data-open],
-  &[data-pressed]
-    background: var(--highlight-hover)
-
-  &[data-focused]
-    background: var(--highlight-background)
-    color: var(--highlight-foreground)
-
-  &[data-selection-mode]
-    .lucide-check,
-    .lucide-dot
-      grid-area: check
+    > svg:not(.lucide-check, .lucide-dot, .lucide-chevron-right)
+      grid-area: icon
       width: var(--spacing-4)
       height: var(--spacing-4)
+      justify-self: center
+      margin-inline-end: var(--spacing-2)
 
-    .lucide-check
-      stroke-width: 3px
+    &:first-of-type
+      margin-top: var(--spacing)
 
-    .lucide-dot
-      scale: 3
+    &:last-of-type
+      margin-bottom: var(--spacing)
 
-  &[href]
-    text-decoration: none
-    cursor: pointer
+    &[data-open],
+    &[data-pressed]
+      background: var(--highlight-hover)
 
-  &[data-disabled]
-    color: var(--text-color-disabled)
+    &[data-focused]
+      background: var(--highlight-background)
+      color: var(--highlight-foreground)
 
-  .react-aria-Text:not([slot]),
-  [slot=label]
-    grid-area: label
-    font-weight: 500
+    &[data-selection-mode]
+      .lucide-check,
+      .lucide-dot
+        grid-area: check
+        width: var(--spacing-4)
+        height: var(--spacing-4)
 
-  [slot=description]
-    font-size: var(--font-size-sm)
-    grid-area: desc
+      .lucide-check
+        stroke-width: 3px
 
-  kbd
-    grid-area: end
-    justify-self: end
-    margin-inline-start: var(--spacing-4)
-    font-family: system-ui
-    font-size: var(--font-size-sm)
-    text-align: end
-    background: var(--highlight-hover)
-    border: 0.5px solid var(--highlight-pressed)
-    padding: 0 var(--spacing-1)
-    border-radius: var(--radius-sm)
+      .lucide-dot
+        scale: 3
 
-  &[data-focused] kbd
-    background: rgb(255 255 255 / 0.1)
-    border-color: rgb(255 255 255 / 0.2)
+    &[href]
+      text-decoration: none
+      cursor: pointer
 
-  .lucide-chevron-right
-    grid-area: end
-    margin-left: var(--spacing-1)
-    justify-self: end
-    width: var(--spacing-4)
-    height: var(--spacing-4)
+    &[data-disabled]
+      color: var(--text-color-disabled)
+
+    .react-aria-Text:not([slot]),
+    [slot=label]
+      grid-area: label
+      font-weight: 500
+
+    [slot=description]
+      font-size: var(--font-size-sm)
+      grid-area: desc
+
+    kbd
+      grid-area: end
+      justify-self: end
+      margin-inline-start: var(--spacing-4)
+      font-family: system-ui
+      font-size: var(--font-size-sm)
+      text-align: end
+      background: var(--highlight-hover)
+      border: 0.5px solid var(--highlight-pressed)
+      padding: 0 var(--spacing-1)
+      border-radius: var(--radius-sm)
+
+    &[data-focused] kbd
+      background: rgb(255 255 255 / 0.1)
+      border-color: rgb(255 255 255 / 0.2)
+
+    .lucide-chevron-right
+      grid-area: end
+      margin-left: var(--spacing-1)
+      justify-self: end
+      width: var(--spacing-4)
+      height: var(--spacing-4)
 
 .react-aria-MenuSection
   display: grid

@@ -13,21 +13,21 @@
     forced-color-adjust: none
     -webkit-tap-highlight-color: transparent
 
-  &[data-focus-visible]
-    outline: 2px solid var(--focus-ring-color)
-    outline-offset: 2px
+    &[data-focus-visible]
+      outline: 2px solid var(--focus-ring-color)
+      outline-offset: 2px
 
-  &[data-selected]::after
-    content: ''
-    position: absolute
-    inset: 0
-    border: 2px solid black
-    outline: 2px solid white
-    outline-offset: -4px
-    border-radius: inherit
+    &[data-selected]::after
+      content: ''
+      position: absolute
+      inset: 0
+      border: 2px solid black
+      outline: 2px solid white
+      outline-offset: -4px
+      border-radius: inherit
 
-  &[data-disabled]
-    opacity: 0.2
+    &[data-disabled]
+      opacity: 0.2
 
   &[data-layout=stack]
     flex-direction: column
