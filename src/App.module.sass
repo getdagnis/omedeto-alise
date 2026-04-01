@@ -458,3 +458,32 @@
   50%
     opacity: 0.2
     transform: translateX(15px)
+
+.styleGuideOverlay
+  position: fixed
+  inset: 0
+  background: #04030e
+  z-index: 9999
+  overflow-y: auto
+  padding-top: 4rem
+
+.styleGuideClose
+  position: fixed
+  top: 1.5rem
+  right: 2rem
+  background: rgba(255, 255, 255, 0.05)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  color: #fff
+  width: 3rem
+  height: 3rem
+  border-radius: 50%
+  display: grid
+  place-items: center
+  cursor: pointer
+  z-index: 10000
+  transition: all 0.2s ease
+  font-size: 1.25rem
+
+  &:hover
+    background: rgba(255, 255, 255, 0.1)
+    transform: scale(1.1)

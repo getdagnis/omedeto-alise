@@ -9,6 +9,7 @@ import ProgressionMeter from './components/ProgressionMeter';
 import { Menu } from './components/Menu/Menu';
 import Shop from './components/Shop/Shop';
 import Admin from './components/Admin/Admin';
+import StyleGuide from './screens/StyleGuide';
 import { useProgression } from './hooks/useProgression';
 import {
   ALL_SOUNDS,
@@ -222,6 +223,7 @@ function App() {
   const [initialEditTab, setInitialEditTab] = useState<'colors' | 'sounds'>('colors');
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isStyleGuideOpen, setIsStyleGuideOpen] = useState(false);
 
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
@@ -232,6 +234,7 @@ function App() {
   useEffect(() => {
     setIsShopOpen(currentPath === '/shop');
     setIsAdminOpen(currentPath === '/admin');
+    setIsStyleGuideOpen(currentPath === '/styleguide');
   }, [currentPath]);
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
@@ -801,6 +804,15 @@ function App() {
           onPreviewSound={togglePreviewSound}
           previewingSoundId={previewingSoundId}
         />
+
+        {isStyleGuideOpen && (
+          <div className={styles.styleGuideOverlay}>
+            <button className={styles.styleGuideClose} onClick={() => navigate('/')}>
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+            <StyleGuide />
+          </div>
+        )}
 
         {pickingSoundsCharacterId && (
           <>
