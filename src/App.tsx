@@ -9,7 +9,7 @@ import ProgressionMeter from './components/ProgressionMeter';
 import { Menu } from './components/Menu/Menu';
 import Shop from './components/Shop/Shop';
 import Admin from './components/Admin/Admin';
-import StyleGuide from './screens/StyleGuide';
+import SandboxUI from './screens/SandboxUI';
 import { useProgression } from './hooks/useProgression';
 import {
   ALL_SOUNDS,
@@ -19,7 +19,6 @@ import {
   CHARACTERS,
   LOCALIZATIONS,
 } from './config';
-import { Button } from './components-ui';
 
 const GLITCH_PREF_KEY = 'gumi-alise-glitch-mode';
 const DEFAULT_GLITCH_MODE: 'stable' | 'glitch' = 'stable';
@@ -223,7 +222,7 @@ function App() {
   const [initialEditTab, setInitialEditTab] = useState<'colors' | 'sounds'>('colors');
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isStyleGuideOpen, setIsStyleGuideOpen] = useState(false);
+  const [isSandboxUIOpen, setIsSandboxUIOpen] = useState(false);
 
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
@@ -234,7 +233,7 @@ function App() {
   useEffect(() => {
     setIsShopOpen(currentPath === '/shop');
     setIsAdminOpen(currentPath === '/admin');
-    setIsStyleGuideOpen(currentPath === '/styleguide');
+    setIsSandboxUIOpen(currentPath === '/sandbox');
   }, [currentPath]);
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
@@ -766,7 +765,7 @@ function App() {
 
         <div className={styles.testDiv}>
           <button>test</button>
-          <Button aria-label="this">this</Button>
+          {/* <Button aria-label="this">this</Button> */}
         </div>
 
         <EditCharacterModal
@@ -805,12 +804,12 @@ function App() {
           previewingSoundId={previewingSoundId}
         />
 
-        {isStyleGuideOpen && (
+        {isSandboxUIOpen && (
           <div className={styles.styleGuideOverlay}>
             <button className={styles.styleGuideClose} onClick={() => navigate('/')}>
               <FontAwesomeIcon icon={faXmark} />
             </button>
-            <StyleGuide />
+            <SandboxUI />
           </div>
         )}
 

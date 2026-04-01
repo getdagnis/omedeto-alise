@@ -1,0 +1,33 @@
+.container
+  min-height: 100vh
+  background: #04030e
+  color: #fff
+  padding: 2rem
+  font-family: var(--font-body)
+
+.header
+  margin-bottom: 3rem
+  text-align: center
+
+  p
+    font-size: 0.9rem
+    letter-spacing: 0.1em
+    opacity: 0.6
+    margin-top: 0.5rem
+
+.grid
+  display: grid
+  grid-template-columns: 1fr 1fr
+  gap: 2rem
+  max-width: 1400px
+  margin: 0 auto
+
+  @media (max-width: 1024px)
+    grid-template-columns: 1fr
+
+.card
+  background: rgba(255, 255, 255, 0.03)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  border-radius: 1.5rem
+  padding: 2rem
+  backdrop-filter: blur(10px)
