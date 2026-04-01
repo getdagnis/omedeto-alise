@@ -13,14 +13,14 @@ import {
 import { Check } from 'lucide-react';
 import { Text } from './Content';
 import { ProgressCircle } from './ProgressCircle';
-import './ListBox.css';
+import './ListBox.sass';
 
 export function ListBox<T extends object>({ children, ...props }: ListBoxProps<T>) {
   return <AriaListBox {...props}>{children}</AriaListBox>;
 }
 
 export function ListBoxItem(props: ListBoxItemProps) {
-  let textValue = props.textValue || (typeof props.children === 'string' ? props.children : undefined);
+  const textValue = props.textValue || (typeof props.children === 'string' ? props.children : undefined);
   return (
     <AriaListBoxItem {...props} textValue={textValue}>
       {composeRenderProps(props.children, (children) =>
@@ -47,7 +47,7 @@ export function DropdownListBox<T extends object>(props: ListBoxProps<T>) {
 }
 
 export function DropdownItem(props: ListBoxItemProps) {
-  let textValue = props.textValue || (typeof props.children === 'string' ? props.children : undefined);
+  const textValue = props.textValue || (typeof props.children === 'string' ? props.children : undefined);
   return (
     <ListBoxItem {...props} textValue={textValue} className="dropdown-item">
       {composeRenderProps(props.children, (children, { isSelected }) => (

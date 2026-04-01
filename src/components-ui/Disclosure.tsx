@@ -9,7 +9,7 @@ import {
 } from 'react-aria-components';
 import { Heading } from './Content';
 import { ChevronRight } from 'lucide-react';
-import './Disclosure.css';
+import './Disclosure.sass';
 
 export function Disclosure(props: DisclosureProps) {
   return <AriaDisclosure {...props} />;

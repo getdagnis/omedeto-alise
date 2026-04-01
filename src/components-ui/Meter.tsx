@@ -1,7 +1,7 @@
 'use client';
 import { Meter as AriaMeter, type MeterProps as AriaMeterProps } from 'react-aria-components';
 import { Label } from './Form';
-import './Meter.css';
+import './Meter.sass';
 
 export interface MeterProps extends AriaMeterProps {
   label?: string;
@@ -21,7 +21,7 @@ export function Meter({ label, ...props }: MeterProps) {
                 {
                   width: percentage + '%',
                   '--fill-color': percentage < 70 ? 'var(--green)' : percentage < 90 ? 'var(--orange)' : 'var(--red)',
-                } as any
+                } as React.CSSProperties
               }
             />
           </div>

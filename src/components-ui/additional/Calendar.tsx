@@ -8,12 +8,12 @@ import {
   type CalendarCellProps,
   type CalendarGridProps,
 } from 'react-aria-components';
-import { Heading, Text } from './Content';
+import { Heading, Text } from '../Content';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import { Button } from './Button';
+import { Button } from '../Button';
 
-import './Calendar.css';
+import './Calendar.sass';
 
 export interface CalendarProps<T extends DateValue> extends AriaCalendarProps<T> {
   errorMessage?: string;

@@ -13,7 +13,7 @@ import {
   SelectionIndicator,
   type TabPanelsProps,
 } from 'react-aria-components';
-import './Tabs.css';
+import './Tabs.sass';
 
 export function Tabs(props: TabsProps) {
   return <RACTabs {...props} />;

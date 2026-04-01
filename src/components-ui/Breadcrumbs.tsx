@@ -8,7 +8,7 @@ import {
   Link,
 } from 'react-aria-components';
 import { ChevronRight } from 'lucide-react';
-import './Breadcrumbs.css';
+import './Breadcrumbs.sass';
 
 export function Breadcrumbs<T extends object>(props: BreadcrumbsProps<T>) {
   return <RACBreadcrumbs {...props} />;

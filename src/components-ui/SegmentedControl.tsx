@@ -7,7 +7,7 @@ import {
   type ToggleButtonGroupProps,
   composeRenderProps,
 } from 'react-aria-components';
-import './SegmentedControl.css';
+import './SegmentedControl.sass';
 
 export function SegmentedControl(props: ToggleButtonGroupProps) {
   return <RACToggleButtonGroup {...props} className="segmented-control button-base" data-variant="secondary" />;

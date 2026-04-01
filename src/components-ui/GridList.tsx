@@ -11,7 +11,7 @@ import {
 import { Checkbox } from './Checkbox';
 import { GripVertical } from 'lucide-react';
 import { ProgressCircle } from './ProgressCircle';
-import './GridList.css';
+import './GridList.sass';
 
 export function GridList<T extends object>({ children, layout = 'grid', ...props }: GridListProps<T>) {
   return (

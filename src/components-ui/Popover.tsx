@@ -2,7 +2,7 @@
 import { OverlayArrow, Popover as AriaPopover, type PopoverProps as AriaPopoverProps } from 'react-aria-components';
 import clsx from 'clsx';
 
-import './Popover.css';
+import './Popover.sass';
 
 export interface PopoverProps extends Omit<AriaPopoverProps, 'children'> {
   children: React.ReactNode;

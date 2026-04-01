@@ -1,7 +1,7 @@
 'use client';
 import { Modal, ModalOverlay, type ModalOverlayProps, composeRenderProps } from 'react-aria-components';
 import { Dialog } from './additional/Dialog';
-import './Sheet.css';
+import './Sheet.sass';
 
 export function Sheet(props: ModalOverlayProps) {
   return (

@@ -1,7 +1,7 @@
 'use client';
 import { Button as RACButton, type ButtonProps as RACButtonProps, composeRenderProps } from 'react-aria-components';
 import { ProgressCircle } from './ProgressCircle';
-import './Button.css';
+import './Button.sass';
 
 interface ButtonProps extends RACButtonProps {
   /**

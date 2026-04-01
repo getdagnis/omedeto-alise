@@ -4,7 +4,7 @@ import {
   ToggleButton as RACToggleButton,
   type ToggleButtonProps as RACToggleButtonProps,
 } from 'react-aria-components';
-import './ToggleButton.css';
+import './ToggleButton.sass';
 
 interface ToggleButtonProps extends RACToggleButtonProps {
   /**

@@ -15,10 +15,10 @@ import {
 import { Popover } from './Popover';
 import { Text } from './Content';
 import React from 'react';
-import './Menu.css';
+import './Menu.sass';
 
 export function MenuTrigger(props: MenuTriggerProps) {
-  let [trigger, menu] = React.Children.toArray(props.children) as [React.ReactElement, React.ReactElement];
+  const [trigger, menu] = React.Children.toArray(props.children) as [React.ReactElement, React.ReactElement];
   return (
     <AriaMenuTrigger {...props}>
       {trigger}
@@ -32,7 +32,7 @@ export function Menu<T extends object>(props: MenuProps<T>) {
 }
 
 export function MenuItem(props: Omit<MenuItemProps, 'children'> & { children?: React.ReactNode }) {
-  let textValue = props.textValue || (typeof props.children === 'string' ? props.children : undefined);
+  const textValue = props.textValue || (typeof props.children === 'string' ? props.children : undefined);
   return (
     <AriaMenuItem {...props} textValue={textValue}>
       {({ hasSubmenu, isSelected, selectionMode }) => (
@@ -52,7 +52,7 @@ export function MenuSection<T extends object>(props: MenuSectionProps<T>) {
 }
 
 export function SubmenuTrigger(props: SubmenuTriggerProps) {
-  let [trigger, menu] = React.Children.toArray(props.children) as [React.ReactElement, React.ReactElement];
+  const [trigger, menu] = React.Children.toArray(props.children) as [React.ReactElement, React.ReactElement];
   return (
     <AriaSubmenuTrigger {...props}>
       {trigger}

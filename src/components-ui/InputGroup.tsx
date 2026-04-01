@@ -2,7 +2,7 @@
 import { composeRenderProps, Group, type GroupProps, InputContext } from 'react-aria-components';
 import { Label } from './Form';
 import { useId } from 'react';
-import './InputGroup.css';
+import './InputGroup.sass';
 
 interface InputGroupProps extends GroupProps {
   label?: string;

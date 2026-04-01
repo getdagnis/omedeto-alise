@@ -1,6 +1,11 @@
 'use client';
-import {Dialog as RACDialog, DialogProps, DialogTrigger as RACDialogTrigger, DialogTriggerProps} from 'react-aria-components';
-import './Dialog.css';
+import {
+  Dialog as RACDialog,
+  type DialogProps,
+  DialogTrigger as RACDialogTrigger,
+  type DialogTriggerProps,
+} from 'react-aria-components';
+import './Dialog.sass';
 
 export function Dialog(props: DialogProps) {
   return <RACDialog {...props} />;

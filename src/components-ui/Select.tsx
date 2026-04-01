@@ -12,7 +12,7 @@ import { DropdownItem, DropdownListBox } from './ListBox';
 import { ChevronDown } from 'lucide-react';
 import { Popover } from './Popover';
 import { Label, FieldError, Description } from './Form';
-import './Select.css';
+import './Select.sass';
 
 export interface SelectProps<T extends object, M extends 'single' | 'multiple'> extends Omit<
   AriaSelectProps<T, M>,

@@ -13,7 +13,7 @@ import { DropdownItem, DropdownListBox } from './ListBox';
 import { Popover } from './Popover';
 import { ChevronDown } from 'lucide-react';
 
-import './ComboBox.css';
+import './ComboBox.sass';
 
 export interface ComboBoxProps<T extends object, M extends 'single' | 'multiple'> extends Omit<
   AriaComboBoxProps<T, M>,

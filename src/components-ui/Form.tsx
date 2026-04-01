@@ -10,7 +10,7 @@ import {
   Button,
   type TextProps,
 } from 'react-aria-components';
-import './Form.css';
+import './Form.sass';
 import { Text } from './Content';
 
 export function Form(props: FormProps) {

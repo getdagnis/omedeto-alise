@@ -9,7 +9,7 @@ import {
 } from 'react-aria-components';
 import { Button } from './Button';
 import { X } from 'lucide-react';
-import './Toast.css';
+import './Toast.sass';
 import { flushSync } from 'react-dom';
 import { type CSSProperties } from 'react';
 

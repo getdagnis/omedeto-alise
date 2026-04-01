@@ -8,7 +8,7 @@ import {
 
 import { ColorSwatch } from './ColorSwatch';
 
-import './ColorSwatchPicker.css';
+import './ColorSwatchPicker.sass';
 
 export function ColorSwatchPicker({ children, ...props }: ColorSwatchPickerProps) {
   return <AriaColorSwatchPicker {...props}>{children}</AriaColorSwatchPicker>;

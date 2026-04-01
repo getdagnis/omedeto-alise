@@ -1,6 +1,6 @@
 import { Heading as AriaHeading, type HeadingProps, Text as AriaText, type TextProps } from 'react-aria-components';
 
-import './Content.css';
+import './Content.sass';
 
 export function Heading(props: HeadingProps) {
   return <AriaHeading {...props} />;

@@ -9,7 +9,7 @@ import {
 import { Button } from './Button';
 import { Plus, Minus } from 'lucide-react';
 import { Label, FieldError, Description } from './Form';
-import './NumberField.css';
+import './NumberField.sass';
 
 export interface NumberFieldProps extends AriaNumberFieldProps {
   label?: string;
