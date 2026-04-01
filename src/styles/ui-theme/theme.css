@@ -6,7 +6,7 @@
 
   /* theme colors */
   /* lightness channel is only used as a multiplier for chroma (see below) */
-  --gray: oklch(54.193% 0.09419 290.415 / 0.413);
+  --gray: oklch(57.558% 0.05973 291.442 / 0.413);
   --red: oklch(0.6 0.181447 27.0726);
   --orange: oklch(0.7 0.150492 54);
   --yellow: oklch(0.8 0.128516 73.8032);
