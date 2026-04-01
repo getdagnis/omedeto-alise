@@ -9,7 +9,7 @@ interface InputGroupProps extends GroupProps {
 }
 
 export function InputGroup(props: InputGroupProps) {
-  let id = useId();
+  const id = useId();
   return (
     <div className="input-group">
       {props.label && (

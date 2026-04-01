@@ -1,4 +1,5 @@
 'use client';
+import type { CSSProperties } from 'react';
 import {
   Slider as AriaSlider,
   SliderOutput,
@@ -14,6 +15,15 @@ export interface SliderProps<T> extends AriaSliderProps<T> {
   thumbLabels?: string[];
 }
 
+type SingleSliderFillStyle = CSSProperties & {
+  '--size': string;
+};
+
+type RangeSliderFillStyle = CSSProperties & {
+  '--start': string;
+  '--size': string;
+};
+
 export function Slider<T extends number | number[]>({ label, thumbLabels, ...props }: SliderProps<T>) {
   return (
     <AriaSlider {...props}>
@@ -25,7 +35,7 @@ export function Slider<T extends number | number[]>({ label, thumbLabels, ...pro
             <div className="track inset" data-disabled={isDisabled || undefined}>
               {state.values.length === 1 ? (
                 // Single thumb, render fill from the end
-                <div className="fill" style={{ '--size': state.getThumbPercent(0) * 100 + '%' } as any} />
+                <div className="fill" style={{ '--size': state.getThumbPercent(0) * 100 + '%' } as SingleSliderFillStyle} />
               ) : state.values.length === 2 ? (
                 // Range slider, render fill between the thumbs
                 <div
@@ -34,7 +44,7 @@ export function Slider<T extends number | number[]>({ label, thumbLabels, ...pro
                     {
                       '--start': state.getThumbPercent(0) * 100 + '%',
                       '--size': (state.getThumbPercent(1) - state.getThumbPercent(0)) * 100 + '%',
-                    } as any
+                    } as RangeSliderFillStyle
                   }
                 />
               ) : null}

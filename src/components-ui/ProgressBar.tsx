@@ -1,11 +1,16 @@
 'use client';
 import { ProgressBar as AriaProgressBar, type ProgressBarProps as AriaProgressBarProps } from 'react-aria-components';
+import type { CSSProperties } from 'react';
 import { Label } from './Form';
 import './ProgressBar.sass';
 
 export interface ProgressBarProps extends AriaProgressBarProps {
   label?: string;
 }
+
+type ProgressFillStyle = CSSProperties & {
+  '--percent': string;
+};
 
 export function ProgressBar({ label, ...props }: ProgressBarProps) {
   return (
@@ -15,7 +20,7 @@ export function ProgressBar({ label, ...props }: ProgressBarProps) {
           <Label>{label}</Label>
           <span className="value">{valueText}</span>
           <div className="track inset">
-            <div className="fill" style={{ '--percent': (isIndeterminate ? 100 : percentage) + '%' } as any} />
+            <div className="fill" style={{ '--percent': (isIndeterminate ? 100 : percentage) + '%' } as ProgressFillStyle} />
           </div>
         </>
       )}
