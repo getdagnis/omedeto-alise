@@ -18,7 +18,9 @@ import Shop from './components/Shop/Shop';
 import Admin from './components/Admin/Admin';
 import SandboxUI from './screens/SandboxUI';
 import { useProgression } from './hooks/useProgression';
+import { PROGRESSION_LEVELS } from './progression';
 import { Button, CloseButton, ProgressCircle } from './components-ui';
+import AchievementUnlockedModal from './components/AchievementUnlockedModal';
 import {
   ALL_SOUNDS,
   BACKGROUND_IMAGE_KEYS,
@@ -261,6 +263,22 @@ function App() {
     recordCharacterCustomized,
     buySound,
   } = useProgression();
+
+  // User-visible lvl 2 = progression level 1 (Dual Boost / 2 sounds per character).
+  const [isLvl2AchievementOpen, setIsLvl2AchievementOpen] = useState(false);
+  const lastUnlockedLevelRef = useRef<number>(progressionState.unlockedLevel);
+
+  useEffect(() => {
+    const prev = lastUnlockedLevelRef.current;
+    const next = progressionState.unlockedLevel;
+
+    if (!isLvl2AchievementOpen && prev < 1 && next === 1) {
+      // Schedule outside the effect body to avoid cascading renders.
+      window.setTimeout(() => setIsLvl2AchievementOpen(true), 0);
+    }
+
+    lastUnlockedLevelRef.current = next;
+  }, [progressionState.unlockedLevel, isLvl2AchievementOpen]);
 
   useEffect(() => {
     if (editingCharacterId) {
@@ -951,6 +969,16 @@ function App() {
   const isBlockingOverlayOpen = Boolean(editingCharacterId || pickingSoundsCharacterId);
   const isMenuVisible = isMenuOpen && !isInternalRoute;
 
+  const lvl2NextLevel = PROGRESSION_LEVELS[2];
+  const lvl2NextReq = lvl2NextLevel.requirements;
+  const lvl2UnlockNextLines = [
+    lvl2NextReq.charactersCustomized
+      ? `Customize images/colors on ${lvl2NextReq.charactersCustomized} characters.`
+      : null,
+    lvl2NextReq.minutesPlayed ? `Mix for ${lvl2NextReq.minutesPlayed} minutes.` : null,
+    lvl2NextReq.soundsPlayed ? `Trigger ${lvl2NextReq.soundsPlayed} different sound clips.` : null,
+  ].filter((line): line is string => Boolean(line));
+
   return (
     <div className={`${styles.page} ${isLowGraphics ? styles.pageLowGraphics : ''}`}>
       <div className={styles.background} style={{ backgroundImage: `url(${activeBackgroundImage})` }} />
@@ -1350,6 +1378,16 @@ function App() {
               state={progressionState}
               currentLevelInfo={currentLevelInfo}
               nextLevelInfo={nextLevelInfo}
+            />
+
+            <AchievementUnlockedModal
+              isOpen={isLvl2AchievementOpen}
+              onClose={() => setIsLvl2AchievementOpen(false)}
+              title="Achievement unlocked: Level 2"
+              message="Congrats! Level 2 Soundmixer unlocked. Add up to 2 sounds per character. The market will open more soon."
+              unlockNextTitle="To unlock Level 3:"
+              unlockNextLines={lvl2UnlockNextLines}
+              buttonLabel="Hurrah!"
             />
           </>
         )}

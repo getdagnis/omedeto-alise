@@ -45,7 +45,7 @@ export const PROGRESSION_LEVELS: ProgressionLevel[] = [
     benefitTitle: 'Triple Sounds',
     benefitDetail: '3 sounds per character, unlock custom character images.',
     benefitIcon: '🌈',
-    requirements: { charactersCustomized: 12, minutesPlayed: 12, soundsPlayed: 18 },
+    requirements: { charactersCustomized: 9, minutesPlayed: 9, soundsPlayed: 12 },
   },
   {
     level: 3,

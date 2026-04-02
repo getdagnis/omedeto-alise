@@ -1,0 +1,99 @@
+.overlay
+  position: fixed
+  inset: 0
+  z-index: 120
+  background: rgba(0, 0, 0, 0.55)
+  display: grid
+  place-items: center
+  padding: 1rem
+
+.modal
+  position: relative
+  width: min(32rem, 95vw)
+  border-radius: 1.25rem
+  border: 1px solid rgba(255, 255, 255, 0.14)
+  background: rgba(12, 24, 55, 0.96) // darkish blue, slightly transparent
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.55)
+  padding: 1.2rem 1.25rem 1.1rem
+  text-align: center
+
+  // subtle glow hint using theme cyan
+  &::before
+    content: ''
+    position: absolute
+    inset: -1px
+    border-radius: inherit
+    pointer-events: none
+    box-shadow: 0 0 28px rgba(0, 245, 255, 0.18)
+    border: 1px solid rgba(0, 245, 255, 0.14)
+
+.title
+  margin: 0 0 1rem
+  color: var(--yellow)
+  font-family: var(--font-title)
+  font-size: 1.5rem
+  font-weight: 900
+  letter-spacing: 0.08em
+  text-transform: uppercase
+  text-shadow: 0 0 18px rgba(212, 255, 0, 0.25)
+
+.message
+  margin: 1rem auto
+  color: rgba(255, 255, 255, 0.92)
+  font-family: var(--font-body)
+  font-size: 0.92rem
+  max-width: 30rem
+  line-height: 1.35
+
+.nextBlock
+  margin: 1rem auto 0.5rem
+  border-radius: 0.9rem
+  background: rgba(0, 0, 0, 0.22)
+  border: 1px solid rgba(255, 255, 255, 0.08)
+  padding: 0.85rem 0.9rem
+  max-width: 30rem
+  text-align: left
+
+.nextTitle
+  font-family: var(--font-title)
+  font-size: 1rem
+  font-weight: 900
+  letter-spacing: 0.08em
+  text-transform: uppercase
+  color: rgba(255, 255, 255, 0.92)
+
+.nextLines
+  margin-top: 0.55rem
+  display: grid
+  gap: 0.35rem
+
+.nextLine
+  font-family: var(--font-body)
+  font-size: 0.92rem
+  color: var(--color-text-muted)
+
+.ctaButton
+  margin-top: 2rem
+  width: 100%
+  max-width: 18rem
+  border-radius: 999px
+  border: 1px solid rgba(0, 245, 255, 0.28)
+  background: rgba(0, 245, 255, 0.12)
+  color: #eaffff
+  font-family: var(--font-title)
+  font-weight: 900
+  letter-spacing: 0.08em
+  text-transform: uppercase
+  cursor: pointer
+  padding: 0.65rem 1rem
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.25), 0 0 45px rgba(0, 245, 255, 0.12)
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease
+
+  &:hover
+    background: rgba(0, 245, 255, 0.16)
+    box-shadow: 0 0 22px rgba(0, 245, 255, 0.3), 0 0 55px rgba(0, 245, 255, 0.16)
+    transform: translateY(-1px)
+
+  &:active
+    transform: translateY(0)
+    box-shadow: 0 0 14px rgba(0, 245, 255, 0.18), 0 0 35px rgba(0, 245, 255, 0.12)

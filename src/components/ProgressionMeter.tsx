@@ -20,30 +20,38 @@ export default function ProgressionMeter({ state, currentLevelInfo, nextLevelInf
     const meters = [];
     if (reqs.charactersPlayed) {
       meters.push({
+        key: 'charactersPlayed' as const,
         label: `CHARS`,
         value: `${state.playedCharacterIds.length}/${reqs.charactersPlayed}`,
         percent: Math.min(100, (state.playedCharacterIds.length / reqs.charactersPlayed) * 100),
+        help: `Play sounds on at least ${reqs.charactersPlayed} different characters.`,
       });
     }
     if (reqs.charactersCustomized) {
       meters.push({
+        key: 'charactersCustomized' as const,
         label: `CUSTOM`,
         value: `${state.customizedCharacterIds.length}/${reqs.charactersCustomized}`,
         percent: Math.min(100, (state.customizedCharacterIds.length / reqs.charactersCustomized) * 100),
+        help: `Save an image/color customization for at least ${reqs.charactersCustomized} characters.`,
       });
     }
     if (reqs.soundsPlayed) {
       meters.push({
+        key: 'soundsPlayed' as const,
         label: `SFX`,
         value: `${state.playedSoundIds.length}/${reqs.soundsPlayed}`,
         percent: Math.min(100, (state.playedSoundIds.length / reqs.soundsPlayed) * 100),
+        help: `Trigger at least ${reqs.soundsPlayed} different sound clips.`,
       });
     }
     if (reqs.minutesPlayed) {
       meters.push({
+        key: 'minutesPlayed' as const,
         label: `TIME`,
         value: `${state.minutesPlayed}/${reqs.minutesPlayed}m`,
         percent: Math.min(100, (state.minutesPlayed / reqs.minutesPlayed) * 100),
+        help: `Accumulate at least ${reqs.minutesPlayed} minutes of interaction (play a sound or save customization).`,
       });
     }
     return meters;
@@ -110,6 +118,7 @@ export default function ProgressionMeter({ state, currentLevelInfo, nextLevelInf
                             <div className={styles.detailedTrack}>
                               <div className={styles.detailedFill} style={{ width: `${m.percent}%` }} />
                             </div>
+                            <div className={styles.detailedHelp}>{m.help}</div>
                           </div>
                         ))}
                       </div>
