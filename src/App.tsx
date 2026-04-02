@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faArrowsRotate, faPen, faThumbtack, faTrash, faVolumeHigh } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowLeft,
+  faArrowsRotate,
+  faPen,
+  faThumbtack,
+  faTrash,
+  faVolumeHigh,
+} from '@fortawesome/free-solid-svg-icons';
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
@@ -11,7 +18,7 @@ import Shop from './components/Shop/Shop';
 import Admin from './components/Admin/Admin';
 import SandboxUI from './screens/SandboxUI';
 import { useProgression } from './hooks/useProgression';
-import { Button, CloseButton } from './components-ui';
+import { Button, CloseButton, ProgressCircle } from './components-ui';
 import {
   ALL_SOUNDS,
   BACKGROUND_IMAGE_KEYS,
@@ -27,7 +34,10 @@ const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
 const MAX_SOUNDS_TOTAL = 12;
 const LOW_GRAPHICS_STORAGE_KEY = 'gumi-alise-low-graphics';
-const MAX_CHARACTER_SOUNDS = 6;
+const MAX_CHARACTER_SOUNDS = 9;
+const PICKER_RANDOM_DELAY_MS = 420;
+
+type PickerRandomBusy = { kind: 'slot'; index: number } | { kind: 'shuffle' };
 
 const COMBO_WORDS = [
   {
@@ -139,7 +149,7 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
         next.image = typed.image;
       }
       if (Array.isArray(typed.soundIds)) {
-        next.soundIds = typed.soundIds.filter((s) => typeof s === 'string').slice(0, 12);
+        next.soundIds = typed.soundIds.filter((s) => typeof s === 'string').slice(0, MAX_CHARACTER_SOUNDS);
       }
 
       sanitized[key] = next;
@@ -203,6 +213,7 @@ function App() {
   const [pickerSlots, setPickerSlots] = useState<Array<string | null>>([]);
   const [pickerSelectedSoundIds, setPickerSelectedSoundIds] = useState<string[]>([]);
   const [pickerPinnedSoundIds, setPickerPinnedSoundIds] = useState<string[]>([]);
+  const [pickerRandomBusy, setPickerRandomBusy] = useState<PickerRandomBusy | null>(null);
   const [initialEditTab, setInitialEditTab] = useState<'colors' | 'sounds'>('colors');
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
@@ -230,6 +241,17 @@ function App() {
   const totalActiveSoundsRef = useRef(0);
   const glowBurstTimeoutRef = useRef<number | null>(null);
   const activeComboIdRef = useRef<string | null>(null);
+  const pickerShuffleTimeoutRef = useRef<number | null>(null);
+  const pickerSlotsLatestRef = useRef<Array<string | null>>([]);
+  const pickerPinnedLatestRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    pickerSlotsLatestRef.current = pickerSlots;
+  }, [pickerSlots]);
+
+  useEffect(() => {
+    pickerPinnedLatestRef.current = pickerPinnedSoundIds;
+  }, [pickerPinnedSoundIds]);
 
   const {
     state: progressionState,
@@ -298,27 +320,34 @@ function App() {
     }
   }, [pickingSoundsCharacterId]);
 
-  const togglePreviewSound = useCallback(
+  const clearPreviewAudio = useCallback(() => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+  }, []);
+
+  const stopPickerPreview = useCallback((soundId: string) => {
+    if (pickerActionTimeoutRef.current) {
+      window.clearTimeout(pickerActionTimeoutRef.current);
+      pickerActionTimeoutRef.current = null;
+    }
+    clearPreviewAudio();
+    setPreviewingSoundId(null);
+    setPickerActionSoundId(soundId);
+    pickerActionTimeoutRef.current = window.setTimeout(() => {
+      setPickerActionSoundId((current) => (current === soundId ? null : current));
+      pickerActionTimeoutRef.current = null;
+    }, 2000);
+  }, [clearPreviewAudio]);
+
+  const startPickerPreview = useCallback(
     (soundId: string, path: string) => {
       if (pickerActionTimeoutRef.current) {
         window.clearTimeout(pickerActionTimeoutRef.current);
         pickerActionTimeoutRef.current = null;
       }
-
-      if (previewAudioRef.current) {
-        previewAudioRef.current.pause();
-        previewAudioRef.current = null;
-      }
-
-      if (previewingSoundId === soundId) {
-        setPreviewingSoundId(null);
-        setPickerActionSoundId(soundId);
-        pickerActionTimeoutRef.current = window.setTimeout(() => {
-          setPickerActionSoundId((current) => (current === soundId ? null : current));
-          pickerActionTimeoutRef.current = null;
-        }, 2000);
-        return;
-      }
+      clearPreviewAudio();
 
       const audio = new Audio(path);
       audio.loop = false;
@@ -337,6 +366,18 @@ function App() {
       previewAudioRef.current = audio;
       setPreviewingSoundId(soundId);
       setPickerActionSoundId(soundId);
+    },
+    [clearPreviewAudio],
+  );
+
+  const togglePreviewSound = useCallback(
+    (soundId: string, path: string) => {
+      if (previewingSoundId === soundId) {
+        stopPickerPreview(soundId);
+        return;
+      }
+
+      startPickerPreview(soundId, path);
       setPickerSelectedSoundIds((previous) => {
         if (previous.includes(soundId)) {
           return previous;
@@ -347,7 +388,7 @@ function App() {
         return [...previous, soundId];
       });
     },
-    [currentLevelInfo.soundsPerCharacter, previewingSoundId],
+    [currentLevelInfo.soundsPerCharacter, previewingSoundId, startPickerPreview, stopPickerPreview],
   );
 
   const toggleMuteCharacter = useCallback((characterId: string) => {
@@ -640,64 +681,118 @@ function App() {
     [persistCharacterCustomStorageDebounced, recordCharacterCustomized],
   );
 
-  const handleRemoveSound = useCallback(
-    (soundId: string) => {
-      setPickerSlots((previous) => previous.map((id) => (id === soundId ? null : id)));
-      setPickerSelectedSoundIds((previous) => previous.filter((id) => id !== soundId));
-      setPickerPinnedSoundIds((previous) => previous.filter((id) => id !== soundId));
-      setPickerActionSoundId((current) => (current === soundId ? null : current));
-    },
-    [],
-  );
+  const handleRemoveSound = useCallback((soundId: string) => {
+    setPickerSlots((previous) => previous.map((id) => (id === soundId ? null : id)));
+    setPickerSelectedSoundIds((previous) => previous.filter((id) => id !== soundId));
+    setPickerPinnedSoundIds((previous) => previous.filter((id) => id !== soundId));
+    setPickerActionSoundId((current) => (current === soundId ? null : current));
+  }, []);
 
-  const fillPickerSlotWithRandomSound = useCallback(
+  const clearPickerShuffleTimer = useCallback(() => {
+    if (pickerShuffleTimeoutRef.current !== null) {
+      window.clearTimeout(pickerShuffleTimeoutRef.current);
+      pickerShuffleTimeoutRef.current = null;
+    }
+  }, []);
+
+  const applyPickerSlotRandom = useCallback((characterId: string, slotIndex: number) => {
+    const character = CHARACTERS.find((entry) => entry.id === characterId);
+    if (!character) {
+      return;
+    }
+
+    const allSoundIds = character.sounds.map((sound) => sound.id);
+    setPickerSlots((previous) => {
+      const slots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => previous[index] ?? null);
+      const nextSoundId = getRandomUnusedSoundId(
+        allSoundIds,
+        slots.filter((id): id is string => Boolean(id)),
+      );
+
+      if (!nextSoundId) {
+        return previous;
+      }
+
+      const nextSlots = [...slots];
+      nextSlots[slotIndex] = nextSoundId;
+      return nextSlots;
+    });
+  }, []);
+
+  const schedulePickerSlotRandom = useCallback(
     (characterId: string, slotIndex: number) => {
+      if (pickerRandomBusy !== null) {
+        return;
+      }
+
       const character = CHARACTERS.find((entry) => entry.id === characterId);
       if (!character) {
         return;
       }
 
-      const allSoundIds = character.sounds.map((sound) => sound.id);
-      const currentSlots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => pickerSlots[index] ?? null);
-      const nextSoundId = getRandomUnusedSoundId(allSoundIds, currentSlots.filter((id): id is string => Boolean(id)));
+      const slots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => pickerSlotsLatestRef.current[index] ?? null);
+      const nextSoundId = getRandomUnusedSoundId(
+        character.sounds.map((sound) => sound.id),
+        slots.filter((id): id is string => Boolean(id)),
+      );
 
       if (!nextSoundId) {
         return;
       }
 
-      const nextSlots = [...currentSlots];
-      nextSlots[slotIndex] = nextSoundId;
-      setPickerSlots(nextSlots);
+      clearPickerShuffleTimer();
+      setPickerRandomBusy({ kind: 'slot', index: slotIndex });
+      pickerShuffleTimeoutRef.current = window.setTimeout(() => {
+        pickerShuffleTimeoutRef.current = null;
+        applyPickerSlotRandom(characterId, slotIndex);
+        setPickerRandomBusy(null);
+      }, PICKER_RANDOM_DELAY_MS);
     },
-    [pickerSlots],
+    [applyPickerSlotRandom, clearPickerShuffleTimer, pickerRandomBusy],
   );
 
-  const handleRandomizeSounds = useCallback(
+  const applyPickerShuffleAll = useCallback((characterId: string) => {
+    const character = CHARACTERS.find((c) => c.id === characterId);
+    if (!character) return;
+
+    const allSoundIds = character.sounds.map((s) => s.id);
+    const pickerSlotsSnapshot = pickerSlotsLatestRef.current;
+    const pickerPinnedSnapshot = pickerPinnedLatestRef.current;
+    const pinned = new Set(pickerPinnedSnapshot);
+    const used = new Set<string>();
+    const nextSlots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => {
+      const currentId = pickerSlotsSnapshot[index] ?? null;
+      if (currentId && pinned.has(currentId)) {
+        used.add(currentId);
+        return currentId;
+      }
+      const nextId = getRandomUnusedSoundId(allSoundIds, [...used]);
+      if (nextId) {
+        used.add(nextId);
+      }
+      return nextId;
+    });
+
+    setPickerSlots(nextSlots);
+    setPickerSelectedSoundIds((previous) => previous.filter((id) => nextSlots.includes(id)));
+    setPickerActionSoundId(null);
+  }, []);
+
+  const schedulePickerShuffleAll = useCallback(
     (characterId: string) => {
-      const character = CHARACTERS.find((c) => c.id === characterId);
-      if (!character) return;
+      if (pickerRandomBusy !== null) {
+        return;
+      }
 
-      const allSoundIds = character.sounds.map((sound) => sound.id);
-      const pinned = new Set(pickerPinnedSoundIds);
-      const used = new Set<string>();
-      const nextSlots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => {
-        const currentId = pickerSlots[index] ?? null;
-        if (currentId && pinned.has(currentId)) {
-          used.add(currentId);
-          return currentId;
-        }
-        const nextId = getRandomUnusedSoundId(allSoundIds, [...used]);
-        if (nextId) {
-          used.add(nextId);
-        }
-        return nextId;
-      });
-
-      setPickerSlots(nextSlots);
-      setPickerSelectedSoundIds((previous) => previous.filter((id) => nextSlots.includes(id)));
-      setPickerActionSoundId(null);
+      clearPickerShuffleTimer();
+      setPickerRandomBusy({ kind: 'shuffle' });
+      pickerShuffleTimeoutRef.current = window.setTimeout(() => {
+        pickerShuffleTimeoutRef.current = null;
+        applyPickerShuffleAll(characterId);
+        setPickerRandomBusy(null);
+      }, PICKER_RANDOM_DELAY_MS);
     },
-    [pickerPinnedSoundIds, pickerSlots],
+    [applyPickerShuffleAll, clearPickerShuffleTimer, pickerRandomBusy],
   );
 
   const togglePickerSelectedSound = useCallback(
@@ -715,6 +810,19 @@ function App() {
     [currentLevelInfo.soundsPerCharacter],
   );
 
+  const onPickerSoundBarPress = useCallback(
+    (soundId: string, path: string) => {
+      const wasSelected = pickerSelectedSoundIds.includes(soundId);
+      togglePickerSelectedSound(soundId);
+      if (!wasSelected) {
+        startPickerPreview(soundId, path);
+      } else if (previewingSoundId === soundId) {
+        stopPickerPreview(soundId);
+      }
+    },
+    [pickerSelectedSoundIds, previewingSoundId, startPickerPreview, stopPickerPreview, togglePickerSelectedSound],
+  );
+
   const togglePickerPinnedSound = useCallback((soundId: string) => {
     setPickerPinnedSoundIds((previous) =>
       previous.includes(soundId) ? previous.filter((id) => id !== soundId) : [...previous, soundId],
@@ -726,6 +834,11 @@ function App() {
       window.clearTimeout(pickerActionTimeoutRef.current);
       pickerActionTimeoutRef.current = null;
     }
+    if (pickerShuffleTimeoutRef.current !== null) {
+      window.clearTimeout(pickerShuffleTimeoutRef.current);
+      pickerShuffleTimeoutRef.current = null;
+    }
+    setPickerRandomBusy(null);
     setPickerSlots([]);
     setPickerSelectedSoundIds([]);
     setPickerPinnedSoundIds([]);
@@ -796,6 +909,11 @@ function App() {
     (characterId: string) => {
       const currentSoundIds = characterCustomizations[characterId]?.soundIds ?? [];
       const currentSelected = activeSoundsByCharacter[characterId] ?? [];
+      if (pickerShuffleTimeoutRef.current !== null) {
+        window.clearTimeout(pickerShuffleTimeoutRef.current);
+        pickerShuffleTimeoutRef.current = null;
+      }
+      setPickerRandomBusy(null);
       setPickerSlots([
         ...currentSoundIds.slice(0, MAX_CHARACTER_SOUNDS),
         ...Array.from({ length: Math.max(0, MAX_CHARACTER_SOUNDS - currentSoundIds.length) }, () => null),
@@ -842,260 +960,320 @@ function App() {
         {isInternalRoute ? (
           <section className={styles.internalPage}>
             <header className={styles.internalPageHeader}>
-              <Button variant="secondary" size="sm" shape="pill" className={styles.internalBackButton} onPress={() => navigate('/')}>
+              <Button
+                variant="secondary"
+                size="sm"
+                shape="pill"
+                className={styles.internalBackButton}
+                onPress={() => navigate('/')}
+              >
                 <FontAwesomeIcon icon={faArrowLeft} />
                 Back
               </Button>
             </header>
 
             <div className={styles.internalPageBody}>
-              {isAdminOpen && (
-                <Admin
-                  onPreviewSound={togglePreviewSound}
-                  previewingSoundId={previewingSoundId}
-                />
-              )}
+              {isAdminOpen && <Admin onPreviewSound={togglePreviewSound} previewingSoundId={previewingSoundId} />}
               {isSandboxUIOpen && <SandboxUI />}
             </div>
           </section>
         ) : (
           <>
-        <section
-          className={styles.panel}
-          style={
-            {
-              '--character-title': activeScheme.titleColor,
-              '--character-primary': activeScheme.primaryColor,
-              '--character-secondary': activeScheme.secondaryColor,
-              '--character-soundboard': activeScheme.soundboardColor,
-            } as CSSProperties
-          }
-        >
-          <header className={styles.titleBlock}>
-            <h1 className={styles.titleJapanese}>おめでとう、</h1>
-            <p className={styles.titleRomanized}>(OMEDETO)</p>
-            <p className={styles.titleName}>ALISE!</p>
-          </header>
+            <section
+              className={styles.panel}
+              style={
+                {
+                  '--character-title': activeScheme.titleColor,
+                  '--character-primary': activeScheme.primaryColor,
+                  '--character-secondary': activeScheme.secondaryColor,
+                  '--character-soundboard': activeScheme.soundboardColor,
+                } as CSSProperties
+              }
+            >
+              <header className={styles.titleBlock}>
+                <h1 className={styles.titleJapanese}>おめでとう、</h1>
+                <p className={styles.titleRomanized}>(OMEDETO)</p>
+                <p className={styles.titleName}>ALISE!</p>
+              </header>
 
-          <CharacterGrid
-            characters={CHARACTERS}
-            favoriteCharacterId={favoriteCharacterId}
-            customizations={characterCustomizations}
-            activeSoundsByCharacter={activeSoundsByCharacter}
-            mutedCharacterIds={mutedCharacterIds}
-            soundCatalogById={soundCatalogById}
-            loadedCharacterMap={loadedCharacterMap}
-            isGlowBurst={isGlowBurst}
-            comboWord={comboWord}
-            onSelectCharacter={handleCharacterClick}
-            onToggleFavorite={handleToggleFavorite}
-            onDropSound={(event: React.DragEvent<HTMLDivElement>, characterId: string) => {
-              event.preventDefault();
-              const soundId = event.dataTransfer.getData('text/plain');
-              if (soundId) setSingleSound(characterId, soundId);
-            }}
-            onImageLoad={handleCharacterImageLoad}
-            onEditCharacter={(characterId: string) => {
-              setInitialEditTab('colors');
-              navigate(`/${characterId}/edit`);
-            }}
-            onResetCharacter={resetCharacter}
-            onOpenSoundPicker={openSoundPicker}
-          />
-        </section>
+              <CharacterGrid
+                characters={CHARACTERS}
+                favoriteCharacterId={favoriteCharacterId}
+                customizations={characterCustomizations}
+                activeSoundsByCharacter={activeSoundsByCharacter}
+                mutedCharacterIds={mutedCharacterIds}
+                soundCatalogById={soundCatalogById}
+                loadedCharacterMap={loadedCharacterMap}
+                isGlowBurst={isGlowBurst}
+                comboWord={comboWord}
+                onSelectCharacter={handleCharacterClick}
+                onToggleFavorite={handleToggleFavorite}
+                onDropSound={(event: React.DragEvent<HTMLDivElement>, characterId: string) => {
+                  event.preventDefault();
+                  const soundId = event.dataTransfer.getData('text/plain');
+                  if (soundId) setSingleSound(characterId, soundId);
+                }}
+                onImageLoad={handleCharacterImageLoad}
+                onEditCharacter={(characterId: string) => {
+                  setInitialEditTab('colors');
+                  navigate(`/${characterId}/edit`);
+                }}
+                onResetCharacter={resetCharacter}
+                onOpenSoundPicker={openSoundPicker}
+              />
+            </section>
 
-        <EditCharacterModal
-          isOpen={Boolean(editingCharacterId)}
-          characters={CHARACTERS}
-          editingCharacterId={editingCharacterId}
-          customizations={characterCustomizations}
-          activeSoundsByCharacter={activeSoundsByCharacter}
-          soundCatalogById={soundCatalogById}
-          colorOptions={CHARACTER_COLOR_OPTIONS}
-          imageOptions={CHARACTER_IMAGE_OPTIONS}
-          ownedSoundIds={progressionState.ownedSoundIds}
-          initialTab={initialEditTab}
-          unlockedLevel={progressionState.unlockedLevel}
-          onClose={() => navigate('/')}
-          onSelectCharacter={(id: string) => navigate(`/${id}/edit`)}
-          onUpdateCustomization={(id: string, patch: CharacterCustomization) => updateCharacterCustomization(id, patch)}
-          onOpenShop={() => navigate('/shop')}
-        />
+            <EditCharacterModal
+              isOpen={Boolean(editingCharacterId)}
+              characters={CHARACTERS}
+              editingCharacterId={editingCharacterId}
+              customizations={characterCustomizations}
+              activeSoundsByCharacter={activeSoundsByCharacter}
+              soundCatalogById={soundCatalogById}
+              colorOptions={CHARACTER_COLOR_OPTIONS}
+              imageOptions={CHARACTER_IMAGE_OPTIONS}
+              ownedSoundIds={progressionState.ownedSoundIds}
+              initialTab={initialEditTab}
+              unlockedLevel={progressionState.unlockedLevel}
+              onClose={() => navigate('/')}
+              onSelectCharacter={(id: string) => navigate(`/${id}/edit`)}
+              onUpdateCustomization={(id: string, patch: CharacterCustomization) =>
+                updateCharacterCustomization(id, patch)
+              }
+              onOpenShop={() => navigate('/shop')}
+            />
 
-        <Shop
-          isOpen={isShopOpen}
-          onClose={() => navigate('/')}
-          walletBalance={progressionState.walletBalance}
-          currencySymbol={LOCALIZATIONS.currencySymbol}
-          ownedSoundIds={progressionState.ownedSoundIds}
-          onBuySound={buySound}
-          onPreviewSound={togglePreviewSound}
-          previewingSoundId={previewingSoundId}
-        />
+            <Shop
+              isOpen={isShopOpen}
+              onClose={() => navigate('/')}
+              walletBalance={progressionState.walletBalance}
+              currencySymbol={LOCALIZATIONS.currencySymbol}
+              ownedSoundIds={progressionState.ownedSoundIds}
+              onBuySound={buySound}
+              onPreviewSound={togglePreviewSound}
+              previewingSoundId={previewingSoundId}
+            />
 
-        {pickingSoundsCharacterId && (
-          <>
-            <div className={styles.backdrop} onClick={closeSoundPicker} />
-            <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add sound">
-              <div className={styles.pickerCard}>
-                <header className={styles.pickerHeader}>
-                  <div className={styles.pickerHeaderLeft}>
-                    <h3 className={styles.pickerTitle}>SOUND SELECTOR</h3>
-                    <Button
-                      type="button"
-                      variant="quiet"
-                      size="sm"
-                      shape="square"
-                      className={styles.editSoundsButton}
-                      onPress={() => {
-                        setInitialEditTab('sounds');
-                        const charId = pickingSoundsCharacterId;
-                        closeSoundPicker();
-                        navigate(`/${charId}/edit`);
-                      }}
-                      aria-label="Edit sounds"
-                    >
-                      <FontAwesomeIcon icon={faPen} />
-                    </Button>
-                  </div>
-                  <CloseButton className={styles.closeButton} onPress={closeSoundPicker} aria-label="Close sound selector" />
-                </header>
-                <div className={styles.pickerContent}>
-                  {(() => {
-                    const characterId = pickingSoundsCharacterId;
-                    if (!characterId) return null;
-                    const character = CHARACTERS.find((entry) => entry.id === characterId);
-                    if (!character) return null;
-                    const characterName = characterCustomizations[characterId]?.name?.trim() || character.name;
+            {pickingSoundsCharacterId && (
+              <>
+                <div className={styles.backdrop} onClick={closeSoundPicker} />
+                <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add sound">
+                  <div className={styles.pickerCard}>
+                    <header className={styles.pickerHeader}>
+                      <div className={styles.pickerHeaderLeft}>
+                        <h3 className={styles.pickerTitle}>SOUND PICKER</h3>
+                        <Button
+                          type="button"
+                          variant="quiet"
+                          size="sm"
+                          shape="square"
+                          className={styles.editSoundsButton}
+                          onPress={() => {
+                            setInitialEditTab('sounds');
+                            const charId = pickingSoundsCharacterId;
+                            closeSoundPicker();
+                            navigate(`/${charId}/edit`);
+                          }}
+                          aria-label="Edit sounds"
+                        >
+                          <FontAwesomeIcon icon={faPen} />
+                        </Button>
+                      </div>
+                      <CloseButton
+                        className={styles.closeButton}
+                        onPress={closeSoundPicker}
+                        aria-label="Close sound selector"
+                      />
+                    </header>
+                    <div className={styles.pickerContent}>
+                      {(() => {
+                        const characterId = pickingSoundsCharacterId;
+                        if (!characterId) return null;
+                        const character = CHARACTERS.find((entry) => entry.id === characterId);
+                        if (!character) return null;
+                        const characterName = characterCustomizations[characterId]?.name?.trim() || character.name;
+                        const pickerSpinnerSize = 18;
+                        const isPickerRandomBusy = pickerRandomBusy !== null;
+                        const slotSpinnerIndex = pickerRandomBusy?.kind === 'slot' ? pickerRandomBusy.index : null;
 
-                    const availableSounds = pickerSlots
-                      .filter((id): id is string => Boolean(id))
-                      .map((id) => soundCatalogById.get(id))
-                      .filter((s): s is NonNullable<typeof s> => Boolean(s));
-                    const visibleSlots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => {
-                      const soundId = pickerSlots[index];
-                      return soundId ? soundCatalogById.get(soundId) ?? null : null;
-                    });
+                        const availableSounds = pickerSlots
+                          .filter((id): id is string => Boolean(id))
+                          .map((id) => soundCatalogById.get(id))
+                          .filter((s): s is NonNullable<typeof s> => Boolean(s));
+                        const visibleSlots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => {
+                          const soundId = pickerSlots[index];
+                          return soundId ? (soundCatalogById.get(soundId) ?? null) : null;
+                        });
 
-                    return (
-                      <div className={styles.pickerSections}>
-                        <section className={styles.pickerLibrary}>
-                          <div className={styles.pickerLibraryHeader}>
-                            <div>
-                              <p className={styles.pickerSectionEyebrow}>This Character's Mix</p>
-                              <h4 className={styles.pickerSectionTitle}>Choose up to six sounds</h4>
-                            </div>
-                            <span className={styles.pickerLibraryCount}>{availableSounds.length}/{MAX_CHARACTER_SOUNDS}</span>
-                          </div>
+                        return (
+                          <div className={styles.pickerSections}>
+                            <section className={styles.pickerLibrary}>
+                              <div className={styles.pickerLibraryHeader}>
+                                <div>
+                                  <p className={styles.pickerSectionEyebrow}>This Character's Mix</p>
+                                  <h4 className={styles.pickerSectionTitle}>
+                                    Choose up to {MAX_CHARACTER_SOUNDS} sounds
+                                  </h4>
+                                </div>
+                                <span className={styles.pickerLibraryCount}>
+                                  {availableSounds.length}/{MAX_CHARACTER_SOUNDS}
+                                </span>
+                              </div>
 
-                          <div className={styles.pickerOptionActions}>
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              shape="default"
-                              className={styles.emptyPickerButton}
-                              onPress={() => openCharacterSoundCollection(characterId)}
-                            >
-                              YOUR COLLECTION
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              shape="default"
-                              className={styles.emptyPickerButton}
-                              onPress={() => {
-                                closeSoundPicker();
-                                navigate('/shop');
-                              }}
-                            >
-                              SHOP FOR SOUNDS
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              shape="default"
-                              className={`${styles.emptyPickerButton} ${styles.pickerButtonCallout}`}
-                              onPress={() => handleRandomizeSounds(characterId)}
-                            >
-                              SHUFFLE SOUNDS
-                            </Button>
-                          </div>
+                              <div className={styles.pickerOptionActions}>
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  shape="default"
+                                  className={styles.emptyPickerButton}
+                                  onPress={() => openCharacterSoundCollection(characterId)}
+                                >
+                                  YOUR COLLECTION
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  shape="default"
+                                  className={styles.emptyPickerButton}
+                                  onPress={() => {
+                                    closeSoundPicker();
+                                    navigate('/shop');
+                                  }}
+                                >
+                                  SHOP FOR SOUNDS
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="primary"
+                                  size="sm"
+                                  shape="default"
+                                  className={`${styles.emptyPickerButton} ${styles.pickerButtonCallout}`}
+                                  onPress={() => schedulePickerShuffleAll(characterId)}
+                                  isDisabled={isPickerRandomBusy}
+                                >
+                                  {pickerRandomBusy?.kind === 'shuffle' ? (
+                                    <span className={styles.pickerShuffleButtonInner}>
+                                      <ProgressCircle
+                                        aria-label="Shuffling"
+                                        isIndeterminate
+                                        value={0}
+                                        size={pickerSpinnerSize}
+                                      />
+                                      <span>SHUFFLE SOUNDS</span>
+                                    </span>
+                                  ) : (
+                                    'SHUFFLE SOUNDS'
+                                  )}
+                                </Button>
+                              </div>
 
-                          <div className={styles.pickerList}>
-                              {visibleSlots.map((sound, index) => {
-                                if (!sound) {
+                              <div className={styles.pickerList}>
+                                {visibleSlots.map((sound, index) => {
+                                  if (!sound) {
+                                    return (
+                                      <div
+                                        key={`empty-slot-${index}`}
+                                        className={`${styles.pickerItemWrap} ${styles.pickerItemWrapEmpty}`}
+                                      >
+                                        <div
+                                          className={`${styles.pickerItemPreview} ${styles.pickerItemPreviewEmpty}`}
+                                          aria-hidden="true"
+                                        />
+                                        <button
+                                          type="button"
+                                          className={`${styles.pickerItemSelect} ${styles.pickerItemSelectEmpty}`}
+                                          onClick={() => schedulePickerSlotRandom(characterId, index)}
+                                          disabled={isPickerRandomBusy}
+                                          aria-label="Add random sound"
+                                          aria-busy={slotSpinnerIndex === index}
+                                        >
+                                          {slotSpinnerIndex === index ? (
+                                            <ProgressCircle aria-hidden isIndeterminate value={0} size={pickerSpinnerSize} />
+                                          ) : (
+                                            <FontAwesomeIcon icon={faArrowsRotate} />
+                                          )}
+                                        </button>
+                                      </div>
+                                    );
+                                  }
+
+                                  const isSelected = pickerSelectedSoundIds.includes(sound.id);
+                                  const isPinned = pickerPinnedSoundIds.includes(sound.id);
+                                  const isPreviewing = previewingSoundId === sound.id;
+                                  const isActionActive = pickerActionSoundId === sound.id;
+                                  const showFullActions = isSelected || isActionActive;
+                                  const showPinOnly = !showFullActions && (isPinned || isActionActive);
+
                                   return (
-                                    <div key={`empty-slot-${index}`} className={`${styles.pickerItemWrap} ${styles.pickerItemWrapEmpty}`}>
-                                      <div className={`${styles.pickerItemPreview} ${styles.pickerItemPreviewEmpty}`} aria-hidden="true" />
+                                    <div
+                                      key={sound.id}
+                                      className={`${styles.pickerItemWrap} ${isSelected ? styles.pickerItemActive : ''} ${
+                                        isPreviewing ? styles.pickerItemWrapPreviewing : ''
+                                      }`}
+                                      style={{ '--sound-color': `var(${sound.colorToken})` } as CSSProperties}
+                                    >
                                       <button
                                         type="button"
-                                        className={`${styles.pickerItemSelect} ${styles.pickerItemSelectEmpty}`}
-                                        onClick={() => fillPickerSlotWithRandomSound(characterId, index)}
-                                        aria-label="Add random sound"
+                                        className={`${styles.pickerItemPreview} ${isPreviewing ? styles.pickerItemPreviewing : ''}`}
+                                        onClick={() => togglePreviewSound(sound.id, sound.path)}
+                                        aria-label={isPreviewing ? 'Stop preview' : 'Preview sound'}
                                       >
-                                        <FontAwesomeIcon icon={faArrowsRotate} />
+                                        <FontAwesomeIcon icon={faVolumeHigh} />
                                       </button>
-                                    </div>
-                                  );
-                                }
-
-                                const isSelected = pickerSelectedSoundIds.includes(sound.id);
-                                const isPinned = pickerPinnedSoundIds.includes(sound.id);
-                                const isPreviewing = previewingSoundId === sound.id;
-                                const isActionActive = pickerActionSoundId === sound.id;
-                                const showFullActions = isSelected || isActionActive;
-                                const showPinOnly = !showFullActions && (isPinned || isActionActive);
-
-                                return (
-                                  <div
-                                    key={sound.id}
-                                    className={`${styles.pickerItemWrap} ${isSelected ? styles.pickerItemActive : ''} ${
-                                      isPreviewing ? styles.pickerItemWrapPreviewing : ''
-                                    }`}
-                                    style={{ '--sound-color': `var(${sound.colorToken})` } as CSSProperties}
-                                  >
-                                    <button
-                                      type="button"
-                                      className={`${styles.pickerItemPreview} ${isPreviewing ? styles.pickerItemPreviewing : ''}`}
-                                      onClick={() => togglePreviewSound(sound.id, sound.path)}
-                                      aria-label={isPreviewing ? 'Stop preview' : 'Preview sound'}
-                                    >
-                                      <FontAwesomeIcon icon={faVolumeHigh} />
-                                    </button>
                                     <button
                                       type="button"
                                       className={styles.pickerItemSelect}
-                                      onClick={() => togglePickerSelectedSound(sound.id)}
+                                      onClick={() => onPickerSoundBarPress(sound.id, sound.path)}
                                     >
                                       <span>{sound.name.toUpperCase()}</span>
                                     </button>
-                                    {showFullActions && (
-                                      <>
-                                        <button
-                                          type="button"
-                                          className={styles.pickerItemDelete}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRemoveSound(sound.id);
-                                          }}
-                                          aria-label="Remove sound"
-                                        >
-                                          <FontAwesomeIcon icon={faTrash} />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className={styles.pickerItemRefresh}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            fillPickerSlotWithRandomSound(characterId, index);
-                                          }}
-                                          aria-label="Replace with random sound"
-                                        >
-                                          <FontAwesomeIcon icon={faArrowsRotate} />
-                                        </button>
+                                      {showFullActions && (
+                                        <>
+                                          <button
+                                            type="button"
+                                            className={styles.pickerItemDelete}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRemoveSound(sound.id);
+                                            }}
+                                            aria-label="Remove sound"
+                                          >
+                                            <FontAwesomeIcon icon={faTrash} />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={styles.pickerItemRefresh}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              schedulePickerSlotRandom(characterId, index);
+                                            }}
+                                            disabled={isPickerRandomBusy}
+                                            aria-label="Replace with random sound"
+                                            aria-busy={slotSpinnerIndex === index}
+                                          >
+                                            {slotSpinnerIndex === index ? (
+                                              <ProgressCircle aria-hidden isIndeterminate value={0} size={pickerSpinnerSize} />
+                                            ) : (
+                                              <FontAwesomeIcon icon={faArrowsRotate} />
+                                            )}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`${styles.pickerItemPin} ${isPinned ? styles.pickerItemPinActive : ''}`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              togglePickerPinnedSound(sound.id);
+                                            }}
+                                            aria-label={isPinned ? 'Unpin sound' : 'Pin sound'}
+                                            aria-pressed={isPinned}
+                                          >
+                                            <FontAwesomeIcon icon={faThumbtack} />
+                                          </button>
+                                        </>
+                                      )}
+                                      {!showFullActions && showPinOnly && (
                                         <button
                                           type="button"
                                           className={`${styles.pickerItemPin} ${isPinned ? styles.pickerItemPinActive : ''}`}
@@ -1108,76 +1286,71 @@ function App() {
                                         >
                                           <FontAwesomeIcon icon={faThumbtack} />
                                         </button>
-                                      </>
-                                    )}
-                                    {!showFullActions && showPinOnly && (
-                                      <button
-                                        type="button"
-                                        className={`${styles.pickerItemPin} ${isPinned ? styles.pickerItemPinActive : ''}`}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          togglePickerPinnedSound(sound.id);
-                                        }}
-                                        aria-label={isPinned ? 'Unpin sound' : 'Pin sound'}
-                                        aria-pressed={isPinned}
-                                      >
-                                        <FontAwesomeIcon icon={faThumbtack} />
-                                      </button>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                            <div className={styles.pickerFooterActions}>
+                              <Button
+                                type="button"
+                                variant="primary"
+                                size="md"
+                                shape="default"
+                                className={styles.pickerApplyButton}
+                                onPress={() => applyPickerSelection(characterId)}
+                                isDisabled={pickerSelectedSoundIds.length === 0}
+                              >
+                                {`APPLY TO ${characterName.toUpperCase()}`}
+                              </Button>
+                            </div>
                           </div>
-                        </section>
-                        <div className={styles.pickerFooterActions}>
-                          <Button
-                            type="button"
-                            variant="primary"
-                            size="md"
-                            shape="default"
-                            className={styles.pickerApplyButton}
-                            onPress={() => applyPickerSelection(characterId)}
-                            isDisabled={pickerSelectedSoundIds.length === 0}
-                          >
-                            {`APPLY TO ${characterName.toUpperCase()}`}
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Button
+              type="button"
+              variant="secondary"
+              shape="pill"
+              className={styles.refreshButton}
+              onPress={resetBoard}
+            >
+              Reset Board
+            </Button>
+
+            {!isBlockingOverlayOpen && (
+              <div className={styles.hamburgerWrap}>
+                <div
+                  className={`${styles.hamburger} ${isMenuVisible ? styles.hamburgerActive : ''}`}
+                  onClick={() => setIsMenuOpen((prev) => !prev)}
+                >
+                  <span className={styles.hamburgerBox}>
+                    <span className={styles.hamburgerInner}></span>
+                  </span>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            )}
 
-        <Button type="button" variant="secondary" shape="pill" className={styles.refreshButton} onPress={resetBoard}>
-          Reset Board
-        </Button>
-
-        {!isBlockingOverlayOpen && (
-          <div className={styles.hamburgerWrap}>
-            <div
-              className={`${styles.hamburger} ${isMenuVisible ? styles.hamburgerActive : ''}`}
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-            >
-              <span className={styles.hamburgerBox}>
-                <span className={styles.hamburgerInner}></span>
-              </span>
-            </div>
-          </div>
-        )}
-
-        {!isBlockingOverlayOpen && (
-          <Menu
-            isOpen={isMenuVisible}
-            onClose={() => setIsMenuOpen(false)}
-            onNavigate={navigate}
-            isLowGraphics={isLowGraphics}
-            onToggleLowGraphics={() => setIsLowGraphics((prev) => !prev)}
-          />
-        )}
-        <ProgressionMeter state={progressionState} currentLevelInfo={currentLevelInfo} nextLevelInfo={nextLevelInfo} />
+            {!isBlockingOverlayOpen && (
+              <Menu
+                isOpen={isMenuVisible}
+                onClose={() => setIsMenuOpen(false)}
+                onNavigate={navigate}
+                isLowGraphics={isLowGraphics}
+                onToggleLowGraphics={() => setIsLowGraphics((prev) => !prev)}
+              />
+            )}
+            <ProgressionMeter
+              state={progressionState}
+              currentLevelInfo={currentLevelInfo}
+              nextLevelInfo={nextLevelInfo}
+            />
           </>
         )}
       </main>

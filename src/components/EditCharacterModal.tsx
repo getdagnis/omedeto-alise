@@ -78,7 +78,7 @@ function EditCharacterModal({
   onUpdateCustomization,
   onOpenShop,
 }: EditCharacterModalProps) {
-  const MAX_CHARACTER_SOUNDS = 6;
+  const MAX_CHARACTER_SOUNDS = 9;
   const [draftCustomization, setDraftCustomization] = useState<CharacterCustomization>({});
   const [activeTab, setActiveTab] = useState<'colors' | 'sounds'>(initialTab);
   const [activeCategory, setActiveCategory] = useState<SoundCategory | 'all'>('all');
