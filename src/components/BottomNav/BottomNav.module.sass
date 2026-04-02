@@ -3,9 +3,9 @@
   bottom: 0
   left: 0
   width: 100%
-  background: rgba(8, 6, 26, 0.85)
+  background: rgba(8, 6, 26, 0.92)
   backdrop-filter: blur(8px)
-  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  border-top: 1px solid rgba(255, 255, 255, 0.08)
   z-index: 100
   transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1)
   display: flex
@@ -13,13 +13,13 @@
 
   &.isExpanded
     height: 75vh
-    background: #120a30
-    border-radius: 1.5rem 1.5rem 0 0
-    box-shadow: 0 -1rem 3rem rgba(0, 0, 0, 0.6)
+    background: #100d18
+    border-radius: 0.9rem 0.9rem 0 0
+    box-shadow: 0 -1rem 3rem rgba(0, 0, 0, 0.4)
 
 .collapsedBar
   height: 4rem
-  padding: 0 1.5rem
+  padding: 0 1rem
   display: flex
   align-items: center
   justify-content: space-between
@@ -42,8 +42,9 @@
   width: 100%
   max-width: 40rem
   color: var(--color-text-strong)
-  font-family: var(--font-title)
-  font-size: 0.7rem
+  font-family: var(--font-body)
+  font-size: 0.68rem
+  font-weight: 700
   text-transform: uppercase
   letter-spacing: 0.08em
 
@@ -72,23 +73,23 @@
 .maxText
   font-size: 0.7rem
   color: var(--color-mood-tokyo-15)
-  font-family: var(--font-title)
+  font-family: var(--font-body)
 
 .barRight
   display: flex
   align-items: center
-  gap: 1rem
+  gap: 0.75rem
 
 .footerWallet
   display: flex
   align-items: center
   gap: 0.4rem
   background: rgba(0, 0, 0, 0.3)
-  padding: 0.35rem 0.75rem
-  border-radius: 999px
+  padding: 0.35rem 0.65rem
+  border-radius: 0.55rem
   border: 1px solid rgba(255, 230, 0, 0.3)
   color: #ffe600
-  font-family: var(--font-title)
+  font-family: var(--font-body)
   font-weight: 800
   font-size: 0.8rem
 
@@ -98,12 +99,12 @@
 .backBtn, .checkoutBtn, .saveBtnNav
   background: rgba(255, 255, 255, 0.08)
   border: 1px solid rgba(255, 255, 255, 0.15)
-  border-radius: 999px
+  border-radius: 0.6rem
   color: #fff
-  font-family: var(--font-title)
-  font-size: 0.75rem
+  font-family: var(--font-body)
+  font-size: 0.72rem
   font-weight: 700
-  padding: 0.4rem 1rem
+  padding: 0.42rem 0.85rem
   cursor: pointer
   display: flex
   align-items: center
@@ -135,8 +136,8 @@
   display: flex
   align-items: center
   justify-content: space-between
-  padding: 1.25rem 1.5rem
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1)
+  padding: 1rem 1rem 0.9rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08)
 
 .headerTitle
   display: flex
@@ -144,8 +145,9 @@
   gap: 0.75rem
   h2
     margin: 0
-    font-family: var(--font-title)
-    font-size: 1.1rem
+    font-family: var(--font-body)
+    font-size: 0.95rem
+    font-weight: 700
     color: #fff
 
 .starIcon
@@ -153,12 +155,12 @@
   filter: drop-shadow(0 0 8px #ffe600)
 
 .closeButton
-  background: rgba(255, 255, 255, 0.05)
-  border: 1px solid rgba(255, 255, 255, 0.1)
+  background: transparent
+  border: none
   color: #fff
   width: 2.2rem
   height: 2.2rem
-  border-radius: 50%
+  border-radius: 0.5rem
   display: grid
   place-items: center
   cursor: pointer
@@ -166,7 +168,7 @@
 .expandedBody
   flex: 1
   overflow-y: auto
-  padding: 1.5rem
+  padding: 1rem
   display: flex
   flex-direction: column
   scrollbar-width: thin
@@ -195,7 +197,7 @@
   gap: 1rem
   background: rgba(255, 255, 255, 0.03)
   padding: 0.75rem 1rem
-  border-radius: 0.75rem
+  border-radius: 0.65rem
   border: 1px solid rgba(255, 255, 255, 0.05)
 
 .cartItemName
@@ -206,7 +208,7 @@
 
 .cartItemPrice
   color: #ffe600
-  font-family: var(--font-title)
+  font-family: var(--font-body)
   font-weight: 800
 
 .cartItemDelete
@@ -242,7 +244,7 @@
   color: #fff
   border: none
   height: 3.5rem
-  border-radius: 1rem
+  border-radius: 0.7rem
   font-weight: 800
   font-size: 1.1rem
   cursor: pointer
@@ -270,16 +272,17 @@
   gap: 1rem
   h3
     margin: 0
-    font-family: var(--font-title)
-    font-size: 0.9rem
+    font-family: var(--font-body)
+    font-size: 0.82rem
+    font-weight: 700
     color: var(--color-text-muted)
 
 .headerCheckoutBtn
   background: rgba(255, 255, 255, 0.05)
   border: 1px solid rgba(255, 255, 255, 0.1)
-  border-radius: 999px
+  border-radius: 0.55rem
   color: var(--color-text-muted)
-  font-family: var(--font-title)
+  font-family: var(--font-body)
   font-size: 0.65rem
   padding: 0.3rem 0.75rem
   cursor: pointer
@@ -306,13 +309,13 @@
   gap: 1rem
   background: rgba(255, 255, 255, 0.05)
   padding: 0.75rem
-  border-radius: 1rem
+  border-radius: 0.65rem
   border: 1px solid rgba(255, 255, 255, 0.1)
 
 .quickPreview
   width: 2.5rem
   height: 2.5rem
-  border-radius: 0.75rem
+  border-radius: 0.55rem
   background: rgba(0, 0, 0, 0.3)
   border: none
   color: #fff
@@ -333,7 +336,7 @@
   color: #000
   border: none
   padding: 0.5rem 1rem
-  border-radius: 0.75rem
+  border-radius: 0.55rem
   font-weight: 800
   font-size: 0.75rem
   cursor: pointer
@@ -348,9 +351,9 @@
   border: 1px solid rgba(255, 255, 255, 0.1)
   color: #fff
   height: 3rem
-  border-radius: 0.75rem
+  border-radius: 0.65rem
   cursor: pointer
-  font-family: var(--font-title)
+  font-family: var(--font-body)
   font-size: 0.8rem
   &:hover
     background: rgba(255, 255, 255, 0.1)
@@ -364,7 +367,7 @@
 .levelCard
   background: rgba(255, 255, 255, 0.03)
   border: 1px solid rgba(255, 255, 255, 0.08)
-  border-radius: 1rem
+  border-radius: 0.65rem
   padding: 1rem
 
 .levelCleared
@@ -412,7 +415,7 @@
   gap: 0.75rem
   background: rgba(0, 0, 0, 0.2)
   padding: 0.75rem
-  border-radius: 0.75rem
+  border-radius: 0.65rem
   margin-top: 0.75rem
 
 .benefitIcon

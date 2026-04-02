@@ -11,6 +11,7 @@ import {
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
+import { Button, Chip } from '../components-ui';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const FAV_BUTTON = false;
@@ -206,17 +207,19 @@ function CharacterCard({
 
         {/* Image Edit Button */}
         {onEditImage && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
+            shape="pill"
             className={styles.imageEditButton}
-            onClick={(e) => {
-              e.stopPropagation();
+            onPress={() => {
               onEditImage();
             }}
             aria-label="Change character image"
           >
             <FontAwesomeIcon icon={faPen} />
-          </button>
+          </Button>
         )}
 
         {/* Muted Icon Overlay (Only if sounds are active) */}
@@ -243,12 +246,14 @@ function CharacterCard({
         {!hideSounds && soundNames.length > 0 && (
           <div className={styles.characterSoundList}>
             {soundNames.map((soundName, index) => (
-              <span
+              <Chip
                 key={`${character.id}-slot-${index}`}
                 className={styles.characterSoundTag}
+                tone="neutral"
+                size="sm"
               >
                 {soundName}
-              </span>
+              </Chip>
             ))}
           </div>
         )}
@@ -256,32 +261,51 @@ function CharacterCard({
 
       {showActions && (
         <div className={styles.characterActions}>
-          <button type="button" className={styles.characterActionButton} onClick={onEdit} aria-label="Edit character">
-            <FontAwesomeIcon icon={faPen} />
-          </button>
-          <button
-            type="button"
-            className={`${styles.characterActionButton} ${isFlashing ? styles.actionButtonFlash : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onOpenSoundPicker) onOpenSoundPicker();
-            }}
-            aria-label="Add sounds"
-          >
-            <FontAwesomeIcon icon={faMusic} />
-          </button>
-          {soundIds.length > 0 && (
-            <button
+          <div className={styles.characterActionWrap}>
+            {isFlashing && (
+              <div className={styles.actionTooltip} role="status" aria-live="polite">
+                Pick some sounds
+              </div>
+            )}
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
+              shape="pill"
+              className={`${styles.characterActionButton} ${isFlashing ? styles.actionButtonFlash : ''}`}
+              onPress={() => {
+                if (onOpenSoundPicker) onOpenSoundPicker();
+              }}
+              aria-label="Add sounds"
+            >
+              <FontAwesomeIcon icon={faMusic} />
+            </Button>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            shape="pill"
+            className={styles.characterActionButton}
+            onPress={onEdit}
+            aria-label="Edit character"
+          >
+            <FontAwesomeIcon icon={faPen} />
+          </Button>
+          {soundIds.length > 0 && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              shape="pill"
               className={styles.characterActionButton}
-              onClick={(e) => {
-                e.stopPropagation();
+              onPress={() => {
                 if (onReset) onReset();
               }}
               aria-label="Reset character"
             >
               <FontAwesomeIcon icon={faRotateLeft} />
-            </button>
+            </Button>
           )}
         </div>
       )}

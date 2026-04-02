@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVolumeHigh, faXmark, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCheck, faPen, faPlay, faPlus, faTrash, faVolumeHigh } from '@fortawesome/free-solid-svg-icons';
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
@@ -11,6 +11,7 @@ import Shop from './components/Shop/Shop';
 import Admin from './components/Admin/Admin';
 import SandboxUI from './screens/SandboxUI';
 import { useProgression } from './hooks/useProgression';
+import { Button, CloseButton } from './components-ui';
 import {
   ALL_SOUNDS,
   BACKGROUND_IMAGE_KEYS,
@@ -25,6 +26,8 @@ const BG_DESKTOP_SUFFIX = '1920';
 const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
 const MAX_SOUNDS_TOTAL = 12;
+const LOW_GRAPHICS_STORAGE_KEY = 'gumi-alise-low-graphics';
+const MAX_CHARACTER_SOUNDS = 6;
 
 const COMBO_WORDS = [
   {
@@ -71,6 +74,18 @@ const getIsMobileVerticalDevice = () => {
   const isPortrait = window.matchMedia('(orientation: portrait)').matches;
   const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
   return isPortrait && hasCoarsePointer;
+};
+
+const getStoredLowGraphicsMode = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    return window.localStorage.getItem(LOW_GRAPHICS_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
 };
 
 type CharacterCustomization = {
@@ -169,6 +184,7 @@ function App() {
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [isMobileVerticalDevice, setIsMobileVerticalDevice] = useState(() => getIsMobileVerticalDevice());
   const [isBackgroundRotationReady, setIsBackgroundRotationReady] = useState(false);
+  const [isLowGraphics, setIsLowGraphics] = useState(() => getStoredLowGraphicsMode());
 
   const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
 
@@ -180,21 +196,15 @@ function App() {
   const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
   const [pickingSoundsCharacterId, setPickingSoundsCharacterId] = useState<string | null>(null);
   const [initialEditTab, setInitialEditTab] = useState<'colors' | 'sounds'>('colors');
-  const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isSandboxUIOpen, setIsSandboxUIOpen] = useState(false);
-
   const editingCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/edit$/);
     if (match) return match[1];
     return null;
   }, [currentPath]);
-
-  useEffect(() => {
-    setIsShopOpen(currentPath === '/shop');
-    setIsAdminOpen(currentPath === '/admin');
-    setIsSandboxUIOpen(currentPath === '/sandbox');
-  }, [currentPath]);
+  const isShopOpen = currentPath === '/shop';
+  const isAdminOpen = currentPath === '/admin';
+  const isSandboxUIOpen = currentPath === '/sandbox';
+  const isInternalRoute = isAdminOpen || isSandboxUIOpen;
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
@@ -549,6 +559,20 @@ function App() {
   useEffect(() => () => stopAllAudio(), [stopAllAudio]);
 
   useEffect(() => {
+    document.documentElement.dataset.graphics = isLowGraphics ? 'low' : 'full';
+
+    try {
+      window.localStorage.setItem(LOW_GRAPHICS_STORAGE_KEY, String(isLowGraphics));
+    } catch {
+      // Ignore storage errors.
+    }
+
+    return () => {
+      delete document.documentElement.dataset.graphics;
+    };
+  }, [isLowGraphics]);
+
+  useEffect(() => {
     const total = Object.values(activeSoundsByCharacter).reduce((sum, ids) => sum + ids.length, 0);
     if (total >= MAX_SOUNDS_TOTAL && totalActiveSoundsRef.current < MAX_SOUNDS_TOTAL) {
       setTimeout(() => {
@@ -599,7 +623,6 @@ function App() {
       const current = characterCustomizations[characterId]?.soundIds ?? [];
       const next = current.filter((id) => id !== soundId);
 
-      // Stop audio if it was playing as a loop
       const audioKey = buildAudioKey(characterId, soundId);
       const audio = audioRefs.current[audioKey];
       if (audio) {
@@ -628,11 +651,31 @@ function App() {
 
       const availableSounds = character.sounds;
       const shuffled = [...availableSounds].sort(() => 0.5 - Math.random());
-      const selectedIds = shuffled.slice(0, 12).map((s) => s.id);
+      const selectedIds = shuffled.slice(0, MAX_CHARACTER_SOUNDS).map((s) => s.id);
 
       updateCharacterCustomization(characterId, { soundIds: selectedIds });
     },
     [updateCharacterCustomization],
+  );
+
+  const openSoundPicker = useCallback(
+    (characterId: string) => {
+      setPickingSoundsCharacterId(characterId);
+    },
+    [],
+  );
+
+  const closeSoundPicker = useCallback(() => {
+    setPickingSoundsCharacterId(null);
+  }, []);
+
+  const openCharacterSoundCollection = useCallback(
+    (characterId: string) => {
+      setInitialEditTab('sounds');
+      closeSoundPicker();
+      navigate(`/${characterId}/edit`);
+    },
+    [closeSoundPicker, navigate],
   );
 
   const activeBackgroundImage = useMemo(() => {
@@ -648,13 +691,36 @@ function App() {
     secondaryColor: '#ff0040a1',
     soundboardColor: '#29063acc',
   };
+  const isBlockingOverlayOpen = Boolean(editingCharacterId || pickingSoundsCharacterId);
+  const isMenuVisible = isMenuOpen && !isInternalRoute;
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${isLowGraphics ? styles.pageLowGraphics : ''}`}>
       <div className={styles.background} style={{ backgroundImage: `url(${activeBackgroundImage})` }} />
       <div className={styles.backgroundOverlay} />
 
       <main className={styles.content}>
+        {isInternalRoute ? (
+          <section className={styles.internalPage}>
+            <header className={styles.internalPageHeader}>
+              <Button variant="secondary" size="sm" shape="pill" className={styles.internalBackButton} onPress={() => navigate('/')}>
+                <FontAwesomeIcon icon={faArrowLeft} />
+                Back
+              </Button>
+            </header>
+
+            <div className={styles.internalPageBody}>
+              {isAdminOpen && (
+                <Admin
+                  onPreviewSound={togglePreviewSound}
+                  previewingSoundId={previewingSoundId}
+                />
+              )}
+              {isSandboxUIOpen && <SandboxUI />}
+            </div>
+          </section>
+        ) : (
+          <>
         <section
           className={styles.panel}
           style={
@@ -695,14 +761,9 @@ function App() {
               navigate(`/${characterId}/edit`);
             }}
             onResetCharacter={resetCharacter}
-            onOpenSoundPicker={(characterId: string) => setPickingSoundsCharacterId(characterId)}
+            onOpenSoundPicker={openSoundPicker}
           />
         </section>
-
-        <div className={styles.testDiv}>
-          <button>test</button>
-          {/* <Button aria-label="this">this</Button> */}
-        </div>
 
         <EditCharacterModal
           isOpen={Boolean(editingCharacterId)}
@@ -733,51 +794,32 @@ function App() {
           previewingSoundId={previewingSoundId}
         />
 
-        <Admin
-          isOpen={isAdminOpen}
-          onClose={() => navigate('/')}
-          onPreviewSound={togglePreviewSound}
-          previewingSoundId={previewingSoundId}
-        />
-
-        {isSandboxUIOpen && (
-          <div className={styles.styleGuideOverlay}>
-            <button className={styles.styleGuideClose} onClick={() => navigate('/')}>
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
-            <SandboxUI />
-          </div>
-        )}
-
         {pickingSoundsCharacterId && (
           <>
-            <div className={styles.backdrop} onClick={() => setPickingSoundsCharacterId(null)} />
+            <div className={styles.backdrop} onClick={closeSoundPicker} />
             <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add sound">
               <div className={styles.pickerCard}>
                 <header className={styles.pickerHeader}>
                   <div className={styles.pickerHeaderLeft}>
                     <h3 className={styles.pickerTitle}>SOUND SELECTOR</h3>
-                    <button
+                    <Button
                       type="button"
+                      variant="quiet"
+                      size="sm"
+                      shape="square"
                       className={styles.editSoundsButton}
-                      onClick={() => {
+                      onPress={() => {
                         setInitialEditTab('sounds');
                         const charId = pickingSoundsCharacterId;
-                        setPickingSoundsCharacterId(null);
+                        closeSoundPicker();
                         navigate(`/${charId}/edit`);
                       }}
                       aria-label="Edit sounds"
                     >
                       <FontAwesomeIcon icon={faPen} />
-                    </button>
+                    </Button>
                   </div>
-                  <button
-                    type="button"
-                    className={styles.closeButton}
-                    onClick={() => setPickingSoundsCharacterId(null)}
-                  >
-                    <FontAwesomeIcon icon={faXmark} />
-                  </button>
+                  <CloseButton className={styles.closeButton} onPress={closeSoundPicker} aria-label="Close sound selector" />
                 </header>
                 <div className={styles.pickerContent}>
                   {(() => {
@@ -785,47 +827,97 @@ function App() {
                     if (!characterId) return null;
 
                     const customSoundIds = characterCustomizations[characterId]?.soundIds;
+                    const pickerSoundIds = customSoundIds ?? [];
 
-                    if (!customSoundIds || customSoundIds.length === 0) {
-                      return (
-                        <div className={styles.emptyPickerState}>
-                          <p className={styles.emptyPickerText}>Add some sounds to this character!</p>
-                          <div className={styles.emptyPickerActions}>
-                            <button
-                              type="button"
-                              className={styles.emptyPickerButton}
-                              onClick={() => {
-                                setInitialEditTab('sounds');
-                                setPickingSoundsCharacterId(null);
-                                navigate(`/${characterId}/edit`);
-                              }}
-                            >
-                              SELECT SOUNDS
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.emptyPickerButton}
-                              onClick={() => handleRandomizeSounds(characterId)}
-                            >
-                              RANDOM SOUNDS
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    const availableSounds = customSoundIds
+                    const availableSounds = pickerSoundIds
                       .map((id) => soundCatalogById.get(id))
                       .filter((s): s is NonNullable<typeof s> => Boolean(s));
+                    const visibleSlots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => availableSounds[index] ?? null);
 
                     return (
-                      <div className={styles.pickerList}>
-                        {availableSounds.map((sound) => {
+                      <div className={styles.pickerSections}>
+                        <section className={styles.pickerLibrary}>
+                          <div className={styles.pickerLibraryHeader}>
+                            <div>
+                              <p className={styles.pickerSectionEyebrow}>This Character's Mix</p>
+                              <h4 className={styles.pickerSectionTitle}>Choose up to six sounds</h4>
+                            </div>
+                            <span className={styles.pickerLibraryCount}>{availableSounds.length}/{MAX_CHARACTER_SOUNDS}</span>
+                          </div>
+
+                          <div className={styles.pickerOptionActions}>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              shape="default"
+                              className={styles.emptyPickerButton}
+                              onPress={() => openCharacterSoundCollection(characterId)}
+                            >
+                              YOUR COLLECTION
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              shape="default"
+                              className={styles.emptyPickerButton}
+                              onPress={() => handleRandomizeSounds(characterId)}
+                            >
+                              RANDOM MIX
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              shape="default"
+                              className={styles.emptyPickerButton}
+                              onPress={() => {
+                                closeSoundPicker();
+                                navigate('/shop');
+                              }}
+                            >
+                              SHOP FOR SOUNDS
+                            </Button>
+                          </div>
+
+                          <div className={styles.pickerList}>
+                              {visibleSlots.map((sound, index) => {
+                          if (!sound) {
+                            return (
+                              <div key={`empty-slot-${index}`} className={`${styles.pickerItemWrap} ${styles.pickerItemWrapEmpty}`}>
+                                <div className={`${styles.pickerItemPreview} ${styles.pickerItemPreviewEmpty}`} aria-hidden="true">
+                                  <FontAwesomeIcon icon={faPlus} />
+                                </div>
+                                <button
+                                  type="button"
+                                  className={`${styles.pickerItemSelect} ${styles.pickerItemSelectEmpty}`}
+                                  onClick={() => openCharacterSoundCollection(characterId)}
+                                  aria-label="Add sounds"
+                                >
+                                  <span>ADD SOUNDS</span>
+                                </button>
+                                <div className={styles.pickerItemActions}>
+                                  <button
+                                    type="button"
+                                    className={`${styles.pickerItemAction} ${styles.pickerItemActionAdd}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openCharacterSoundCollection(characterId);
+                                    }}
+                                    aria-label="Open your collection"
+                                  >
+                                    <FontAwesomeIcon icon={faPen} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          }
+
                           const characterSounds = activeSoundsByCharacter[characterId] ?? [];
                           const isActive = characterSounds.includes(sound.id);
                           const isPreviewing = previewingSoundId === sound.id;
                           const isRecentlyActive = recentlyActiveSoundIds[sound.id];
-                          const showDelete = isPreviewing || isRecentlyActive;
 
                           return (
                             <div
@@ -846,14 +938,27 @@ function App() {
                               <button
                                 type="button"
                                 className={styles.pickerItemSelect}
-                                onClick={() => setSingleSound(characterId, sound.id)}
+                                onClick={() => togglePreviewSound(sound.id, sound.path)}
+                                aria-label={isPreviewing ? `Stop preview for ${sound.name}` : `Preview ${sound.name}`}
                               >
                                 <span>{sound.name.toUpperCase()}</span>
                               </button>
-                              {showDelete && (
+                              <div className={styles.pickerItemActions}>
                                 <button
                                   type="button"
-                                  className={styles.pickerItemDelete}
+                                  className={`${styles.pickerItemAction} ${isActive || isRecentlyActive ? styles.pickerItemActionActive : ''}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSingleSound(characterId, sound.id);
+                                  }}
+                                  aria-label={isActive ? 'Unselect sound' : 'Select sound'}
+                                  aria-pressed={isActive}
+                                >
+                                  <FontAwesomeIcon icon={isActive ? faCheck : faPlay} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className={styles.pickerItemAction}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleRemoveSound(characterId, sound.id);
@@ -862,10 +967,25 @@ function App() {
                                 >
                                   <FontAwesomeIcon icon={faTrash} />
                                 </button>
-                              )}
+                              </div>
                             </div>
                           );
-                        })}
+                              })}
+                            </div>
+                        </section>
+
+                        <div className={styles.pickerFooterActions}>
+                          <Button
+                            type="button"
+                            variant="primary"
+                            size="md"
+                            shape="default"
+                            className={styles.emptyPickerButton}
+                            onPress={closeSoundPicker}
+                          >
+                            SELECT THESE SOUNDS FOR THE CHARACTER
+                          </Button>
+                        </div>
                       </div>
                     );
                   })()}
@@ -875,23 +995,35 @@ function App() {
           </>
         )}
 
-        <button type="button" className={styles.refreshButton} onClick={resetBoard}>
+        <Button type="button" variant="secondary" shape="pill" className={styles.refreshButton} onPress={resetBoard}>
           Reset Board
-        </button>
+        </Button>
 
-        <div className={styles.hamburgerWrap}>
-          <div
-            className={`${styles.hamburger} ${isMenuOpen ? styles.hamburgerActive : ''}`}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <span className={styles.hamburgerBox}>
-              <span className={styles.hamburgerInner}></span>
-            </span>
+        {!isBlockingOverlayOpen && (
+          <div className={styles.hamburgerWrap}>
+            <div
+              className={`${styles.hamburger} ${isMenuVisible ? styles.hamburgerActive : ''}`}
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+            >
+              <span className={styles.hamburgerBox}>
+                <span className={styles.hamburgerInner}></span>
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
-        <Menu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onNavigate={navigate} />
+        {!isBlockingOverlayOpen && (
+          <Menu
+            isOpen={isMenuVisible}
+            onClose={() => setIsMenuOpen(false)}
+            onNavigate={navigate}
+            isLowGraphics={isLowGraphics}
+            onToggleLowGraphics={() => setIsLowGraphics((prev) => !prev)}
+          />
+        )}
         <ProgressionMeter state={progressionState} currentLevelInfo={currentLevelInfo} nextLevelInfo={nextLevelInfo} />
+          </>
+        )}
       </main>
     </div>
   );

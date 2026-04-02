@@ -12,21 +12,21 @@
   min-height: 100%
   display: grid
   place-items: start center
-  padding: 1.5rem
+  padding: 1rem 1rem 5.5rem
   z-index: 61
 
 .modalCard
-  width: min(100%, 72rem)
+  width: min(100%, 76rem)
   background: rgba(18, 10, 48, 0.95)
-  border: 1px solid rgba(255, 255, 255, 0.25)
+  border: 1px solid rgba(255, 255, 255, 0.18)
   border-radius: var(--radius-md)
   box-shadow: var(--shadow-panel)
-  padding: 1.25rem
+  padding: 1rem
   display: flex
   flex-direction: column
-  gap: 1.25rem
-  margin-top: 2rem
-  margin-bottom: 4rem
+  gap: 1rem
+  margin-top: 1rem
+  margin-bottom: 1rem
 
 .modalHeader
   display: flex
@@ -35,18 +35,28 @@
   gap: 1rem
   flex-shrink: 0
 
+.modalTitle
+  margin: 0
+  font-family: var(--font-body)
+  font-size: 0.9rem
+  font-weight: 700
+  letter-spacing: 0.12em
+  text-transform: uppercase
+  color: var(--color-text-strong)
+
 .layoutColumns
   display: grid
   grid-template-columns: 1fr
-  gap: 1.5rem
+  gap: 1rem
 
 .columnTitle
-  font-family: var(--font-title)
-  font-size: 0.8rem
+  font-family: var(--font-body)
+  font-size: 0.72rem
+  font-weight: 700
   letter-spacing: 0.12em
   text-transform: uppercase
   color: var(--color-text-muted)
-  margin: 0 0 1rem
+  margin: 0 0 0.8rem
 
 .columnPreview
   display: flex
@@ -68,8 +78,9 @@
 
 .columnControls
   display: grid
-  gap: 1.25rem
+  gap: 1rem
   align-content: start
+  min-width: 0
 
 .columnTabs
   display: flex
@@ -80,67 +91,20 @@
 .tabsContainer
   display: grid
   gap: 0.5rem
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr))
+  grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr))
 
 .modalActions
   width: 100%
   display: flex
-  justify-content: flex-end
+  justify-content: stretch
   gap: 0.75rem
-  margin-top: 1.25rem
+  margin-top: 0.5rem
 
-  // Mobile/Portrait: Fix buttons to bottom of screen
-  @media (max-width: 63.99rem) or (orientation: portrait)
-  .modalActions
-    position: fixed
-    bottom: 0
-    left: 0
-    right: 0
-    margin: 0
-    padding: 1rem 1.5rem 1.5rem
-    background: linear-gradient(to top, rgba(8, 6, 26, 0.95) 80%, transparent)
-    backdrop-filter: blur(8px)
-    justify-content: center
-    z-index: 70
-    border-top: 1px solid rgba(255, 255, 255, 0.1)
-
-    @media (min-width: 64rem)
-  .layoutColumns
-    grid-template-columns: 1.2fr 2fr 1fr
-
-  .tabsContainer
-    grid-template-columns: 1fr
-
-  .columnTabs
-    border-left: 1px solid rgba(255, 255, 255, 0.1)
-    padding-left: 1.5rem
-
-  .columnPreview
-    border-right: 1px solid rgba(255, 255, 255, 0.1)
-    padding-right: 1.5rem
-
-.colorBadge
-  position: absolute
-  top: -0.4rem
-  right: -0.4rem
-  width: 1.1rem
-  height: 1.1rem
-  background: #fff
-  color: #000
-  border-radius: 50%
-  display: grid
-  place-items: center
-  font-size: 0.65rem
-  font-weight: 800
-  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3)
-  border: 1px solid rgba(0, 0, 0, 0.1)
-
-.modalTitle
-  margin: 0
-  font-family: var(--font-title)
-  font-size: 1.1rem
-  letter-spacing: 0.08em
-  text-transform: uppercase
+.actionButton
+  flex: 1
+  min-width: 0
+  font-weight: 700
+  letter-spacing: 0.06em
 
 .field
   display: grid
@@ -162,152 +126,122 @@
   font-family: var(--font-body)
   text-transform: uppercase
   font-size: 0.85rem
-  padding: 0.45rem 0.6rem
+  padding: 0.55rem 0.65rem
+
+.tabButtons
+  display: flex
+  gap: 0.5rem
+  border-bottom: 1px solid rgba(179, 205, 255, 0.12)
+  padding-bottom: 0
+  margin-bottom: 0.15rem
+
+.tabButton
+  flex: 1
+  display: flex
+  align-items: center
+  justify-content: center
+  min-height: 2.35rem
+  padding: 0.2rem 0.85rem 0.65rem
+  border: 0
+  border-bottom: 2px solid transparent
+  border-radius: 0.4rem 0.4rem 0 0
+  background: transparent
+  color: rgba(215, 228, 255, 0.64)
+  font-family: var(--font-body)
+  font-size: 0.74rem
+  font-weight: 700
+  letter-spacing: 0.08em
+  cursor: pointer
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease
+
+  &:hover
+    color: rgba(255, 255, 255, 0.86)
+    background: rgba(93, 122, 212, 0.12)
+
+  &[data-selected]
+    color: #fff
+    border-bottom-color: rgba(255, 210, 248, 0.88)
+    background: linear-gradient(180deg, rgba(85, 130, 255, 0.18) 0%, rgba(255, 120, 196, 0.08) 100%)
+
+.tabContent
+  display: grid
+  gap: 1rem
+  align-content: start
+  min-width: 0
+
+.fieldHeader
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 0.75rem
+  flex-wrap: wrap
+  margin-bottom: 0.5rem
+
+.soundActions
+  display: flex
+  gap: 0.5rem
+  flex-wrap: wrap
+
+.randomizeButton,
+.shopButton,
+.filterButton
+  letter-spacing: 0.05em
 
 .colorGrid
   display: grid
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr))
-  gap: 0.45rem
+  gap: 0.5rem
 
 .colorOption
   position: relative
   display: flex
   align-items: center
   gap: 0.45rem
-  border: 1px solid rgba(255, 255, 255, 0.2)
-  border-radius: var(--radius-sm)
-  padding: 0.35rem 0.5rem
-  background: rgba(9, 9, 20, 0.6)
+  border: 1px solid rgba(169, 204, 255, 0.18)
+  border-radius: 0.55rem
+  padding: 0.48rem 0.58rem
+  background: linear-gradient(180deg, rgba(18, 24, 54, 0.78) 0%, rgba(13, 14, 32, 0.74) 100%)
   cursor: pointer
   color: var(--color-text-strong)
   font-size: 0.75rem
   font-weight: 600
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease
 
 .colorOptionActive
-  border-color: rgba(255, 255, 255, 0.6)
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18)
+  border-color: rgba(255, 226, 247, 0.68)
+  box-shadow: 0 0 0 1px rgba(255, 226, 247, 0.16), 0 0 1rem rgba(100, 140, 255, 0.28)
+
+.colorOption:hover
+  transform: translateY(-1px)
+  border-color: rgba(190, 217, 255, 0.32)
+  box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.24)
 
 .colorOptionDisabled
   opacity: 0.3
   cursor: not-allowed
   filter: grayscale(0.2)
 
-.colorOption input
-  position: absolute
-  opacity: 0
-  pointer-events: none
-
 .colorSwatch
   width: 1rem
   height: 1rem
-  border-radius: 999px
+  border-radius: 0.3rem
   border: 1px solid rgba(255, 255, 255, 0.5)
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35)
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 0.6rem rgba(255, 255, 255, 0.1)
 
-.okButton, .cancelButton
-  height: 2.8rem
-  padding: 0 2rem
-  border-radius: 999px
-  font-family: var(--font-body)
-  font-size: 0.9rem
-  font-weight: 700
-  letter-spacing: 0.05em
-  text-transform: uppercase
-  cursor: pointer
-  transition: all 0.2s ease
-  display: flex
-  align-items: center
-  justify-content: center
-  background: rgba(8, 8, 18, 0.85)
-  color: #fff
-  border: 1px solid rgba(255, 255, 255, 0.25)
-  min-width: 8rem
-
-.okButton:active, .cancelButton:active
-  background: rgba(45, 45, 75, 0.95)
-  transform: scale(0.98)
-
-  @media (min-width: 40rem)
-  .modalCard
-    padding: 1.2rem 1.3rem
-
-.tabButtons
-  display: flex
-  gap: 0.5rem
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1)
-  margin-bottom: 1rem
-
-.tabButton
-  flex: 1
-  padding: 0.5rem
-  background: transparent
-  border: none
-  border-bottom: 2px solid transparent
-  color: var(--color-text-muted)
-  font-family: var(--font-title)
-  font-size: 0.75rem
-  letter-spacing: 0.1em
-  text-transform: uppercase
-  cursor: pointer
-  transition: all 0.2s ease
-
-.tabButton:hover
-  color: var(--color-text-strong)
-  background: rgba(255, 255, 255, 0.05)
-
-.tabButtonActive
-  color: var(--color-text-strong)
-  border-bottom-color: rgba(255, 255, 255, 0.6)
-
-.tabContent
-  display: grid
-  gap: 1.25rem
-  align-content: start
-
-.fieldHeader
-  display: flex
-  align-items: center
-  justify-content: space-between
-  margin-bottom: 0.5rem
-
-.soundActions
-  display: flex
-  gap: 0.5rem
-
-.shopButton
-  background: var(--color-mood-tokyo-13)
-  border: 1px solid rgba(255, 255, 255, 0.2)
-  border-radius: 999px
-  color: #fff
-  font-size: 0.65rem
-  font-weight: 800
-  letter-spacing: 0.05em
-  padding: 0.25rem 0.75rem
-  cursor: pointer
-  transition: all 0.2s ease
-  box-shadow: 0 0 8px var(--color-mood-tokyo-13)
-
-.shopButton:hover
+.colorBadge
+  position: absolute
+  top: -0.35rem
+  right: -0.35rem
+  width: 1.1rem
+  height: 1.1rem
   background: #fff
   color: #000
-  transform: scale(1.05)
-
-.randomizeButton
-  background: transparent
-  border: 1px solid rgba(255, 255, 255, 0.15)
-  border-radius: 999px
-  color: var(--color-text-muted)
+  border-radius: 0.35rem
+  display: grid
+  place-items: center
   font-size: 0.65rem
-  font-weight: 700
-  letter-spacing: 0.05em
-  padding: 0.25rem 0.75rem
-  cursor: pointer
-  transition: all 0.2s ease
-
-.randomizeButton:hover
-  color: var(--color-text-strong)
-  background: rgba(255, 255, 255, 0.05)
-  border-color: rgba(255, 255, 255, 0.3)
+  font-weight: 800
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3)
 
 .filterBar
   display: flex
@@ -315,25 +249,11 @@
   flex-wrap: wrap
   margin-bottom: 0.5rem
 
-.filterButton
-  background: rgba(255, 255, 255, 0.05)
-  border: 1px solid rgba(255, 255, 255, 0.1)
-  border-radius: 999px
-  color: var(--color-text-muted)
-  font-size: 0.6rem
-  font-weight: 700
-  padding: 0.2rem 0.6rem
-  cursor: pointer
-  transition: all 0.2s ease
-
-.filterButton:hover
-  background: rgba(255, 255, 255, 0.1)
-  border-color: rgba(255, 255, 255, 0.2)
-
-.filterButtonActive
-  background: rgba(255, 255, 255, 0.2)
-  border-color: rgba(255, 255, 255, 0.4)
-  color: #fff
+.columnTabs
+  display: flex
+  flex-direction: column
+  gap: 0.8rem
+  min-height: 0
 
 .emptySoundsGrid
   display: flex
@@ -357,38 +277,20 @@
   justify-content: center
 
 .emptyPickerButton
-  height: 2.4rem
-  padding: 0 1.5rem
-  border-radius: 999px
-  background: rgba(255, 255, 255, 0.08)
-  border: 1px solid rgba(255, 255, 255, 0.15)
   color: #fff
-  font-family: var(--font-title)
-  font-size: 0.75rem
   letter-spacing: 0.05em
-  cursor: pointer
-  transition: all 0.2s ease
-
-.emptyPickerButton:hover
-  background: rgba(255, 255, 255, 0.15)
-  border-color: rgba(255, 255, 255, 0.3)
-  transform: translateY(-1px)
 
 .soundGrid
   display: grid
-  grid-template-columns: repeat(2, 1fr)
+  grid-template-columns: repeat(2, minmax(0, 1fr))
   gap: 0.4rem
   max-height: 40vh
   overflow-y: auto
   padding-right: 0.5rem
 
-  @media (min-width: 40rem)
-  .soundGrid
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr))
-
 .soundOptionWrap
   display: flex
-  height: 2.2rem
+  height: 2.25rem
   background: rgba(255, 255, 255, 0.06)
   border: 1px solid transparent
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1)
@@ -402,14 +304,20 @@
 
 @keyframes borderPulse
   from
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 0px rgba(255, 255, 255, 0)
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 0 rgba(255, 255, 255, 0)
   to
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 8px rgba(255, 255, 255, 0.2)
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 0.5rem rgba(255, 255, 255, 0.18)
 
 .soundOptionActive
   border-color: var(--sound-color)
   box-shadow: 0 0 0.8rem var(--sound-color)
   background: var(--sound-color)
+
+.soundOptionIdle
+  background: rgba(255, 255, 255, 0.035)
+
+.soundOptionMuted
+  opacity: 0.56
 
 .soundOptionDisabled
   opacity: 0.3
@@ -424,7 +332,7 @@
   background: rgba(0, 0, 0, 0.15)
   border: none
   border-right: 1px solid rgba(255, 255, 255, 0.1)
-  color: rgba(255, 255, 255, 0.3) // Default opacity 0.3
+  color: rgba(255, 255, 255, 0.3)
   cursor: pointer
   transition: all 0.2s ease
   font-size: 0.8rem
@@ -434,7 +342,7 @@
   background: rgba(0, 0, 0, 0.25)
 
 .soundOptionPreviewing
-  color: #fff !important // Opacity 1
+  color: #fff !important
   background: rgba(255, 255, 255, 0.2)
   animation: previewIconFlash 0.8s infinite alternate
 
@@ -453,6 +361,10 @@
   text-align: left
   cursor: pointer
   white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+.soundName
   overflow: hidden
   text-overflow: ellipsis
 
@@ -486,7 +398,6 @@
   to
     opacity: 1
 
-/* Sub-modal for Image Picker */
 .subModal
   position: fixed
   inset: 0
@@ -494,17 +405,18 @@
   place-items: center
   z-index: 100
   background: rgba(4, 3, 14, 0.8)
+  padding: 1rem
 
 .subModalCard
   width: min(90%, 40rem)
   background: rgba(18, 10, 48, 0.98)
-  border: 1px solid rgba(255, 255, 255, 0.25)
+  border: 1px solid rgba(255, 255, 255, 0.2)
   border-radius: var(--radius-md)
   box-shadow: 0 0 2rem rgba(0, 0, 0, 0.5)
-  padding: 1.5rem
+  padding: 1.25rem
   display: flex
   flex-direction: column
-  gap: 1.25rem
+  gap: 1rem
 
 .subModalHeader
   display: flex
@@ -513,9 +425,10 @@
 
 .subModalTitle
   margin: 0
-  font-family: var(--font-title)
-  font-size: 1rem
-  letter-spacing: 0.08em
+  font-family: var(--font-body)
+  font-size: 0.85rem
+  font-weight: 700
+  letter-spacing: 0.12em
   text-transform: uppercase
 
 .imagePickerGrid
@@ -546,7 +459,7 @@
 
   img
     width: 100%
-    aspect-ratio: 1/1
+    aspect-ratio: 1 / 1
     object-fit: cover
     border-radius: var(--radius-sm)
 
@@ -558,4 +471,59 @@
 .subModalActions
   display: flex
   justify-content: center
-  margin-top: 0.5rem
+
+@media (min-width: 40rem)
+  .modal
+    padding: 1.5rem 1.5rem 6rem
+
+  .modalCard
+    padding: 1.2rem 1.3rem
+
+  .soundGrid
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr))
+
+@media (max-width: 63.99rem)
+  .modalActions
+    position: fixed
+    left: 0
+    right: 0
+    bottom: 0
+    margin: 0
+    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom))
+    background: linear-gradient(180deg, rgba(8, 6, 26, 0) 0%, rgba(8, 6, 26, 0.94) 35%)
+    backdrop-filter: blur(8px)
+    z-index: 70
+
+@media (min-width: 56rem) and (orientation: landscape), (min-width: 72rem)
+  .layoutColumns
+    grid-template-columns: minmax(14rem, 1.05fr) minmax(0, 1.6fr) minmax(12rem, 0.95fr)
+    gap: 1.25rem
+
+  .tabsContainer
+    grid-template-columns: 1fr
+
+  .columnPreview
+    border-right: 1px solid rgba(255, 255, 255, 0.08)
+    padding-right: 1.25rem
+
+  .columnTabs
+    border-left: 1px solid rgba(255, 255, 255, 0.08)
+    padding-left: 1.25rem
+
+  .modalActions
+    position: sticky
+    bottom: 0
+    margin-top: auto
+    padding-top: 1rem
+    background: linear-gradient(180deg, rgba(18, 10, 48, 0) 0%, rgba(18, 10, 48, 0.94) 26%)
+
+:global(html[data-graphics='low']) .modalCard
+  background: #110f18
+  box-shadow: none
+
+:global(html[data-graphics='low']) .subModalCard
+  background: #110f18
+  box-shadow: none
+
+:global(html[data-graphics='low']) .modalActions
+  backdrop-filter: none

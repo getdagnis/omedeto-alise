@@ -9,11 +9,23 @@ interface ButtonProps extends RACButtonProps {
    * @default 'primary'
    */
   variant?: 'primary' | 'secondary' | 'quiet';
+  size?: 'sm' | 'md' | 'lg';
+  shape?: 'default' | 'pill' | 'square';
 }
 
 export function Button(props: ButtonProps) {
+  const { variant = 'primary', size = 'md', shape = 'default' } = props;
+
   return (
-    <RACButton {...props} className="react-aria-Button button-base" data-variant={props.variant || 'primary'}>
+    <RACButton
+      {...props}
+      className={composeRenderProps(props.className, (className) =>
+        ['react-aria-Button', 'button-base', className].filter(Boolean).join(' '),
+      )}
+      data-variant={variant}
+      data-size={size}
+      data-shape={shape}
+    >
       {composeRenderProps(props.children, (children, { isPending }) => (
         <>
           {!isPending && children}

@@ -108,6 +108,17 @@ export function useProgression() {
     });
   }, []);
 
+  const grantOwnedSound = useCallback((soundId: string) => {
+    setState((prev) => {
+      if (prev.ownedSoundIds.includes(soundId)) return prev;
+
+      return {
+        ...prev,
+        ownedSoundIds: [...prev.ownedSoundIds, soundId],
+      };
+    });
+  }, []);
+
   // Calculate current level
   const currentLevelInfo = useMemo(() => {
     let currentLevel = 0;
@@ -152,5 +163,6 @@ export function useProgression() {
     recordCharacterCustomized,
     recordInteraction,
     buySound,
+    grantOwnedSound,
   };
 }

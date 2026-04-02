@@ -186,18 +186,7 @@
   width: 100%
 
 .characterSoundTag
-  height: 1.1rem
-  padding: 0 0.5rem
-  border-radius: 999px
-  border: 1px solid rgba(255, 255, 255, 0.12)
-  background: rgba(8, 8, 18, 0.7)
-  color: var(--character-title, var(--color-active-tag-text))
-  white-space: nowrap
-  display: flex
-  align-items: center
-  justify-content: center
-  line-height: 1
-  transition: color 0.2s ease
+  color: var(--character-title, var(--color-text-muted))
   box-shadow: 0 0.1rem 0.5rem rgba(0, 0, 0, 0.4)
 
 .characterSoundTagEmpty
@@ -213,53 +202,78 @@
   z-index: 15
   margin-top: 0.25rem
 
-.characterActionButton
-  border: 1px solid rgba(255, 255, 255, 0.35)
-  border-radius: 999px
-  background: rgba(8, 8, 18, 0.85)
-  color: #fff
-  width: 2.4rem
-  height: 1.6rem
-  cursor: pointer
-  box-shadow: var(--shadow-refresh)
-  transition: transform 0.2s ease, background-color 0.2s ease
+.characterActionWrap
+  position: relative
   display: flex
   align-items: center
   justify-content: center
+
+.actionTooltip
+  position: absolute
+  bottom: calc(100% + 0.4rem)
+  left: 50%
+  transform: translateX(-50%)
+  min-width: max-content
+  padding: 0.3rem 0.65rem
+  border-radius: 999px
+  background: rgba(7, 9, 24, 0.96)
+  border: 1px solid rgba(255, 255, 255, 0.16)
+  color: rgba(255, 255, 255, 0.92)
+  font-family: var(--font-body)
+  font-size: 0.62rem
+  font-weight: 700
+  letter-spacing: 0.08em
+  text-transform: uppercase
+  white-space: nowrap
+  pointer-events: none
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.35)
+
+  &::after
+    content: ''
+    position: absolute
+    top: 100%
+    left: 50%
+    width: 0.45rem
+    height: 0.45rem
+    background: rgba(7, 9, 24, 0.96)
+    border-right: 1px solid rgba(255, 255, 255, 0.16)
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16)
+    transform: translate(-50%, -50%) rotate(45deg)
+
+.characterActionButton
+  --button-color: var(--blue)
+  --button-background: rgba(9, 14, 38, 0.94)
+  --button-gradient: rgba(16, 24, 56, 0.92)
+  --button-border: rgba(155, 190, 255, 0.16)
+  --button-shadow: rgba(3, 8, 22, 0.92)
+  --button-highlight: rgba(255, 255, 255, 0.07)
+  color: #fff
+  width: 2.4rem
+  height: 1.6rem
+  box-shadow: 0 0.45rem 1rem rgba(3, 8, 22, 0.35)
   font-size: 0.75rem
 
-.characterActionButton:hover
-  background: rgba(25, 25, 45, 0.95)
-  transform: scale(1.1)
-
 .characterActionButton:disabled
-  cursor: default
   opacity: 0.6
-  transform: none
   box-shadow: none
 
 .imageEditButton
   position: absolute
-  bottom: 1.2rem
-  right: 1.2rem
+  bottom: 0.7rem
+  left: 50%
+  transform: translateX(-50%)
   z-index: 10
-  border: 1px solid rgba(255, 255, 255, 0.35)
-  border-radius: 999px
-  background: rgba(8, 8, 18, 0.85)
+  --button-color: var(--blue)
+  --button-background: rgba(9, 14, 38, 0.94)
+  --button-gradient: rgba(16, 24, 56, 0.92)
+  --button-border: rgba(155, 190, 255, 0.16)
+  --button-shadow: rgba(3, 8, 22, 0.92)
+  --button-highlight: rgba(255, 255, 255, 0.07)
   color: #fff
-  width: 2.4rem
+  min-width: 2.4rem
   height: 1.6rem
-  cursor: pointer
-  box-shadow: var(--shadow-refresh)
-  transition: transform 0.2s ease, background-color 0.2s ease
-  display: flex
-  align-items: center
-  justify-content: center
+  box-shadow: 0 0.45rem 1rem rgba(3, 8, 22, 0.35)
   font-size: 0.75rem
-
-  &:hover
-    background: rgba(25, 25, 45, 0.95)
-    transform: scale(1.1)
 
 .favoriteButton
   position: absolute
@@ -426,28 +440,29 @@
   align-items: center
   gap: 0.6rem
   padding: 0.45rem 0.6rem
-  border: 1px solid rgba(255, 255, 255, 0.15)
-  border-radius: 999px
-  background: rgba(8, 8, 18, 0.45)
+  border: 1px solid rgba(169, 204, 255, 0.16)
+  border-radius: 0.75rem
+  background: linear-gradient(180deg, rgba(22, 28, 58, 0.78) 0%, rgba(12, 14, 32, 0.74) 100%)
   cursor: pointer
   transition: all 0.2s ease
   color: var(--color-text-strong)
   text-align: left
 
 .smallPreview:hover
-  background: rgba(25, 25, 45, 0.65)
-  border-color: rgba(255, 255, 255, 0.3)
+  background: linear-gradient(180deg, rgba(36, 47, 90, 0.86) 0%, rgba(20, 24, 52, 0.82) 100%)
+  border-color: rgba(194, 219, 255, 0.28)
+  box-shadow: 0 0.45rem 1rem rgba(0, 0, 0, 0.24)
 
 .smallPreviewActive
-  background: rgba(45, 45, 75, 0.8)
+  background: linear-gradient(180deg, rgba(52, 69, 122, 0.94) 0%, rgba(35, 28, 78, 0.9) 100%)
   border-color: var(--preview-color, rgba(255, 255, 255, 0.6))
-  box-shadow: 0 0 0.8rem var(--preview-color, rgba(255, 255, 255, 0.15))
+  box-shadow: 0 0 0.95rem var(--preview-color, rgba(255, 255, 255, 0.18))
 
 .smallPreviewImage
   width: 2.2rem
   height: 2.2rem
   object-fit: cover
-  border-radius: 999px
+  border-radius: 0.6rem
   background: var(--preview-color, rgba(255, 255, 255, 0.1))
   border: 1px solid rgba(255, 255, 255, 0.2)
 

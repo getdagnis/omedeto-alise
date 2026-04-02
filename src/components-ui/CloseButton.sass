@@ -1,0 +1,22 @@
+@use "../styles/ui-theme/theme.css"
+
+.app-CloseButton
+  background: transparent !important
+  box-shadow: none !important
+  color: rgba(255, 255, 255, 0.9) !important
+  border: 0 !important
+  padding: 0 !important
+
+  &:hover,
+  &[data-hovered]
+    color: #fff !important
+    background: transparent !important
+
+  &:focus-visible,
+  &[data-focus-visible]
+    outline: 2px solid rgba(255, 255, 255, 0.7)
+    outline-offset: 4px
+
+  > svg
+    width: 1.05rem
+    height: 1.05rem

@@ -4,6 +4,7 @@ import { faVolumeHigh, faTrash } from '@fortawesome/free-solid-svg-icons';
 import styles from './EditCharacterModal.module.sass';
 import type { CharacterOption, SoundOption, SoundCategory } from '../config';
 import CharacterCard from './CharacterCard';
+import { Button, CloseButton } from '../components-ui';
 
 const SOUND_CATEGORIES: { id: SoundCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'ALL' },
@@ -77,6 +78,7 @@ function EditCharacterModal({
   onUpdateCustomization,
   onOpenShop,
 }: EditCharacterModalProps) {
+  const MAX_CHARACTER_SOUNDS = 6;
   const [draftCustomization, setDraftCustomization] = useState<CharacterCustomization>({});
   const [activeTab, setActiveTab] = useState<'colors' | 'sounds'>(initialTab);
   const [activeCategory, setActiveCategory] = useState<SoundCategory | 'all'>('all');
@@ -167,7 +169,7 @@ function EditCharacterModal({
     if (currentSounds.includes(soundId)) {
       handleUpdateDraft({ soundIds: currentSounds.filter((id) => id !== soundId) });
     } else {
-      if (currentSounds.length >= 12) return;
+      if (currentSounds.length >= MAX_CHARACTER_SOUNDS) return;
       handleUpdateDraft({ soundIds: [...currentSounds, soundId] });
     }
   };
@@ -214,6 +216,7 @@ function EditCharacterModal({
         <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
           <header className={styles.modalHeader}>
             <h2 className={styles.modalTitle}>EDIT CHARACTER</h2>
+            <CloseButton onPress={handleCancel} aria-label="Close editor" />
           </header>
 
           <div className={styles.layoutColumns}>
@@ -267,7 +270,8 @@ function EditCharacterModal({
               <div className={styles.tabButtons}>
                 <button
                   type="button"
-                  className={`${styles.tabButton} ${activeTab === 'colors' ? styles.tabButtonActive : ''}`}
+                  className={styles.tabButton}
+                  data-selected={activeTab === 'colors' ? 'true' : undefined}
                   onClick={() => setActiveTab('colors')}
                 >
                   COLORS (
@@ -276,10 +280,11 @@ function EditCharacterModal({
                 </button>
                 <button
                   type="button"
-                  className={`${styles.tabButton} ${activeTab === 'sounds' ? styles.tabButtonActive : ''}`}
+                  className={styles.tabButton}
+                  data-selected={activeTab === 'sounds' ? 'true' : undefined}
                   onClick={() => setActiveTab('sounds')}
                 >
-                  SOUNDS ({draftCustomization.soundIds?.length ?? 0}/12)
+                  SOUNDS ({draftCustomization.soundIds?.length ?? 0}/{MAX_CHARACTER_SOUNDS})
                 </button>
               </div>
 
@@ -323,9 +328,9 @@ function EditCharacterModal({
                             : { background: `var(${option.value})` };
 
                         return (
-                          <button
-                            key={option.id}
-                            type="button"
+                        <button
+                          key={option.id}
+                          type="button"
                             className={`${styles.colorOption} ${isSelected ? styles.colorOptionActive : ''} ${
                               isDisabled ? styles.colorOptionDisabled : ''
                             }`}
@@ -350,39 +355,39 @@ function EditCharacterModal({
                     <div className={styles.fieldHeader}>
                       <span className={styles.fieldLabel}>YOUR OWNED SOUNDS</span>
                       <div className={styles.soundActions}>
-                        <button
+                        <Button
                           type="button"
+                          variant="secondary"
+                          size="sm"
+                          shape="pill"
                           className={styles.randomizeButton}
-                          onClick={() => {
+                          onPress={() => {
                             const owned = character.sounds.filter(s => ownedSoundIds.includes(s.id));
                             const shuffled = [...owned].sort(() => 0.5 - Math.random());
-                            handleUpdateDraft({ soundIds: shuffled.slice(0, 12).map((s) => s.id) });
+                            handleUpdateDraft({ soundIds: shuffled.slice(0, MAX_CHARACTER_SOUNDS).map((s) => s.id) });
                           }}
                         >
                           RANDOMIZE
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.shopButton}
-                          onClick={onOpenShop}
-                        >
+                        </Button>
+                        <Button type="button" variant="primary" size="sm" shape="pill" className={styles.shopButton} onPress={onOpenShop}>
                           SHOP
-                        </button>
+                        </Button>
                       </div>
                     </div>
 
                     <div className={styles.filterBar}>
                       {SOUND_CATEGORIES.map((cat) => (
-                        <button
+                        <ToggleButton
                           key={cat.id}
-                          type="button"
-                          className={`${styles.filterButton} ${
-                            activeCategory === cat.id ? styles.filterButtonActive : ''
-                          }`}
-                          onClick={() => setActiveCategory(cat.id)}
+                          className={styles.filterButton}
+                          variant="secondary"
+                          size="sm"
+                          shape="pill"
+                          isSelected={activeCategory === cat.id}
+                          onChange={() => setActiveCategory(cat.id)}
                         >
                           {cat.label}
-                        </button>
+                        </ToggleButton>
                       ))}
                     </div>
 
@@ -390,7 +395,7 @@ function EditCharacterModal({
                       {filteredSounds.map((sound) => {
                         const currentSounds = draftCustomization.soundIds ?? [];
                         const isSelected = currentSounds.includes(sound.id);
-                        const isMaxReached = !isSelected && currentSounds.length >= 12;
+                        const isMaxReached = !isSelected && currentSounds.length >= MAX_CHARACTER_SOUNDS;
                         const isPreviewing = previewingSoundId === sound.id;
                         const isRecentlyActive = recentlyActiveSoundIds[sound.id];
                         const showDelete = isPreviewing || isRecentlyActive;
@@ -400,6 +405,8 @@ function EditCharacterModal({
                             key={sound.id}
                             className={`${styles.soundOptionWrap} ${
                               isSelected ? styles.soundOptionActive : ''
+                            } ${!isSelected ? styles.soundOptionMuted : ''} ${
+                              isSelected ? '' : styles.soundOptionIdle
                             } ${isMaxReached ? styles.soundOptionDisabled : ''} ${
                               isPreviewing ? styles.soundOptionWrapPreviewing : ''
                             }`}
@@ -492,12 +499,12 @@ function EditCharacterModal({
               </div>
 
               <div className={styles.modalActions}>
-                <button type="button" className={styles.cancelButton} onClick={handleCancel}>
+                <Button type="button" variant="secondary" shape="pill" className={styles.actionButton} onPress={handleCancel}>
                   CANCEL
-                </button>
-                <button type="button" className={styles.okButton} onClick={handleOk}>
+                </Button>
+                <Button type="button" variant="primary" shape="pill" className={styles.actionButton} onPress={handleOk}>
                   OK
-                </button>
+                </Button>
               </div>
             </nav>
           </div>
@@ -533,13 +540,9 @@ function EditCharacterModal({
             </div>
 
             <nav className={styles.subModalActions}>
-              <button
-                type="button"
-                className={styles.okButton}
-                onClick={() => setIsImagePickerOpen(false)}
-              >
+              <Button type="button" variant="primary" shape="pill" className={styles.actionButton} onPress={() => setIsImagePickerOpen(false)}>
                 OK
-              </button>
+              </Button>
             </nav>
           </div>
         </div>

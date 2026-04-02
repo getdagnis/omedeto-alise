@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVolumeHigh, faXmark, faCartShopping, faCoins, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faVolumeHigh, faCartShopping, faCoins, faCheck } from '@fortawesome/free-solid-svg-icons';
 import styles from './Shop.module.sass';
 import { ALL_SOUNDS } from '../../config';
 import type { SoundType, SoundMood } from '../../config';
+import { Button, Chip, CloseButton, ToggleButton } from '../../components-ui';
 
 type ShopProps = {
   isOpen: boolean;
@@ -70,9 +71,7 @@ export default function Shop({
                 {currencySymbol}
               </span>
             </div>
-            <button className={styles.closeButton} onClick={onClose}>
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
+            <CloseButton className={styles.closeButton} onPress={onClose} aria-label="Close shop" />
           </div>
         </header>
 
@@ -81,13 +80,17 @@ export default function Shop({
             <span className={styles.filterLabel}>TYPE</span>
             <div className={styles.filterBar}>
               {SOUND_TYPES.map((t) => (
-                <button
+                <ToggleButton
                   key={t}
-                  className={`${styles.filterButton} ${activeType === t ? styles.filterButtonActive : ''}`}
-                  onClick={() => setActiveType(t)}
+                  className={styles.filterButton}
+                  variant="secondary"
+                  size="sm"
+                  shape="pill"
+                  isSelected={activeType === t}
+                  onChange={() => setActiveType(t)}
                 >
                   {t.toUpperCase()}
-                </button>
+                </ToggleButton>
               ))}
             </div>
           </div>
@@ -96,13 +99,17 @@ export default function Shop({
             <span className={styles.filterLabel}>MOOD</span>
             <div className={styles.filterBar}>
               {SOUND_MOODS.map((m) => (
-                <button
+                <ToggleButton
                   key={m}
-                  className={`${styles.filterButton} ${activeMood === m ? styles.filterButtonActive : ''}`}
-                  onClick={() => setActiveMood(m)}
+                  className={styles.filterButton}
+                  variant="secondary"
+                  size="sm"
+                  shape="pill"
+                  isSelected={activeMood === m}
+                  onChange={() => setActiveMood(m)}
                 >
                   {m.toUpperCase()}
-                </button>
+                </ToggleButton>
               ))}
             </div>
           </div>
@@ -116,25 +123,36 @@ export default function Shop({
 
             return (
               <div key={sound.id} className={`${styles.marketItem} ${isOwned ? styles.itemOwned : ''}`}>
-                <button
+                <Button
                   className={`${styles.previewBtn} ${isPreviewing ? styles.previewing : ''}`}
-                  onClick={() => onPreviewSound(sound.id, sound.path)}
+                  variant="secondary"
+                  size="md"
+                  shape="square"
+                  onPress={() => onPreviewSound(sound.id, sound.path)}
+                  aria-label={isPreviewing ? 'Stop preview' : `Preview ${sound.name}`}
                 >
                   <FontAwesomeIcon icon={faVolumeHigh} />
-                </button>
+                </Button>
 
                 <div className={styles.itemInfo}>
                   <span className={styles.itemName}>{sound.name.toUpperCase()}</span>
                   <div className={styles.itemTags}>
-                    <span>{sound.type}</span>
-                    <span>{sound.mood}</span>
+                    <Chip tone="neutral" size="sm">
+                      {sound.type}
+                    </Chip>
+                    <Chip tone="accent" size="sm">
+                      {sound.mood}
+                    </Chip>
                   </div>
                 </div>
 
-                <button
+                <Button
                   className={`${styles.buyBtn} ${isOwned ? styles.buyBtnOwned : ''}`}
-                  disabled={isOwned || !canAfford}
-                  onClick={() => onBuySound(sound.id, sound.price)}
+                  variant={isOwned ? 'secondary' : 'primary'}
+                  size="sm"
+                  shape="pill"
+                  isDisabled={isOwned || !canAfford}
+                  onPress={() => onBuySound(sound.id, sound.price)}
                 >
                   {isOwned ? (
                     <>
@@ -143,7 +161,7 @@ export default function Shop({
                   ) : (
                     `${sound.price}Y`
                   )}
-                </button>
+                </Button>
               </div>
             );
           })}

@@ -6,9 +6,11 @@ export interface MenuProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (path: string) => void;
+  isLowGraphics: boolean;
+  onToggleLowGraphics: () => void;
 }
 
-export function Menu({ isOpen, onClose, onNavigate }: MenuProps) {
+export function Menu({ isOpen, onClose, onNavigate, isLowGraphics, onToggleLowGraphics }: MenuProps) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -67,6 +69,12 @@ export function Menu({ isOpen, onClose, onNavigate }: MenuProps) {
           >
             UI Sandbox
           </div>
+        </li>
+        <Separator />
+        <li className={styles.menuItem}>
+          <button type="button" className={`${styles.liInner} ${styles.menuToggle}`} onClick={onToggleLowGraphics}>
+            LOW GRAPHICS: {isLowGraphics ? 'ON' : 'OFF'}
+          </button>
         </li>
       </ul>
     </div>
