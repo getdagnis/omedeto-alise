@@ -4,7 +4,7 @@ import { faVolumeHigh, faTrash } from '@fortawesome/free-solid-svg-icons';
 import styles from './EditCharacterModal.module.sass';
 import type { CharacterOption, SoundOption, SoundCategory } from '../config';
 import CharacterCard from './CharacterCard';
-import { Button, CloseButton } from '../components-ui';
+import { Button, CloseButton, ToggleButton } from '../components-ui';
 
 const SOUND_CATEGORIES: { id: SoundCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'ALL' },

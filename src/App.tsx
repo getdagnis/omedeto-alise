@@ -337,8 +337,17 @@ function App() {
       previewAudioRef.current = audio;
       setPreviewingSoundId(soundId);
       setPickerActionSoundId(soundId);
+      setPickerSelectedSoundIds((previous) => {
+        if (previous.includes(soundId)) {
+          return previous;
+        }
+        if (previous.length >= currentLevelInfo.soundsPerCharacter) {
+          return [...previous.slice(1), soundId];
+        }
+        return [...previous, soundId];
+      });
     },
-    [previewingSoundId],
+    [currentLevelInfo.soundsPerCharacter, previewingSoundId],
   );
 
   const toggleMuteCharacter = useCallback((characterId: string) => {
@@ -698,7 +707,7 @@ function App() {
           return previous.filter((id) => id !== soundId);
         }
         if (previous.length >= currentLevelInfo.soundsPerCharacter) {
-          return previous;
+          return [...previous.slice(1), soundId];
         }
         return [...previous, soundId];
       });
@@ -727,7 +736,7 @@ function App() {
   const applyPickerSelection = useCallback(
     (characterId: string) => {
       const nextSlots = pickerSlots.filter((id): id is string => Boolean(id));
-      const nextSelected = pickerSlots.filter((id): id is string => Boolean(id) && pickerSelectedSoundIds.includes(id));
+      const nextSelected = nextSlots.filter((id) => pickerSelectedSoundIds.includes(id));
       if (nextSelected.length === 0) {
         return;
       }
@@ -960,6 +969,7 @@ function App() {
                     const characterName = characterCustomizations[characterId]?.name?.trim() || character.name;
 
                     const availableSounds = pickerSlots
+                      .filter((id): id is string => Boolean(id))
                       .map((id) => soundCatalogById.get(id))
                       .filter((s): s is NonNullable<typeof s> => Boolean(s));
                     const visibleSlots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => {
@@ -995,22 +1005,22 @@ function App() {
                               size="sm"
                               shape="default"
                               className={styles.emptyPickerButton}
-                              onPress={() => handleRandomizeSounds(characterId)}
-                            >
-                              SHUFFLE
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              shape="default"
-                              className={styles.emptyPickerButton}
                               onPress={() => {
                                 closeSoundPicker();
                                 navigate('/shop');
                               }}
                             >
                               SHOP FOR SOUNDS
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              shape="default"
+                              className={`${styles.emptyPickerButton} ${styles.pickerButtonCallout}`}
+                              onPress={() => handleRandomizeSounds(characterId)}
+                            >
+                              SHUFFLE SOUNDS
                             </Button>
                           </div>
 
@@ -1036,8 +1046,8 @@ function App() {
                                 const isPinned = pickerPinnedSoundIds.includes(sound.id);
                                 const isPreviewing = previewingSoundId === sound.id;
                                 const isActionActive = pickerActionSoundId === sound.id;
-                                const showFullActions = isSelected;
-                                const showPinOnly = !showFullActions && (isActionActive || isPinned);
+                                const showFullActions = isSelected || isActionActive;
+                                const showPinOnly = !showFullActions && (isPinned || isActionActive);
 
                                 return (
                                   <div

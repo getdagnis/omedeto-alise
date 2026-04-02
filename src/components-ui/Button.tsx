@@ -3,7 +3,7 @@ import { Button as RACButton, type ButtonProps as RACButtonProps, composeRenderP
 import { ProgressCircle } from './ProgressCircle';
 import './Button.sass';
 
-interface ButtonProps extends RACButtonProps {
+export interface ButtonProps extends RACButtonProps {
   /**
    * The visual style of the button (Vanilla CSS implementation specific).
    * @default 'primary'
