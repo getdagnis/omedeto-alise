@@ -200,7 +200,7 @@ export default function StyleGuide() {
 
               <SectionCard title="ListBox">
                 <div className={styles.stack} style={{ width: '100%', maxWidth: '320px' }}>
-                  <UI.ListBox aria-label="Standard List" selectionMode="multiple">
+                  <UI.ListBox aria-label="Standard List" selectionMode="single">
                     <UI.ListBoxItem>Aardvark</UI.ListBoxItem>
                     <UI.ListBoxItem>Cat</UI.ListBoxItem>
                     <UI.ListBoxItem>Dog</UI.ListBoxItem>
