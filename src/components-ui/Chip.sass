@@ -27,6 +27,11 @@
     min-height: 1.5rem
     padding: 0.2rem 0.7rem
 
+  &[data-size='lg']
+    min-height: 2rem
+    padding: 0.3rem 1rem
+    font-size: 1rem
+
   &[data-tone='neutral']
     --ui-chip-bg: rgba(8, 8, 18, 0.68)
     --ui-chip-border: rgba(255, 255, 255, 0.12)
@@ -46,6 +51,20 @@
     --ui-chip-bg: rgba(66, 21, 38, 0.78)
     --ui-chip-border: rgba(251, 113, 133, 0.28)
     --ui-chip-text: #ffe4ea
+
+  &[data-tone='title']
+    --ui-chip-bg: rgba(8, 8, 18, 0.6)
+    --ui-chip-border: rgba(255, 255, 255, 0.18)
+    --ui-chip-text: var(--text-primary)
+    font-size: 0.8rem
+    letter-spacing: 0.08em
+    padding: 0.2rem 0.65rem
+
+  &[data-font='goofy']
+    font-family: var(--font-title)
+
+  &[data-font='body']
+    font-family: var(--font-body)
 
   &[data-active='true']
     --ui-chip-bg: rgba(0, 245, 255, 0.16)

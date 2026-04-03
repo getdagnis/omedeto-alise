@@ -165,7 +165,11 @@ function CharacterCard({
         } as CSSProperties
       }
     >
-      {showName && <p className={styles.characterName}>{displayName.toUpperCase()}'S MIX</p>}
+      {showName && (
+        <Chip tone="title" font="goofy" size="md" className={styles.characterName}>
+          {displayName.toUpperCase()}'S MIX
+        </Chip>
+      )}
 
       <div
         className={`${styles.dropTarget} ${pulseClass} ${isDropActive ? styles.dropTargetActive : ''} ${
@@ -207,19 +211,22 @@ function CharacterCard({
 
         {/* Image Edit Button */}
         {onEditImage && (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            shape="pill"
-            className={styles.imageEditButton}
-            onPress={() => {
-              onEditImage();
-            }}
-            aria-label="Change character image"
-          >
-            <FontAwesomeIcon icon={faPen} />
-          </Button>
+          <TooltipTrigger>
+            <Button
+              type="button"
+              variant="action"
+              size="sm"
+              shape="pill"
+              className={styles.imageEditButton}
+              onPress={() => {
+                onEditImage();
+              }}
+              aria-label="Change character image"
+            >
+              <FontAwesomeIcon icon={faPen} />
+            </Button>
+            <Tooltip>CHANGE IMAGE</Tooltip>
+          </TooltipTrigger>
         )}
 
         {/* Muted Icon Overlay (Only if sounds are active) */}
@@ -270,7 +277,7 @@ function CharacterCard({
             <TooltipTrigger>
               <Button
                 type="button"
-                variant="secondary"
+                variant="action"
                 size="sm"
                 shape="pill"
                 className={`${styles.characterActionButton} ${isFlashing ? styles.actionButtonFlash : ''}`}
@@ -287,7 +294,7 @@ function CharacterCard({
           <TooltipTrigger>
             <Button
               type="button"
-              variant="secondary"
+              variant="action"
               size="sm"
               shape="pill"
               className={styles.characterActionButton}
@@ -299,19 +306,22 @@ function CharacterCard({
             <Tooltip>EDIT CHARACTER</Tooltip>
           </TooltipTrigger>
           {soundIds.length > 0 && (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              shape="pill"
-              className={styles.characterActionButton}
-              onPress={() => {
-                if (onReset) onReset();
-              }}
-              aria-label="Reset character"
-            >
-              <FontAwesomeIcon icon={faRotateLeft} />
-            </Button>
+            <TooltipTrigger>
+              <Button
+                type="button"
+                variant="action"
+                size="sm"
+                shape="pill"
+                className={styles.characterActionButton}
+                onPress={() => {
+                  if (onReset) onReset();
+                }}
+                aria-label="Reset character"
+              >
+                <FontAwesomeIcon icon={faRotateLeft} />
+              </Button>
+              <Tooltip>RESET CHARACTER</Tooltip>
+            </TooltipTrigger>
           )}
         </div>
       )}
