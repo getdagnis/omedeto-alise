@@ -33,6 +33,8 @@ const gridItems = [
   { id: 'tokyo', title: 'Tokyo Echo', image: '/alise-2.svg' },
 ] as const;
 
+import { ConstellationPickerMockup, MixerDeckPickerMockup, TokyoSignalPickerMockup } from '../components/SoundPicker/MockupVariants';
+
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <UI.CardSection title={title} bodyClassName={styles.preview}>
@@ -246,6 +248,18 @@ export default function StyleGuide() {
 
         <SectionCard title="NumberField">
           <UI.NumberField label="Slots" defaultValue={3} minValue={1} maxValue={12} />
+        </SectionCard>
+
+        <SectionCard title="Sound Picker: Constellation">
+          <ConstellationPickerMockup />
+        </SectionCard>
+
+        <SectionCard title="Sound Picker: Mixer Deck">
+          <MixerDeckPickerMockup />
+        </SectionCard>
+
+        <SectionCard title="Sound Picker: Tokyo Signal">
+          <TokyoSignalPickerMockup />
         </SectionCard>
 
         <SectionCard title="Popover">

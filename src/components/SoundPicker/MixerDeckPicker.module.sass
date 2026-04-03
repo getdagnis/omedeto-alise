@@ -1,0 +1,69 @@
+@use "../../styles/theme.sass"
+
+.container
+  width: 100%
+  height: 100%
+  min-height: 600px
+  display: flex
+  background: var(--bg-base)
+  overflow: hidden
+
+.sideDrawer
+  width: 300px
+  height: 100%
+  background: rgba(0, 0, 0, 0.4)
+  border-right: 1px solid var(--border-subtle)
+  display: flex
+  flex-direction: column
+  padding: var(--spacing-4)
+  gap: var(--spacing-3)
+  overflow-y: auto
+
+.mainStage
+  flex: 1
+  position: relative
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  background: radial-gradient(circle at center, rgba(22, 22, 68, 0.4) 0%, transparent 70%)
+
+.characterSilhouette
+  position: absolute
+  height: 80%
+  opacity: 0.1
+  pointer-events: none
+
+.slotsGrid
+  display: grid
+  grid-template-columns: repeat(3, 120px)
+  grid-template-rows: repeat(3, 120px)
+  gap: var(--spacing-4)
+  z-index: 1
+
+.slot
+  width: 120px
+  height: 120px
+  border: 2px dashed var(--border-subtle)
+  border-radius: var(--radius-lg)
+  display: flex
+  align-items: center
+  justify-content: center
+  background: rgba(255, 255, 255, 0.02)
+  transition: all 0.3s ease
+
+.slotActive
+  border-style: solid
+  border-color: var(--neon-cyan)
+  background: rgba(0, 245, 255, 0.05)
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.1)
+
+.footer
+  position: absolute
+  bottom: 0
+  left: 300px
+  right: 0
+  padding: var(--spacing-6)
+  display: flex
+  justify-content: center
+  background: linear-gradient(to top, var(--bg-base), transparent)
