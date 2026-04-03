@@ -1,17 +1,19 @@
 @use "../styles/theme.sass"
 
 .react-aria-Popover
-  --background-color: var(--overlay-background)
+  --background-color: var(--bg-surface-elevated)
 
-  outline: 1px solid var(--overlay-border)
+  border: 1px solid var(--border-subtle)
   box-sizing: border-box
-  filter: drop-shadow(var(--popover-shadow))
-  border-radius: var(--radius-lg)
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5))
+  border-radius: var(--radius-md)
   background: var(--background-color)
-  color: var(--text-color)
+  backdrop-filter: blur(12px)
+  color: var(--text-primary)
   transition: transform 200ms, opacity 200ms
-  font: var(--font-size) system-ui
-  padding: 8px
+  font-family: var(--font-body)
+  font-size: 0.9rem
+  padding: var(--spacing-3)
 
   &[data-trigger=MenuTrigger],
   &[data-trigger=SubmenuTrigger]
@@ -20,9 +22,9 @@
   .react-aria-OverlayArrow svg
     display: block
     fill: var(--background-color)
-    stroke: var(--overlay-border)
+    stroke: var(--border-subtle)
     paint-order: stroke
-    stroke-width: 2px
+    stroke-width: 1px
 
   &[data-entering],
   &[data-exiting]
@@ -30,34 +32,17 @@
     opacity: 0
 
   &[data-placement=top]
+    margin-bottom: 8px
     --origin: translateY(8px)
 
-    &:has(.react-aria-OverlayArrow)
-      margin-bottom: 6px
-
   &[data-placement=bottom]
+    margin-top: 8px
     --origin: translateY(-8px)
 
-    &:has(.react-aria-OverlayArrow)
-      margin-top: 6px
-
-    &
-      transform: rotate(180deg)
-
   &[data-placement=right]
+    margin-left: 8px
     --origin: translateX(-8px)
 
-    &:has(.react-aria-OverlayArrow)
-      margin-left: 6px
-
-    &
-      transform: rotate(90deg)
-
   &[data-placement=left]
+    margin-right: 8px
     --origin: translateX(8px)
-
-    &:has(.react-aria-OverlayArrow)
-      margin-right: 6px
-
-    &
-      transform: rotate(-90deg)
