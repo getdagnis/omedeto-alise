@@ -345,19 +345,22 @@ function App() {
     }
   }, []);
 
-  const stopPickerPreview = useCallback((soundId: string) => {
-    if (pickerActionTimeoutRef.current) {
-      window.clearTimeout(pickerActionTimeoutRef.current);
-      pickerActionTimeoutRef.current = null;
-    }
-    clearPreviewAudio();
-    setPreviewingSoundId(null);
-    setPickerActionSoundId(soundId);
-    pickerActionTimeoutRef.current = window.setTimeout(() => {
-      setPickerActionSoundId((current) => (current === soundId ? null : current));
-      pickerActionTimeoutRef.current = null;
-    }, 2000);
-  }, [clearPreviewAudio]);
+  const stopPickerPreview = useCallback(
+    (soundId: string) => {
+      if (pickerActionTimeoutRef.current) {
+        window.clearTimeout(pickerActionTimeoutRef.current);
+        pickerActionTimeoutRef.current = null;
+      }
+      clearPreviewAudio();
+      setPreviewingSoundId(null);
+      setPickerActionSoundId(soundId);
+      pickerActionTimeoutRef.current = window.setTimeout(() => {
+        setPickerActionSoundId((current) => (current === soundId ? null : current));
+        pickerActionTimeoutRef.current = null;
+      }, 2000);
+    },
+    [clearPreviewAudio],
+  );
 
   const startPickerPreview = useCallback(
     (soundId: string, path: string) => {
@@ -748,7 +751,10 @@ function App() {
         return;
       }
 
-      const slots = Array.from({ length: MAX_CHARACTER_SOUNDS }, (_, index) => pickerSlotsLatestRef.current[index] ?? null);
+      const slots = Array.from(
+        { length: MAX_CHARACTER_SOUNDS },
+        (_, index) => pickerSlotsLatestRef.current[index] ?? null,
+      );
       const nextSoundId = getRandomUnusedSoundId(
         character.sounds.map((sound) => sound.id),
         slots.filter((id): id is string => Boolean(id)),
@@ -988,13 +994,7 @@ function App() {
         {isInternalRoute ? (
           <section className={styles.internalPage}>
             <header className={styles.internalPageHeader}>
-              <Button
-                variant="secondary"
-                size="sm"
-                shape="pill"
-                className={styles.internalBackButton}
-                onPress={() => navigate('/')}
-              >
+              <Button variant="secondary" size="sm" className={styles.internalBackButton} onPress={() => navigate('/')}>
                 <FontAwesomeIcon icon={faArrowLeft} />
                 Back
               </Button>
@@ -1019,9 +1019,10 @@ function App() {
               }
             >
               <header className={styles.titleBlock}>
-                <h1 className={styles.titleJapanese}>おめでとう、</h1>
-                <p className={styles.titleRomanized}>(OMEDETO)</p>
-                <p className={styles.titleName}>ALISE!</p>
+                <h1 className={styles.titleJapanese}>アリス・イン・トーキョー</h1>
+                <p className={styles.titleName}>
+                  ALISE <span>in</span> TOKYO!
+                </p>
               </header>
 
               <CharacterGrid
@@ -1218,7 +1219,12 @@ function App() {
                                           aria-busy={slotSpinnerIndex === index}
                                         >
                                           {slotSpinnerIndex === index ? (
-                                            <ProgressCircle aria-hidden isIndeterminate value={0} size={pickerSpinnerSize} />
+                                            <ProgressCircle
+                                              aria-hidden
+                                              isIndeterminate
+                                              value={0}
+                                              size={pickerSpinnerSize}
+                                            />
                                           ) : (
                                             <FontAwesomeIcon icon={faArrowsRotate} />
                                           )}
@@ -1250,13 +1256,13 @@ function App() {
                                       >
                                         <FontAwesomeIcon icon={faVolumeHigh} />
                                       </button>
-                                    <button
-                                      type="button"
-                                      className={styles.pickerItemSelect}
-                                      onClick={() => onPickerSoundBarPress(sound.id, sound.path)}
-                                    >
-                                      <span>{sound.name.toUpperCase()}</span>
-                                    </button>
+                                      <button
+                                        type="button"
+                                        className={styles.pickerItemSelect}
+                                        onClick={() => onPickerSoundBarPress(sound.id, sound.path)}
+                                      >
+                                        <span>{sound.name.toUpperCase()}</span>
+                                      </button>
                                       {showFullActions && (
                                         <>
                                           <button
@@ -1282,7 +1288,12 @@ function App() {
                                             aria-busy={slotSpinnerIndex === index}
                                           >
                                             {slotSpinnerIndex === index ? (
-                                              <ProgressCircle aria-hidden isIndeterminate value={0} size={pickerSpinnerSize} />
+                                              <ProgressCircle
+                                                aria-hidden
+                                                isIndeterminate
+                                                value={0}
+                                                size={pickerSpinnerSize}
+                                              />
                                             ) : (
                                               <FontAwesomeIcon icon={faArrowsRotate} />
                                             )}

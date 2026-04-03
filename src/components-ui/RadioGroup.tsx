@@ -9,7 +9,7 @@ import {
 } from 'react-aria-components';
 import { Label, FieldError, Description } from './Form';
 import './RadioGroup.sass';
-import '../styles/ui-theme/utilities.css';
+import '../styles/globals.sass';
 
 export interface RadioGroupProps extends Omit<AriaRadioGroupProps, 'children'> {
   children?: React.ReactNode;

@@ -1,0 +1,109 @@
+@use "../../styles/globals.sass"
+
+.soundBar
+  display: flex
+  align-items: center
+  background: rgba(255, 255, 255, 0.05)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  border-radius: 4px
+  overflow: hidden
+  transition: all 0.2s ease
+  position: relative
+  height: 40px
+
+  &.isSelected
+    background: rgba(var(--sound-color-rgb, 255, 255, 255), 0.15)
+    border-color: var(--sound-color, #fff)
+    box-shadow: 0 0 10px var(--sound-color, transparent)
+
+  &.isPreviewing
+    border-color: #fff
+    background: rgba(255, 255, 255, 0.2)
+
+  &.isDisabled
+    opacity: 0.4
+    pointer-events: none
+
+  &.size-sm
+    height: 32px
+    .name
+      font-size: 0.7rem
+
+  &.size-lg
+    height: 48px
+    .name
+      font-size: 1rem
+
+.previewButton
+  width: 40px
+  height: 100%
+  display: flex
+  align-items: center
+  justify-content: center
+  background: rgba(255, 255, 255, 0.05)
+  border: none
+  border-right: 1px solid rgba(255, 255, 255, 0.1)
+  color: rgba(255, 255, 255, 0.6)
+  cursor: pointer
+  transition: all 0.2s ease
+  flex-shrink: 0
+
+  &:hover
+    background: rgba(255, 255, 255, 0.15)
+    color: #fff
+
+  &.isPreviewing
+    background: #fff
+    color: #000
+
+.selectButton
+  flex: 1
+  height: 100%
+  display: flex
+  align-items: center
+  padding: 0 12px
+  background: none
+  border: none
+  color: #fff
+  cursor: pointer
+  text-align: left
+  min-width: 0
+
+  &:hover:not(:disabled)
+    background: rgba(255, 255, 255, 0.05)
+
+.name
+  font-family: 'JetBrains Mono', monospace
+  font-size: 0.8rem
+  font-weight: 600
+  letter-spacing: 0.05em
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+.actions
+  display: flex
+  align-items: center
+  padding-right: 4px
+  gap: 2px
+  height: 100%
+
+  button
+    width: 28px
+    height: 28px
+    display: flex
+    align-items: center
+    justify-content: center
+    background: none
+    border: none
+    color: rgba(255, 255, 255, 0.4)
+    cursor: pointer
+    border-radius: 4px
+    transition: all 0.2s ease
+
+    &:hover
+      background: rgba(255, 255, 255, 0.1)
+      color: #fff
+
+    &.active
+      color: var(--sound-color, #fff)

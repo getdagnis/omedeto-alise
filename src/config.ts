@@ -53,7 +53,8 @@ export type CharacterOption = {
   sounds: SoundOption[];
 };
 
-export const BACKGROUND_IMAGE_KEYS = ['bg1', 'bg2', 'bg3', 'bg4', 'bg5'] as const;
+// export const BACKGROUND_IMAGE_KEYS = ['bg1', 'bg2', 'bg3', 'bg4', 'bg5'] as const;
+export const BACKGROUND_IMAGE_KEYS = ['bg2'] as const;
 
 export type Localizations = {
   currencySymbol: string;
