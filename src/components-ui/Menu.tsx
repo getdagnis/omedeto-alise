@@ -11,11 +11,16 @@ import {
   type MenuSectionProps,
   type MenuTriggerProps,
   type SubmenuTriggerProps,
+  Header as AriaHeader,
 } from 'react-aria-components';
 import { Popover } from './Popover';
 import { Text } from './Content';
 import React from 'react';
 import './Menu.sass';
+
+export function Header(props: React.HTMLAttributes<HTMLElement>) {
+  return <AriaHeader {...props} />;
+}
 
 export function MenuTrigger(props: MenuTriggerProps) {
   const [trigger, menu] = React.Children.toArray(props.children) as [React.ReactElement, React.ReactElement];

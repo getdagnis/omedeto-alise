@@ -1,46 +1,180 @@
 @use "../../styles/theme.sass"
 
-.container
-  position: relative
+.mockupWrapper
   width: 100%
   height: 100%
-  min-height: 600px
+  display: flex
+  align-items: center
+  justify-content: center
+  background: transparent
+
+.container
+  width: 100%
+  max-width: 1200px
+  height: min(92vh, 800px)
+  background: var(--bg-surface-elevated)
+  border: 1px solid var(--border-subtle)
+  border-radius: var(--radius-lg)
+  display: flex
   overflow: hidden
-  background: var(--bg-base)
+  position: relative
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5)
+
+.librarySidebar
+  width: 280px
+  background: rgba(0, 0, 0, 0.25)
+  border-right: 1px solid var(--border-subtle)
+  display: flex
+  flex-direction: column
+  z-index: 10
+  flex-shrink: 0
+
+.libraryHeader
+  padding: var(--spacing-4)
+  border-bottom: 1px solid var(--border-subtle)
+  h6
+    margin: 0
+    font-size: 0.7rem
+    font-weight: 800
+    letter-spacing: 0.1em
+    color: var(--text-muted)
+
+.libraryList
+  flex: 1
+  overflow-y: auto
+  padding: var(--spacing-3)
+  display: flex
+  flex-direction: column
+  gap: var(--spacing-2)
+
+  &::-webkit-scrollbar
+    width: 4px
+  &::-webkit-scrollbar-thumb
+    background: var(--border-subtle)
+    border-radius: 2px
+
+.libraryItem
+  display: flex
+  align-items: center
+  gap: var(--spacing-2)
+  padding: 2px
+  border-radius: var(--radius-sm)
+  transition: background 0.2s ease
+
+.itemActive
+  opacity: 0.4
+  filter: grayscale(1)
+
+.libraryChip
+  flex: 1
+  cursor: pointer
+  text-align: left
+  justify-content: flex-start
+
+.getMoreBtn
+  margin-top: var(--spacing-4)
+  width: 100%
+  font-weight: 800
+  letter-spacing: 0.05em
+
+.mainArea
+  flex: 1
+  position: relative
   display: flex
   flex-direction: column
   align-items: center
   justify-content: center
+  background: radial-gradient(circle at center, rgba(0, 245, 255, 0.03) 0%, transparent 60%)
 
 .characterBg
   position: absolute
-  height: 90%
+  height: 95%
   width: auto
-  opacity: 0.25
+  opacity: 0.15
   pointer-events: none
   z-index: 0
   filter: grayscale(1) brightness(0.5)
+  transform: translateY(5%)
 
 .constellation
-  position: relative
+  position: absolute
+  inset: 0
   z-index: 1
-  width: 100%
-  height: 100%
   display: flex
   align-items: center
   justify-content: center
+  pointer-events: none
 
 .floatingChip
   position: absolute
   cursor: pointer
+  pointer-events: auto
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)
   &:hover
     scale: 1.1
     z-index: 10
+    filter: brightness(1.2)
 
-.activeChip
-  border-color: var(--neon-cyan)
-  box-shadow: 0 0 15px var(--neon-cyan)
+.mockupTitle
+  position: absolute
+  top: var(--spacing-4)
+  left: var(--spacing-4)
+  z-index: 10
+  pointer-events: none
+  h3
+    margin: 0
+    font-family: var(--font-title)
+    font-size: 1.1rem
+    color: var(--neon-cyan)
+    letter-spacing: 0.12em
+  p
+    margin: 0
+    font-size: 0.65rem
+    color: var(--text-muted)
+    letter-spacing: 0.2em
+    font-weight: 800
+
+.headerActions
+  position: absolute
+  top: var(--spacing-4)
+  right: var(--spacing-4)
+  z-index: 20
+  display: flex
+  align-items: center
+  gap: var(--spacing-3)
+
+.infoButton
+  color: var(--text-muted)
+  border-radius: 50%
+  width: 2rem
+  height: 2rem
+  font-family: var(--font-title)
+  &:hover
+    color: var(--neon-cyan)
+
+.mockupClose
+  color: var(--text-muted)
+  opacity: 0.5
+  cursor: pointer
+  background: transparent
+  border: none
+  font-size: 1.2rem
+  display: flex
+  align-items: center
+  justify-content: center
+  &:hover
+    opacity: 1
+
+.infoDialog
+  padding: var(--spacing-4)
+  max-width: 250px
+  outline: none
+  p
+    font-size: 0.85rem
+    color: var(--text-primary)
+    margin: 0 0 var(--spacing-2)
+    &:last-child
+      margin: 0
 
 .bottomActions
   position: absolute
@@ -48,7 +182,12 @@
   z-index: 2
   width: 100%
   display: flex
-  justify-content: center
+  flex-direction: column
+  align-items: center
+  gap: var(--spacing-4)
+
+.actionButtons
+  display: flex
   gap: var(--spacing-4)
 
 .applyButton
@@ -56,3 +195,30 @@
   font-family: var(--font-title)
   font-weight: 900
   letter-spacing: 0.1em
+
+// Mobile adjustments
+@media (max-width: 768px)
+  .container
+    flex-direction: column
+    height: 100%
+    max-height: 100%
+    border-radius: 0
+    border: none
+
+  .librarySidebar
+    width: 100%
+    height: 35%
+    border-right: none
+    border-top: 1px solid var(--border-subtle)
+    order: 2
+
+  .mainArea
+    height: 65%
+    order: 1
+
+  .mockupTitle
+    top: auto
+    bottom: var(--spacing-2)
+    left: var(--spacing-2)
+    h3
+      font-size: 0.9rem

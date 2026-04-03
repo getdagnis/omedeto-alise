@@ -1,11 +1,12 @@
 'use client';
+import React from 'react';
 import {
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
   ListBoxSection as AriaListBoxSection,
   ListBoxLoadMoreItem as AriaListBoxLoadMoreItem,
   composeRenderProps,
-  type ListBoxItemProps,
+  type ListBoxItemProps as AriaListBoxItemProps,
   type ListBoxLoadMoreItemProps,
   type ListBoxProps,
   type ListBoxSectionProps,
@@ -19,13 +20,31 @@ export function ListBox<T extends object>({ children, ...props }: ListBoxProps<T
   return <AriaListBox {...props}>{children}</AriaListBox>;
 }
 
-export function ListBoxItem(props: ListBoxItemProps) {
+export interface ListBoxItemProps extends AriaListBoxItemProps {
+  action?: React.ReactNode;
+  isUsed?: boolean;
+}
+
+export function ListBoxItem({ action, isUsed, ...props }: ListBoxItemProps) {
   const textValue = props.textValue || (typeof props.children === 'string' ? props.children : undefined);
   return (
-    <AriaListBoxItem {...props} textValue={textValue}>
-      {composeRenderProps(props.children, (children) =>
-        typeof children === 'string' ? <Text slot="label">{children}</Text> : children,
+    <AriaListBoxItem
+      {...props}
+      textValue={textValue}
+      className={composeRenderProps(props.className, (className, { isSelected, isFocused, isDisabled }) =>
+        ['react-aria-ListBoxItem', isUsed && 'is-used', isSelected && 'is-selected', isFocused && 'is-focused', isDisabled && 'is-disabled', className]
+          .filter(Boolean)
+          .join(' ')
       )}
+    >
+      {composeRenderProps(props.children, (children) => (
+        <>
+          <div className="react-aria-ListBoxItem-content">
+            {typeof children === 'string' ? <Text slot="label">{children}</Text> : children}
+          </div>
+          {action && <div className="react-aria-ListBoxItem-action">{action}</div>}
+        </>
+      ))}
     </AriaListBoxItem>
   );
 }

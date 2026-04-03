@@ -1,144 +1,142 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import stylesConst from './ConstellationPicker.module.sass';
-import stylesDeck from './MixerDeckPicker.module.sass';
-import stylesSignal from './TokyoSignalPicker.module.sass';
-import { Button, Chip } from '../../components-ui';
+import { Button, Chip, Meter, Popover } from '../../components-ui';
 import { CHARACTERS, ALL_SOUNDS } from '../../config';
+import { DialogTrigger, Dialog } from 'react-aria-components';
 
 /**
- * CONCEPT 1: THE CONSTELLATION
- * Floating chips in a cloud around the character.
+ * THE CONSTELLATION (UI MOCKUP v2.0)
+ * Restored exact state from 18:30 screenshot.
+ * Pure mockup, no live App.tsx state.
  */
 export function ConstellationPickerMockup() {
   const character = CHARACTERS[0];
-  const sampleSounds = ALL_SOUNDS.slice(0, 15);
+  const [shuffleKey, setShuffleKey] = useState(0);
 
-  const constellationPositions = useMemo(() => {
-    return sampleSounds.map(() => ({
-      top: 20 + Math.random() * 60,
-      left: 10 + Math.random() * 80,
-    }));
-  }, [sampleSounds]);
+  const ownedMockSounds = useMemo(() => ALL_SOUNDS.slice(0, 15), []);
+  
+  const activeMockSounds = useMemo(() => {
+    const pseudoRandom = (seed: number) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    return [...ALL_SOUNDS].sort((a, b) => 
+      pseudoRandom(a.id.length + shuffleKey) - pseudoRandom(b.id.length + shuffleKey)
+    ).slice(0, 8);
+  }, [shuffleKey]);
 
-  return (
-    <div className={stylesConst.container}>
-      <img src={character.img} alt="" className={stylesConst.characterBg} />
-      <div className={stylesConst.constellation}>
-        {sampleSounds.map((s, i) => {
-          const pos = constellationPositions[i];
-          const isActive = i < 3;
+  const constellationData = useMemo(() => {
+    const pseudoRandom = (seed: number) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
 
-          return (
-            <Chip
-              key={s.id}
-              tone={isActive ? 'title' : 'neutral'}
-              size="sm"
-              className={stylesConst.floatingChip}
-              style={{
-                top: `${pos.top}%`,
-                left: `${pos.left}%`,
-                background: isActive ? `var(${s.colorToken})` : undefined,
-                color: isActive ? '#000' : undefined
-              } as React.CSSProperties}
-            >
-              {s.name}
-            </Chip>
-          );
-        })}
-      </div>
-      <div className={stylesConst.bottomActions}>
-        <Button variant="secondary" shape="pill">SHUFFLE CLOUD</Button>
-        <Button variant="primary" shape="pill" className={stylesConst.applyButton}>APPLY MIX</Button>
-      </div>
-    </div>
-  );
-}
+    return activeMockSounds.map((s, i) => {
+      const seed = i + (shuffleKey * 13);
+      const angle = pseudoRandom(seed) * 2 * Math.PI;
+      const radius = 12 + pseudoRandom(seed + 1) * 28;
+      const left = 50 + Math.cos(angle) * radius * 1.2;
+      const top = 45 + Math.sin(angle) * radius;
 
-/**
- * CONCEPT 2: THE MIXER DECK
- * Physical slots for the 3-9 sound limit.
- */
-export function MixerDeckPickerMockup() {
-  const character = CHARACTERS[0];
-  const deckSounds = ALL_SOUNDS.slice(5, 14);
-  const slots = Array.from({ length: 9 });
+      return {
+        ...s,
+        top,
+        left,
+        isActive: i < 3 // Mock 3 active slots
+      };
+    });
+  }, [activeMockSounds, shuffleKey]);
 
   return (
-    <div className={stylesDeck.container}>
-      <aside className={stylesDeck.sideDrawer}>
-        <h6>LIBRARY</h6>
-        {ALL_SOUNDS.slice(0, 20).map(s => (
-          <Chip key={s.id} tone="neutral" size="sm">{s.name}</Chip>
-        ))}
-      </aside>
-      <main className={stylesDeck.mainStage}>
-        <img src={character.img} alt="" className={stylesDeck.characterSilhouette} />
-        <div className={stylesDeck.slotsGrid}>
-          {slots.map((_, i) => {
-            const sound = deckSounds[i];
-            return (
-              <div key={i} className={`${stylesDeck.slot} ${sound ? stylesDeck.slotActive : ''}`}>
-                {sound ? (
-                  <Chip
-                    tone="title"
-                    size="md"
-                    font="goofy"
-                    style={{ background: `var(${sound.colorToken})`, color: '#000' }}
-                  >
-                    {sound.name}
+    <div className={stylesConst.mockupWrapper}>
+      <div className={stylesConst.container}>
+        
+        <aside className={stylesConst.librarySidebar}>
+          <div className={stylesConst.libraryHeader}>
+            <h6>YOUR LIBRARY</h6>
+          </div>
+          <div className={stylesConst.libraryList}>
+            {ownedMockSounds.map(s => {
+              const isInCloud = activeMockSounds.some(am => am.id === s.id);
+              return (
+                <div key={s.id} className={`${stylesConst.libraryItem} ${isInCloud ? stylesConst.itemActive : ''}`}>
+                  <Chip tone="neutral" size="sm" className={stylesConst.libraryChip}>
+                    {s.name}
                   </Chip>
-                ) : (
-                  <span style={{ opacity: 0.2, fontSize: '0.7rem' }}>EMPTY SLOT</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <div className={stylesDeck.footer}>
-          <Button variant="primary" shape="pill" size="lg">SAVE DECK</Button>
-        </div>
-      </main>
-    </div>
-  );
-}
+                  <Button variant="quiet" size="sm" shape="square">
+                    {isInCloud ? '-' : '+'}
+                  </Button>
+                </div>
+              );
+            })}
+            <div style={{ padding: '0 0.5rem' }}>
+              <Button variant="secondary" size="sm" className={stylesConst.getMoreBtn}>
+                GET MORE SOUNDS
+              </Button>
+            </div>
+          </div>
+        </aside>
 
-/**
- * CONCEPT 3: THE TOKYO SIGNAL
- * Radial rotation / Arcade style.
- */
-export function TokyoSignalPickerMockup() {
-  const character = CHARACTERS[0];
-  const orbitSounds = ALL_SOUNDS.slice(10, 18);
+        <main className={stylesConst.mainArea}>
+          <div className={stylesConst.mockupTitle}>
+            <h3>SOUND PICKER</h3>
+            <p>CONSTELLATION v2.0</p>
+          </div>
 
-  return (
-    <div className={stylesSignal.container}>
-      <div className={stylesSignal.radialCore}>
-        <img src={character.img} alt="" className={stylesSignal.characterThumb} />
-      </div>
-      
-      <div className={stylesSignal.orbit}>
-        {orbitSounds.map((s, i) => {
-          const angle = (i / orbitSounds.length) * 360;
-          return (
-            <div 
-              key={s.id} 
-              className={stylesSignal.orbitItem}
-              style={{ transform: `rotate(${angle}deg) translate(250px) rotate(-${angle}deg)` }}
-            >
-              <Chip 
-                tone="accent" 
-                size="md"
-                style={{ boxShadow: `0 0 15px var(${s.colorToken})`, border: `2px solid var(${s.colorToken})` }}
+          <div className={stylesConst.headerActions}>
+            <button className={stylesConst.mockupClose} aria-label="Close">✕</button>
+            <DialogTrigger>
+              <Button variant="quiet" shape="square" size="sm" className={stylesConst.infoButton}>
+                (i)
+              </Button>
+              <Popover placement="bottom right">
+                <Dialog className={stylesConst.infoDialog}>
+                  <p>Tap a sound in the library to preview.</p>
+                  <p>Use (+) to add to your character's mix.</p>
+                  <p>Double-tap a floating sound to remove it.</p>
+                </Dialog>
+              </Popover>
+            </DialogTrigger>
+          </div>
+
+          <img src={character.img} alt="" className={stylesConst.characterBg} />
+
+          <div className={stylesConst.constellation}>
+            {constellationData.map((s) => (
+              <Chip
+                key={s.id}
+                tone={s.isActive ? 'title' : 'neutral'}
+                size="sm"
+                className={stylesConst.floatingChip}
+                style={{
+                  top: `${s.top}%`,
+                  left: `${s.left}%`,
+                  background: s.isActive ? `var(${s.colorToken})` : undefined,
+                  color: s.isActive ? '#000' : undefined,
+                  opacity: s.isActive ? 1 : 0.4
+                } as React.CSSProperties}
               >
                 {s.name}
               </Chip>
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
 
-      <div className={stylesSignal.applyFab}>
-        <Button variant="primary" shape="square" size="lg">OK</Button>
+          <div className={stylesConst.bottomActions}>
+            <Meter 
+              label="Capacity" 
+              value={(activeMockSounds.length / 9) * 100} 
+              valueLabel={`${activeMockSounds.length} / 9`}
+            />
+            <div className={stylesConst.actionButtons}>
+              <Button variant="secondary" shape="pill" onPress={() => setShuffleKey(k => k + 1)}>
+                SHUFFLE CLOUD
+              </Button>
+              <Button variant="primary" shape="pill" className={stylesConst.applyButton}>
+                APPLY MIX
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );

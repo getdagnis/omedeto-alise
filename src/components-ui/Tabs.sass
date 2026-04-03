@@ -2,7 +2,6 @@
 
 .react-aria-Tabs
   display: flex
-  gap: var(--spacing-2)
   color: var(--text-color)
   max-width: 100%
 
@@ -17,103 +16,72 @@
 
 .react-aria-TabList
   display: flex
-
-  .react-aria-SelectionIndicator
-    background: var(--border-color)
+  position: relative
 
   &[data-orientation=horizontal]
-    border-bottom: 0.5px solid var(--border-color)
+    border-bottom: 1px solid var(--border-subtle)
     max-width: 100%
     overflow-x: auto
     overflow-y: clip
     scrollbar-width: none
-
-    &
-      left: 0
-      bottom: 0px
-      width: 100%
-      height: 3px
-      transition-property: translate, width
+    gap: var(--spacing-4)
 
   &[data-orientation=vertical]
     flex-direction: column
-    border-inline-end: 1px solid var(--border-color)
-
-    &
-      top: 0
-      right: 0px
-      height: 100%
-      width: 3px
-      transition-property: translate, height
+    border-inline-end: 1px solid var(--border-subtle)
+    gap: var(--spacing-2)
 
 .react-aria-Tab
-  padding: 10px
-  cursor: default
+  padding: var(--spacing-3) var(--spacing-4)
+  cursor: pointer
   outline: none
   position: relative
-  font: var(--font-size) system-ui
-  color: var(--text-color)
+  font-family: var(--font-body)
+  font-size: 0.9rem
+  font-weight: 600
+  color: var(--text-muted)
   transition: color 200ms
-  --border-color: transparent
   forced-color-adjust: none
   -webkit-tap-highlight-color: transparent
+  text-transform: uppercase
+  letter-spacing: 0.05em
 
-  &[data-hovered],
-  &[data-focus-visible]
-    color: var(--text-color-hover)
+  &[data-hovered]
+    color: var(--text-primary)
+
+  &[data-selected]
+    color: var(--neon-cyan)
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.3)
+
+  &[data-disabled]
+    opacity: 0.4
+    cursor: not-allowed
 
   .react-aria-SelectionIndicator
     position: absolute
-    transition-duration: 200ms
-    border-radius: 3px
-
+    background: var(--neon-cyan)
+    box-shadow: 0 0 10px var(--neon-cyan)
+    
     @media (prefers-reduced-motion: reduce)
       transition: none
 
-  &[data-selected]
-    --border-color: var(--highlight-background)
-    color: var(--text-color-hover)
+  &[data-orientation=horizontal] .react-aria-SelectionIndicator
+    bottom: -1px
+    left: var(--spacing-4)
+    right: var(--spacing-4)
+    height: 2px
 
-  &[data-disabled]
-    color: var(--text-color-disabled)
-    &[data-selected]
-      --border-color: var(--text-color-disabled)
-
-  &[data-focus-visible]
-    border-radius: calc(var(--radius-sm) + 8px)
-    outline: 2px solid var(--focus-ring-color)
-    outline-offset: -8px
-
-  &[href]
-    text-decoration: none
-    cursor: pointer
-
-.react-aria-TabPanels
-  position: relative
-  height: var(--tab-panel-height)
-  width: var(--tab-panel-width)
-  transition: height 400ms
-  overflow: clip
-
-  @media (prefers-reduced-motion: reduce)
-    transition: none
+  &[data-orientation=vertical] .react-aria-SelectionIndicator
+    right: -1px
+    top: var(--spacing-3)
+    bottom: var(--spacing-3)
+    width: 2px
 
 .react-aria-TabPanel
-  padding: var(--spacing-3)
-  border-radius: var(--radius)
+  padding: var(--spacing-4) 0
   outline: none
   box-sizing: border-box
-  transition: opacity 400ms
 
   &[data-focus-visible]
-    outline: 2px solid var(--focus-ring-color)
-
-  &[data-entering],
-  &[data-exiting]
-    opacity: 0
-
-  &[data-exiting]
-    position: absolute
-    top: 0
-    left: 0
-    width: 100%
+    outline: 2px solid var(--neon-cyan)
+    outline-offset: 4px
