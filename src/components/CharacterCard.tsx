@@ -20,6 +20,7 @@ type CharacterCustomization = {
   name?: string;
   colorModes?: string[];
   image?: string;
+  soundIds?: string[];
 };
 
 type CharacterCardProps = {
@@ -45,6 +46,8 @@ type CharacterCardProps = {
   onEditImage?: () => void;
   onReset?: () => void;
   onOpenSoundPicker?: () => void;
+  onToggleSound?: (soundId: string) => void;
+  onRemoveSound?: (soundId: string) => void;
   isSmallPreview?: boolean;
   hideSounds?: boolean;
   showActions?: boolean;
@@ -101,6 +104,8 @@ function CharacterCard({
   onEditImage,
   onReset,
   onOpenSoundPicker,
+  onToggleSound,
+  onRemoveSound,
   isSmallPreview = false,
   hideSounds = false,
   showActions = true,
@@ -112,7 +117,6 @@ function CharacterCard({
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
   const showName = displayName.trim().length > 0;
-  const soundNames = soundIds.map((soundId) => soundCatalogById.get(soundId)?.name ?? soundId);
   const isLooping = (soundIds.length > 0 || forceLoop) && colors.length > 1;
 
   // Pulse only if playing and not muted
@@ -166,7 +170,7 @@ function CharacterCard({
       }
     >
       {showName && (
-        <Chip tone="title" font="goofy" size="md" className={styles.characterName}>
+        <Chip tone="title" font="goofy" size="lg" className={styles.characterName}>
           {displayName.toUpperCase()}'S MIX
         </Chip>
       )}
@@ -250,20 +254,41 @@ function CharacterCard({
           </>
         )}
 
-        {!hideSounds && soundNames.length > 0 && (
+        {!hideSounds && customization.soundIds && customization.soundIds.length > 0 && (
           <div className={styles.characterSoundList}>
-            {soundNames.map((soundName, index) => (
-              <Chip
-                key={`${character.id}-slot-${index}`}
-                className={styles.characterSoundTag}
-                tone="neutral"
-                size="sm"
-              >
-                {soundName}
-              </Chip>
-            ))}
+            {customization.soundIds.map((soundId, index) => {
+              const sound = soundCatalogById.get(soundId);
+              const soundName = sound?.name ?? soundId;
+              const colorToken = sound?.colorToken;
+              const isActive = soundIds.includes(soundId);
+
+              return (
+                <Chip
+                  key={`${character.id}-slot-${index}`}
+                  className={`${styles.characterSoundTag} ${!isActive ? styles.soundTagPaused : ''}`}
+                  tone="neutral"
+                  size="sm"
+                  style={
+                    isActive && colorToken
+                      ? { background: `var(${colorToken})`, color: '#000', borderColor: 'transparent' }
+                      : {}
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onToggleSound) onToggleSound(soundId);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    if (onRemoveSound) onRemoveSound(soundId);
+                  }}
+                >
+                  {soundName}
+                </Chip>
+              );
+            })}
           </div>
         )}
+
       </div>
 
       {showActions && (

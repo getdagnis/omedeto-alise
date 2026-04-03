@@ -29,6 +29,8 @@ type CharacterGridProps = {
   onEditCharacter: (characterId: string) => void;
   onResetCharacter: (characterId: string) => void;
   onOpenSoundPicker: (characterId: string) => void;
+  onToggleSound: (characterId: string, soundId: string) => void;
+  onRemoveSound: (characterId: string, soundId: string) => void;
 };
 
 function CharacterGrid({
@@ -48,6 +50,8 @@ function CharacterGrid({
   onEditCharacter,
   onResetCharacter,
   onOpenSoundPicker,
+  onToggleSound,
+  onRemoveSound,
 }: CharacterGridProps) {
   return (
     <section className={styles.characterStage}>
@@ -103,6 +107,8 @@ function CharacterGrid({
               onEdit={() => onEditCharacter(character.id)}
               onReset={() => onResetCharacter(character.id)}
               onOpenSoundPicker={() => onOpenSoundPicker(character.id)}
+              onToggleSound={(soundId) => onToggleSound(character.id, soundId)}
+              onRemoveSound={(soundId) => onRemoveSound(character.id, soundId)}
             />
           );
         })}

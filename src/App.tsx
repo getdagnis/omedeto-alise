@@ -537,6 +537,45 @@ function App() {
     ],
   );
 
+  const removeSoundFromCharacter = useCallback(
+    (characterId: string, soundId: string) => {
+      // 1. Stop the audio if it's playing
+      const audioKey = buildAudioKey(characterId, soundId);
+      const audio = audioRefs.current[audioKey];
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        delete audioRefs.current[audioKey];
+      }
+
+      // 2. Remove from active sounds state (pausing/stopping)
+      setActiveSoundsByCharacter((previous) => {
+        const current = previous[characterId] ?? [];
+        return {
+          ...previous,
+          [characterId]: current.filter((id) => id !== soundId),
+        };
+      });
+
+      // 3. Remove from character customization (permanent removal from deck)
+      setCharacterCustomizations((prev) => {
+        const charCustom = prev[characterId] || {};
+        const currentSounds = charCustom.soundIds || [];
+        const nextSounds = currentSounds.filter((id) => id !== soundId);
+        const next = {
+          ...prev,
+          [characterId]: {
+            ...charCustom,
+            soundIds: nextSounds,
+          },
+        };
+        persistCharacterCustomStorage(next);
+        return next;
+      });
+    },
+    [buildAudioKey],
+  );
+
   const resetCharacter = useCallback(
     (characterId: string) => {
       unmuteCharacter(characterId);
@@ -1049,6 +1088,8 @@ function App() {
                 }}
                 onResetCharacter={resetCharacter}
                 onOpenSoundPicker={openSoundPicker}
+                onToggleSound={setSingleSound}
+                onRemoveSound={removeSoundFromCharacter}
               />
             </section>
 
