@@ -11,7 +11,7 @@ import {
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
-import { Button, Chip } from '../components-ui';
+import { Button, Chip, Tooltip, TooltipTrigger } from '../components-ui';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const FAV_BUTTON = false;
@@ -264,34 +264,40 @@ function CharacterCard({
           <div className={styles.characterActionWrap}>
             {isFlashing && (
               <div className={styles.actionTooltip} role="status" aria-live="polite">
-                Pick some sounds
+                PICK SOME SOUNDS
               </div>
             )}
+            <TooltipTrigger>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                shape="pill"
+                className={`${styles.characterActionButton} ${isFlashing ? styles.actionButtonFlash : ''}`}
+                onPress={() => {
+                  if (onOpenSoundPicker) onOpenSoundPicker();
+                }}
+                aria-label="Add sounds"
+              >
+                <FontAwesomeIcon icon={faMusic} />
+              </Button>
+              <Tooltip>PICK SOME SOUNDS</Tooltip>
+            </TooltipTrigger>
+          </div>
+          <TooltipTrigger>
             <Button
               type="button"
               variant="secondary"
               size="sm"
               shape="pill"
-              className={`${styles.characterActionButton} ${isFlashing ? styles.actionButtonFlash : ''}`}
-              onPress={() => {
-                if (onOpenSoundPicker) onOpenSoundPicker();
-              }}
-              aria-label="Add sounds"
+              className={styles.characterActionButton}
+              onPress={onEdit}
+              aria-label="Edit character"
             >
-              <FontAwesomeIcon icon={faMusic} />
+              <FontAwesomeIcon icon={faPen} />
             </Button>
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            shape="pill"
-            className={styles.characterActionButton}
-            onPress={onEdit}
-            aria-label="Edit character"
-          >
-            <FontAwesomeIcon icon={faPen} />
-          </Button>
+            <Tooltip>EDIT CHARACTER</Tooltip>
+          </TooltipTrigger>
           {soundIds.length > 0 && (
             <Button
               type="button"
