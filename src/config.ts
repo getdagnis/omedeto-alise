@@ -29,6 +29,59 @@ export type SoundOption = {
   price: number;
 };
 
+export type Combo = {
+  id: string;
+  name: string;
+  soundIds: string[];
+  description: string;
+  rarity: 'common' | 'rare' | 'ultra';
+};
+
+export type Achievement = {
+  id: string;
+  title: string;
+  description: string;
+  icon?: string;
+  unlockedAt?: string;
+};
+
+export const COMBOS: Combo[] = [
+  {
+    id: 'starlight',
+    name: 'Starlight!',
+    soundIds: ['ok', 'energy', 'fly-me'],
+    description: 'A shimmering celestial melody.',
+    rarity: 'common',
+  },
+  {
+    id: 'cosmic',
+    name: 'Cosmic!',
+    soundIds: ['synth-rise', 'synth-space', 'synth-night'],
+    description: 'The sound of the deep void.',
+    rarity: 'rare',
+  },
+  {
+    id: 'mischief',
+    name: 'Mischief!',
+    soundIds: ['laugh', 'laugh-2', 'laugh-3'],
+    description: 'Something is definitely up.',
+    rarity: 'common',
+  },
+  {
+    id: 'encore',
+    name: 'Encore!',
+    soundIds: ['beat-1', 'beat-2', 'beat-3'],
+    description: 'The crowd wants more.',
+    rarity: 'ultra',
+  },
+];
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first-mix', title: 'First Mix', description: 'Created your first sound combination.' },
+  { id: 'collector', title: 'Sound Collector', description: 'Unlocked 10 different sounds.' },
+  { id: 'tokyo-night', title: 'Tokyo Night', description: 'Spent 1 hour mixing in the city.' },
+];
+
 type BaseSoundOption = Omit<SoundOption, 'colorToken'>;
 
 export type CharacterColorScheme = {
