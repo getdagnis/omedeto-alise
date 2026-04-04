@@ -74,6 +74,7 @@ export type ProgressionState = {
   customizedCharacterIds: string[];
   playedSoundIds: string[];
   ownedSoundIds: string[];
+  discoveredComboIds: string[];
   minutesPlayed: number;
   unlockedLevel: number;
   walletBalance: number;
@@ -84,6 +85,7 @@ export const DEFAULT_PROGRESSION_STATE: ProgressionState = {
   customizedCharacterIds: [],
   playedSoundIds: [],
   ownedSoundIds: [],
+  discoveredComboIds: [],
   minutesPlayed: 0,
   unlockedLevel: 0,
   walletBalance: 1000,

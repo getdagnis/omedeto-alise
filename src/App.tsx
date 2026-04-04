@@ -23,6 +23,7 @@ import {
   CHARACTER_COLOR_TOKENS,
   CHARACTER_IMAGE_OPTIONS,
   CHARACTERS,
+  COMBOS,
   LOCALIZATIONS,
 } from './config';
 
@@ -33,29 +34,6 @@ const GLOW_BURST_MS = 2200;
 const MAX_SOUNDS_TOTAL = 12;
 const LOW_GRAPHICS_STORAGE_KEY = 'alise-in-tokyo-low-graphics';
 const MAX_CHARACTER_SOUNDS = 9;
-
-const COMBO_WORDS = [
-  {
-    id: 'starlight',
-    word: 'Starlight!',
-    soundIds: ['ok', 'energy', 'fly-me'],
-  },
-  {
-    id: 'cosmic',
-    word: 'Cosmic!',
-    soundIds: ['synth-rise', 'synth-space', 'synth-night'],
-  },
-  {
-    id: 'mischief',
-    word: 'Mischief!',
-    soundIds: ['laugh', 'laugh-2', 'laugh-3'],
-  },
-  {
-    id: 'encore',
-    word: 'Encore!',
-    soundIds: ['beat-1', 'beat-2', 'beat-3'],
-  },
-] as const;
 
 const preloadImage = (src: string) =>
   new Promise<void>((resolve) => {
@@ -240,6 +218,7 @@ function App() {
     nextLevelInfo,
     recordSoundPlayed,
     recordCharacterCustomized,
+    recordComboDiscovered,
     buySound,
   } = useProgression();
 
@@ -400,7 +379,7 @@ function App() {
           if (oldestSoundId) {
             const oldAudioKey = buildAudioKey(characterId, oldestSoundId);
             const oldAudio = audioRefs.current[oldAudioKey];
-            if (oldAudio) { oldAudio.pause(); oldAudio.currentTime = 0; delete oldAudioRefs.current[oldAudioKey]; }
+            if (oldAudio) { oldAudio.pause(); oldAudio.currentTime = 0; delete audioRefs.current[oldAudioKey]; }
             activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
               (e) => !(e.characterId === characterId && e.soundId === oldestSoundId),
             );
@@ -540,12 +519,13 @@ function App() {
 
   useEffect(() => {
     const activeSet = new Set(Object.values(activeSoundsByCharacter).flat());
-    const matchedCombo = COMBO_WORDS.find((combo) => combo.soundIds.every((soundId) => activeSet.has(soundId)));
+    const matchedCombo = COMBOS.find((combo) => combo.soundIds.every((soundId) => activeSet.has(soundId)));
     if (!matchedCombo || activeComboIdRef.current === matchedCombo.id) return;
     activeComboIdRef.current = matchedCombo.id;
-    setTimeout(() => setComboWord(matchedCombo.word), 0);
+    recordComboDiscovered(matchedCombo.id);
+    setTimeout(() => setComboWord(matchedCombo.name), 0);
     window.setTimeout(() => setComboWord(null), 2200);
-  }, [activeSoundsByCharacter]);
+  }, [activeSoundsByCharacter, recordComboDiscovered]);
 
   const activeBackgroundImage = useMemo(() => {
     const activeBackgroundKey = BACKGROUND_IMAGE_KEYS[backgroundIndex] ?? BACKGROUND_IMAGE_KEYS[0];
@@ -594,6 +574,8 @@ function App() {
             onToggleSound={(soundId, path) => toggleProfileSound(soundId, path)}
             onApply={() => applyProfileSelection(profileCharacterId)}
             onNavigateShop={() => navigate('/shop')}
+            discoveredComboIds={progressionState.discoveredComboIds}
+            onRecordCombo={recordComboDiscovered}
           />
         ) : (
           <>

@@ -125,6 +125,17 @@ export function useProgression() {
     });
   }, []);
 
+  const recordComboDiscovered = useCallback((comboId: string) => {
+    setState((prev) => {
+      if (prev.discoveredComboIds.includes(comboId)) return prev;
+
+      return {
+        ...prev,
+        discoveredComboIds: [...prev.discoveredComboIds, comboId],
+      };
+    });
+  }, []);
+
   // Calculate current level
   const currentLevelInfo = useMemo(() => {
     let currentLevel = 0;
@@ -167,6 +178,7 @@ export function useProgression() {
     nextLevelInfo,
     recordSoundPlayed,
     recordCharacterCustomized,
+    recordComboDiscovered,
     recordInteraction,
     buySound,
     grantOwnedSound,
