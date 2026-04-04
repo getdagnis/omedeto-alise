@@ -288,24 +288,18 @@ function CharacterCard({
             })}
           </div>
         )}
-
       </div>
 
       {showActions && (
         <div className={styles.characterActions}>
           <div className={styles.characterActionWrap}>
-            {isFlashing && (
-              <div className={styles.actionTooltip} role="status" aria-live="polite">
-                PICK SOME SOUNDS
-              </div>
-            )}
-            <TooltipTrigger>
+            <TooltipTrigger isOpen={isFlashing || undefined}>
               <Button
                 type="button"
                 variant="action"
                 size="sm"
                 shape="pill"
-                className={`${styles.characterActionButton} ${isFlashing ? styles.actionButtonFlash : ''}`}
+                className={styles.characterActionButton}
                 onPress={() => {
                   if (onOpenSoundPicker) onOpenSoundPicker();
                 }}
