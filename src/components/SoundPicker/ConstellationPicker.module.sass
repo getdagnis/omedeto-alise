@@ -98,19 +98,24 @@
   inset: 0
   z-index: 1
   display: flex
-  align-items: center
+  align-items: flex-end
   justify-content: center
+  padding-bottom: 15%
   pointer-events: none
 
-.floatingChip
-  position: absolute
-  cursor: pointer
+.soundChipsWrap
+  display: flex
+  flex-wrap: wrap
+  justify-content: center
+  gap: var(--spacing-2)
+  max-width: 40%
   pointer-events: auto
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+
+.constellationChip
+  cursor: pointer
+  transition: all 0.2s ease
   &:hover
-    scale: 1.1
-    z-index: 10
-    filter: brightness(1.2)
+    filter: brightness(1.15)
 
 .mockupTitle
   position: absolute

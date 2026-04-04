@@ -37,7 +37,7 @@ export function ConstellationPickerMockup() {
     };
     return [...ALL_SOUNDS]
       .sort((a, b) => pseudoRandom(a.id.length + shuffleKey) - pseudoRandom(b.id.length + shuffleKey))
-      .slice(0, 8);
+      .slice(0, 16);
   }, [shuffleKey]);
 
   // Group sounds by category with varied sizes
@@ -74,26 +74,11 @@ export function ConstellationPickerMockup() {
   }, [ownedMockSounds]);
 
   const constellationData = useMemo(() => {
-    const pseudoRandom = (seed: number) => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-
-    return activeMockSounds.map((s, i) => {
-      const seed = i + shuffleKey * 13;
-      const angle = pseudoRandom(seed) * 2 * Math.PI;
-      const radius = 12 + pseudoRandom(seed + 1) * 28;
-      const left = 50 + Math.cos(angle) * radius * 1.2;
-      const top = 45 + Math.sin(angle) * radius;
-
-      return {
-        ...s,
-        top,
-        left,
-        isActive: i < 3, // Mock 3 active slots
-      };
-    });
-  }, [activeMockSounds, shuffleKey]);
+    return activeMockSounds.map((s, i) => ({
+      ...s,
+      isActive: i < 4, // Mock 4 active slots
+    }));
+  }, [activeMockSounds]);
 
   return (
     <div className={stylesConst.mockupWrapper}>
@@ -159,25 +144,23 @@ export function ConstellationPickerMockup() {
           <img src={character.img} alt="" className={stylesConst.characterBg} />
 
           <div className={stylesConst.constellation}>
-            {constellationData.map((s) => (
-              <Chip
-                key={s.id}
-                tone={s.isActive ? 'title' : 'neutral'}
-                size="sm"
-                className={stylesConst.floatingChip}
-                style={
-                  {
-                    top: `${s.top}%`,
-                    left: `${s.left}%`,
-                    background: s.isActive ? `var(${s.colorToken})` : undefined,
-                    color: s.isActive ? '#000' : undefined,
-                    opacity: s.isActive ? 1 : 0.4,
-                  } as React.CSSProperties
-                }
-              >
-                {s.name}
-              </Chip>
-            ))}
+            <div className={stylesConst.soundChipsWrap}>
+              {constellationData.map((s) => (
+                <Chip
+                  key={s.id}
+                  tone={s.isActive ? 'title' : 'neutral'}
+                  size="sm"
+                  className={stylesConst.constellationChip}
+                  style={
+                    s.isActive && s.colorToken
+                      ? { background: `var(${s.colorToken})`, color: '#000', borderColor: 'transparent' }
+                      : {}
+                  }
+                >
+                  {s.name}
+                </Chip>
+              ))}
+            </div>
           </div>
 
           <div className={stylesConst.bottomActions}>
