@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://alise-gumi.vercel.app/sitemap.xml
+Sitemap: https://aliseintokyo.vercel.app/sitemap.xml

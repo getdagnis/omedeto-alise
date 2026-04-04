@@ -114,8 +114,9 @@
     cursor: pointer
     -webkit-touch-callout: none
 
-  &[data-disabled]
-    color: var(--text-color-disabled)
+  &[data-disabled], &.is-used
+    color: #17152C
+    opacity: 1
 
   &[data-dragging]
     opacity: 0.6
@@ -123,6 +124,68 @@
   &[data-drop-target]
     outline: 2px solid var(--highlight-background)
     background: var(--highlight-overlay)
+
+  // Action button container for selected items with multiple actions
+  .listbox-item-actions
+    position: absolute
+    right: var(--spacing-2)
+    top: 50%
+    transform: translateY(-50%)
+    display: flex
+    gap: var(--spacing-1)
+
+    .react-aria-ListBoxItem-action
+      position: static
+      transform: none
+
+  // Action button styling for selected and used items
+  .react-aria-ListBoxItem-action
+    position: absolute
+    right: var(--spacing-2)
+    top: 50%
+    transform: translateY(-50%)
+    width: var(--spacing-6)
+    height: var(--spacing-6)
+    border-radius: 6px
+    display: flex
+    align-items: center
+    justify-content: center
+    font-size: 1rem
+    color: #fff
+    background: #00000020
+    transition: color 200ms
+
+    // ARROW ICON ANIMATION
+    svg:hover
+      animation: slideRight 2s linear infinite
+
+    // HEART ICON HOVER EFFECT
+    .lucide-heart
+      transition: fill 200ms, color 200ms
+    &:hover .lucide-heart
+      color: var(--pink)
+      fill: var(--pink)
+      animation: heartPulse 2s linear infinite
+
+    &.is-used
+      background: transparent
+      color: #17152C
+
+@keyframes slideRight
+  0%, 100%
+    transform: translateX(0)
+  25%, 75%
+    transform: translateX(0.15rem)
+  50%
+    transform: translateX(-0.1rem)
+
+@keyframes heartPulse
+  0%, 100%
+    transform: scale(1)
+  25%
+    transform: scale(1.3)
+  75%
+    transform: scale(0.6)
 
 .react-aria-ListBox
   &[data-layout=stack]
@@ -132,7 +195,6 @@
       flex-direction: column
       width: 250px
       max-height: 300px
-      min-height: 100px
 
       .react-aria-ListBoxItem
         margin-inline: var(--spacing-1)

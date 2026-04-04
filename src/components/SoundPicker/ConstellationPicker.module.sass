@@ -42,10 +42,10 @@
 .libraryList
   flex: 1
   overflow-y: auto
-  padding: var(--spacing-3)
+  padding: var(--spacing-4)
   display: flex
   flex-direction: column
-  gap: var(--spacing-2)
+  gap: var(--spacing-4)
 
   &::-webkit-scrollbar
     width: 4px
@@ -53,26 +53,23 @@
     background: var(--border-subtle)
     border-radius: 2px
 
-.libraryItem
+.libraryCategory
   display: flex
-  align-items: center
+  flex-direction: column
   gap: var(--spacing-2)
-  padding: 2px
-  border-radius: var(--radius-sm)
-  transition: background 0.2s ease
 
-.itemActive
-  opacity: 0.4
-  filter: grayscale(1)
+.categoryHeader
+  font-size: 1.1rem
+  font-weight: 800
+  color: var(--text-muted)
+  padding: 0 var(--spacing-1)
+  margin-bottom: var(--spacing-1)
 
-.libraryChip
-  flex: 1
-  cursor: pointer
-  text-align: left
-  justify-content: flex-start
+.getMoreContainer
+  padding: 0 var(--spacing-1)
+  margin-top: var(--spacing-4)
 
 .getMoreBtn
-  margin-top: var(--spacing-4)
   width: 100%
   font-weight: 800
   letter-spacing: 0.05em
@@ -141,29 +138,29 @@
   z-index: 20
   display: flex
   align-items: center
-  gap: var(--spacing-3)
+  gap: var(--spacing-2)
 
-.infoButton
-  color: var(--text-muted)
-  border-radius: 50%
-  width: 2rem
-  height: 2rem
-  font-family: var(--font-title)
-  &:hover
-    color: var(--neon-cyan)
-
+// Shared styles for both header action buttons
+.infoButton,
 .mockupClose
   color: var(--text-muted)
-  opacity: 0.5
-  cursor: pointer
-  background: transparent
-  border: none
-  font-size: 1.2rem
+  width: 2rem
+  height: 2rem
   display: flex
   align-items: center
   justify-content: center
+  border-radius: var(--radius-sm)
+  transition: color 200ms, background 200ms
+  cursor: pointer
+  background: transparent
+  border: none
+
+  svg
+    stroke-width: 1.5px
+
   &:hover
-    opacity: 1
+    color: var(--text-color)
+    background: rgba(255, 255, 255, 0.08)
 
 .infoDialog
   padding: var(--spacing-4)

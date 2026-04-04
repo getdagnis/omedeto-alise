@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { ProgressionState } from '../progression';
 import { DEFAULT_PROGRESSION_STATE, PROGRESSION_LEVELS } from '../progression';
 
-const PROGRESSION_STORAGE_KEY = 'gumi-alise-progression-v1';
+const PROGRESSION_STORAGE_KEY = 'alise-in-tokyo-progression-v1';
 
 export function useProgression() {
   const [state, setState] = useState<ProgressionState>(() => {
@@ -55,45 +55,51 @@ export function useProgression() {
     }, 30000); // 30 seconds of inactivity clears the "active this minute" flag.
   }, []);
 
-  const recordSoundPlayed = useCallback((characterId: string, soundId: string) => {
-    recordInteraction();
-    setState((prev) => {
-      let changed = false;
-      const nextPlayedCharacterIds = new Set(prev.playedCharacterIds);
-      const nextPlayedSoundIds = new Set(prev.playedSoundIds);
+  const recordSoundPlayed = useCallback(
+    (characterId: string, soundId: string) => {
+      recordInteraction();
+      setState((prev) => {
+        let changed = false;
+        const nextPlayedCharacterIds = new Set(prev.playedCharacterIds);
+        const nextPlayedSoundIds = new Set(prev.playedSoundIds);
 
-      if (!nextPlayedCharacterIds.has(characterId)) {
-        nextPlayedCharacterIds.add(characterId);
-        changed = true;
-      }
-      if (!nextPlayedSoundIds.has(soundId)) {
-        nextPlayedSoundIds.add(soundId);
-        changed = true;
-      }
+        if (!nextPlayedCharacterIds.has(characterId)) {
+          nextPlayedCharacterIds.add(characterId);
+          changed = true;
+        }
+        if (!nextPlayedSoundIds.has(soundId)) {
+          nextPlayedSoundIds.add(soundId);
+          changed = true;
+        }
 
-      if (changed) {
-        return {
-          ...prev,
-          playedCharacterIds: Array.from(nextPlayedCharacterIds),
-          playedSoundIds: Array.from(nextPlayedSoundIds),
-        };
-      }
-      return prev;
-    });
-  }, [recordInteraction]);
+        if (changed) {
+          return {
+            ...prev,
+            playedCharacterIds: Array.from(nextPlayedCharacterIds),
+            playedSoundIds: Array.from(nextPlayedSoundIds),
+          };
+        }
+        return prev;
+      });
+    },
+    [recordInteraction],
+  );
 
-  const recordCharacterCustomized = useCallback((characterId: string) => {
-    recordInteraction();
-    setState((prev) => {
-      if (!prev.customizedCharacterIds.includes(characterId)) {
-        return {
-          ...prev,
-          customizedCharacterIds: [...prev.customizedCharacterIds, characterId],
-        };
-      }
-      return prev;
-    });
-  }, [recordInteraction]);
+  const recordCharacterCustomized = useCallback(
+    (characterId: string) => {
+      recordInteraction();
+      setState((prev) => {
+        if (!prev.customizedCharacterIds.includes(characterId)) {
+          return {
+            ...prev,
+            customizedCharacterIds: [...prev.customizedCharacterIds, characterId],
+          };
+        }
+        return prev;
+      });
+    },
+    [recordInteraction],
+  );
 
   const buySound = useCallback((soundId: string, price: number) => {
     setState((prev) => {
@@ -122,14 +128,15 @@ export function useProgression() {
   // Calculate current level
   const currentLevelInfo = useMemo(() => {
     let currentLevel = 0;
-    
+
     for (let i = 1; i < PROGRESSION_LEVELS.length; i++) {
       const level = PROGRESSION_LEVELS[i];
       const reqs = level.requirements;
       let meetsReqs = true;
 
       if (reqs.charactersPlayed && state.playedCharacterIds.length < reqs.charactersPlayed) meetsReqs = false;
-      if (reqs.charactersCustomized && state.customizedCharacterIds.length < reqs.charactersCustomized) meetsReqs = false;
+      if (reqs.charactersCustomized && state.customizedCharacterIds.length < reqs.charactersCustomized)
+        meetsReqs = false;
       if (reqs.soundsPlayed && state.playedSoundIds.length < reqs.soundsPlayed) meetsReqs = false;
       if (reqs.minutesPlayed && state.minutesPlayed < reqs.minutesPlayed) meetsReqs = false;
 
@@ -142,18 +149,17 @@ export function useProgression() {
 
     // Automatically update unlocked level if newly reached
     if (currentLevel > state.unlockedLevel) {
-       // We defer state update to avoid rendering issues
-       setTimeout(() => {
-         setState(prev => ({ ...prev, unlockedLevel: currentLevel }));
-       }, 0);
+      // We defer state update to avoid rendering issues
+      setTimeout(() => {
+        setState((prev) => ({ ...prev, unlockedLevel: currentLevel }));
+      }, 0);
     }
 
     return PROGRESSION_LEVELS[currentLevel];
   }, [state]);
 
-  const nextLevelInfo = currentLevelInfo.level < PROGRESSION_LEVELS.length - 1 
-    ? PROGRESSION_LEVELS[currentLevelInfo.level + 1] 
-    : null;
+  const nextLevelInfo =
+    currentLevelInfo.level < PROGRESSION_LEVELS.length - 1 ? PROGRESSION_LEVELS[currentLevelInfo.level + 1] : null;
 
   return {
     state,

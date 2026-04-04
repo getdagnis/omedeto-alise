@@ -210,17 +210,11 @@ export default function StyleGuide() {
                   <UI.Text slot="description">Library implementation mockup:</UI.Text>
 
                   <UI.ListBox aria-label="Library Preview" selectionMode="single" selectedKeys={['rain']}>
-                    <UI.ListBoxItem isUsed action="−">
-                      Tokyo Night
-                    </UI.ListBoxItem>
+                    <UI.ListBoxItem isUsed>Tokyo Night</UI.ListBoxItem>
                     <UI.ListBoxItem>Metro Echo</UI.ListBoxItem>
-                    <UI.ListBoxItem id="rain" action="+">
-                      Rain Signal
-                    </UI.ListBoxItem>
+                    <UI.ListBoxItem id="rain">Rain Signal</UI.ListBoxItem>
                     <UI.ListBoxItem>Ambient neon rain...</UI.ListBoxItem>
-                    <UI.ListBoxItem isUsed action="−">
-                      Neon Rain signal
-                    </UI.ListBoxItem>
+                    <UI.ListBoxItem isUsed>Neon Rain signal</UI.ListBoxItem>
                   </UI.ListBox>
                 </div>
               </SectionCard>

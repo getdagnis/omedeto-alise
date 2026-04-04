@@ -35,7 +35,7 @@ const BG_DESKTOP_SUFFIX = '1920';
 const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
 const MAX_SOUNDS_TOTAL = 12;
-const LOW_GRAPHICS_STORAGE_KEY = 'gumi-alise-low-graphics';
+const LOW_GRAPHICS_STORAGE_KEY = 'alise-in-tokyo-low-graphics';
 const MAX_CHARACTER_SOUNDS = 9;
 const PICKER_RANDOM_DELAY_MS = 420;
 
@@ -114,7 +114,7 @@ type CharacterCustomization = {
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
 
-const CHARACTER_CUSTOM_STORAGE_KEY = 'gumi-alise-character-custom-v2';
+const CHARACTER_CUSTOM_STORAGE_KEY = 'alise-in-tokyo-character-custom-v2';
 
 const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
   if (typeof window === 'undefined') {
