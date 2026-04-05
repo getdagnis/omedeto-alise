@@ -25,6 +25,7 @@ export * from './Menu';
 export * from './Meter';
 export * from './Modal';
 export * from './NumberField';
+export * from './Notice';
 export * from './Popover';
 export * from './ProgressBar';
 export * from './ProgressCircle';
