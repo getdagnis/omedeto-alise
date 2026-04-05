@@ -222,6 +222,7 @@ function App() {
     recordCharacterCustomized,
     recordComboDiscovered,
     buySound,
+    toggleFavoriteSound,
   } = useProgression();
 
   const [isLvl2AchievementOpen, setIsLvl2AchievementOpen] = useState(false);
@@ -590,6 +591,8 @@ function App() {
             colorOptions={CHARACTER_COLOR_OPTIONS}
             imageOptions={CHARACTER_IMAGE_OPTIONS}
             isMain={profileCharacterId === mainCharacterId}
+            favoriteSoundIds={progressionState.favoriteSoundIds}
+            onToggleFavoriteSound={toggleFavoriteSound}
           />
         ) : (
           <>

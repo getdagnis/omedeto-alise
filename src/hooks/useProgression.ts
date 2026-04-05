@@ -125,6 +125,18 @@ export function useProgression() {
     });
   }, []);
 
+  const toggleFavoriteSound = useCallback((soundId: string) => {
+    setState((prev) => {
+      const isFav = prev.favoriteSoundIds.includes(soundId);
+      return {
+        ...prev,
+        favoriteSoundIds: isFav
+          ? prev.favoriteSoundIds.filter((id) => id !== soundId)
+          : [...prev.favoriteSoundIds, soundId],
+      };
+    });
+  }, []);
+
   const recordComboDiscovered = useCallback((comboId: string) => {
     setState((prev) => {
       if (prev.discoveredComboIds.includes(comboId)) return prev;
@@ -182,5 +194,6 @@ export function useProgression() {
     recordInteraction,
     buySound,
     grantOwnedSound,
+    toggleFavoriteSound,
   };
 }

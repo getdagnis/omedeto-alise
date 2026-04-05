@@ -9,7 +9,7 @@ import {
   faVolumeXmark,
   faPlay,
   faPause,
-  faIdCard,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import styles from './CharacterCard.module.sass';
@@ -311,73 +311,58 @@ function CharacterCard({
                     variant="action"
                     size="sm"
                     shape="pill"
-                    className={styles.characterActionButton}
+                    className={`${styles.characterActionButton} ${soundIds.length === 0 ? styles.actionWithLabel : ''}`}
                     onPress={() => {
                       if (onOpenProfile) onOpenProfile();
                     }}
                     aria-label="View Profile"
                   >
-                    <FontAwesomeIcon icon={faIdCard} />
+                    <FontAwesomeIcon icon={faUser} />
+                    {soundIds.length === 0 && <span className={styles.actionLabel}>ALISE</span>}
                   </Button>
                   <Tooltip>PROFILE</Tooltip>
                 </TooltipTrigger>
               </div>
-              <div className={styles.characterActionWrap}>
-                <TooltipTrigger>
-                  <Button
-                    type="button"
-                    variant="action"
-                    size="sm"
-                    shape="pill"
-                    className={styles.characterActionButton}
-                    onPress={() => {
-                      if (onOpenSoundPicker) onOpenSoundPicker();
-                    }}
-                    aria-label="Add sounds"
-                  >
-                    <FontAwesomeIcon icon={faMusic} />
-                  </Button>
-                  <Tooltip>SOUNDS</Tooltip>
-                </TooltipTrigger>
-              </div>
-              <div className={styles.characterActionWrap}>
-                <TooltipTrigger>
-                  <Button
-                    type="button"
-                    variant="action"
-                    size="sm"
-                    shape="pill"
-                    className={styles.characterActionButton}
-                    onPress={() => {
-                      if (onToggleMute) onToggleMute();
-                    }}
-                    aria-label={isMuted ? 'Play Mix' : 'Pause Mix'}
-                    isDisabled={soundIds.length === 0}
-                  >
-                    <FontAwesomeIcon icon={isMuted ? faPlay : faPause} />
-                  </Button>
-                  <Tooltip>{isMuted ? 'PLAY' : 'PAUSE'}</Tooltip>
-                </TooltipTrigger>
-              </div>
-              <div className={styles.characterActionWrap}>
-                <TooltipTrigger>
-                  <Button
-                    type="button"
-                    variant="action"
-                    size="sm"
-                    shape="pill"
-                    className={styles.characterActionButton}
-                    onPress={() => {
-                      if (onReset) onReset();
-                    }}
-                    aria-label="Reset character"
-                    isDisabled={soundIds.length === 0}
-                  >
-                    <FontAwesomeIcon icon={faRotateLeft} />
-                  </Button>
-                  <Tooltip>RESET</Tooltip>
-                </TooltipTrigger>
-              </div>
+              {soundIds.length > 0 && (
+                <>
+                  <div className={styles.characterActionWrap}>
+                    <TooltipTrigger>
+                      <Button
+                        type="button"
+                        variant="action"
+                        size="sm"
+                        shape="pill"
+                        className={styles.characterActionButton}
+                        onPress={() => {
+                          if (onToggleMute) onToggleMute();
+                        }}
+                        aria-label={isMuted ? 'Play Mix' : 'Pause Mix'}
+                      >
+                        <FontAwesomeIcon icon={isMuted ? faPlay : faPause} />
+                      </Button>
+                      <Tooltip>{isMuted ? 'PLAY' : 'PAUSE'}</Tooltip>
+                    </TooltipTrigger>
+                  </div>
+                  <div className={styles.characterActionWrap}>
+                    <TooltipTrigger>
+                      <Button
+                        type="button"
+                        variant="action"
+                        size="sm"
+                        shape="pill"
+                        className={styles.characterActionButton}
+                        onPress={() => {
+                          if (onReset) onReset();
+                        }}
+                        aria-label="Reset character"
+                      >
+                        <FontAwesomeIcon icon={faRotateLeft} />
+                      </Button>
+                      <Tooltip>RESET</Tooltip>
+                    </TooltipTrigger>
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <>
@@ -388,13 +373,14 @@ function CharacterCard({
                     variant="action"
                     size="sm"
                     shape="pill"
-                    className={styles.characterActionButton}
+                    className={`${styles.characterActionButton} ${soundIds.length === 0 ? styles.actionWithLabel : ''}`}
                     onPress={() => {
                       if (onOpenProfile) onOpenProfile();
                     }}
                     aria-label="Add sounds"
                   >
                     <FontAwesomeIcon icon={faMusic} />
+                    {soundIds.length === 0 && <span className={styles.actionLabel}>MIX</span>}
                   </Button>
                   <Tooltip>SOUNDS</Tooltip>
                 </TooltipTrigger>

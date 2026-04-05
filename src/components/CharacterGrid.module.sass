@@ -3,14 +3,14 @@
   justify-content: center
   align-items: center
   width: 100%
-  min-height: 60vh
+  min-height: 60svh
   user-select: none
   padding: 2rem 0
   overflow: hidden
 
 .characterGrid
   width: 100%
-  max-width: 1600px // More flexible width
+  max-width: 1600px // Desktop width
   display: grid
   gap: 1.5rem
   grid-template-columns: repeat(2, 1fr)
@@ -34,29 +34,39 @@
 .companionItem
   order: 1
 
+@media (min-width: 40rem) and (max-width: 63.9rem)
+  .characterGrid
+    grid-template-columns: repeat(3, 1fr)
+    grid-template-rows: repeat(2, auto)
+    gap: 2rem
+    max-width: 900px
+
+  .mainItem
+    grid-column: 2 // Row 1, middle
+    order: 0
+    transform: scale(1.1)
+    margin-bottom: 0
+
+  .companionItem
+    grid-column: auto
+    order: 1
+
 @media (min-width: 64rem)
   .characterGrid
-    // 5 columns, flexible
     grid-template-columns: repeat(5, minmax(0, 1fr))
-    gap: 1rem
+    gap: 1.5rem
     align-items: center
     justify-content: center
-    padding: 0 4rem
+    padding: 0 2rem
+    max-width: 1400px // Full width reach
 
   .mainItem
     grid-column: auto
     order: 0
     margin-bottom: 0
-    
-    // Scale up the central character
-    transform: scale(1.2)
+    transform: scale(1.25) // Central character larger
     z-index: 10
 
   .companionItem
     grid-column: auto
     order: 0
-    // Slightly push side characters apart if needed
-    &:nth-child(2)
-      margin-right: 1rem
-    &:nth-child(4)
-      margin-left: 1rem

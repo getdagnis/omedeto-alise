@@ -11,6 +11,10 @@
   @media (min-width: 64rem)
     max-width: 16rem
 
+.mainCharacter
+  @media (min-width: 64rem)
+    max-width: 20rem // Keep it larger on desktop
+
 .characterCardMuted
   --character-title: #ddd !important
   --character-primary: #ddd !important
@@ -67,8 +71,8 @@
   width: min(16rem, 55vw)
   height: min(16rem, 55vw)
   @media (min-width: 64rem)
-    width: min(12rem, 18vw)
-    height: min(12rem, 18vw)
+    width: min(14.5rem, 22vw)
+    height: min(14.5rem, 22vw)
 
 .dropTargetHasLoop
   animation: dropTargetLoop 6s ease-in-out infinite
@@ -268,10 +272,25 @@
   width: 2.4rem
   height: 1.6rem
   font-size: 0.75rem
+  display: flex
+  align-items: center
+  justify-content: center
+  gap: 0.3rem
   @media (max-width: 40rem)
     width: 2rem
     height: 1.4rem
     font-size: 0.65rem
+
+.actionWithLabel
+  width: auto
+  padding: 0 0.8rem
+  min-width: 4rem
+
+.actionLabel
+  font-size: 0.65rem
+  font-weight: 700
+  letter-spacing: 0.05em
+  margin-top: 0.1rem
 
 .actionButtonFlash
   animation: actionButtonFlash 0.5s ease-in-out 3
