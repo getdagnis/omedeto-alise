@@ -25,11 +25,14 @@
   width: 100%
   min-width: 0
 
+.mainItem
+  padding: 0 1rem // Extra physical space in all viewports
+
 // Mobile: Main on top (large), 4 companions in 2x2
 .mainItem
   grid-column: 1 / span 2
   order: -1
-  margin-bottom: 1rem
+  margin-bottom: 1.5rem
 
 .companionItem
   order: 1
@@ -46,32 +49,32 @@
   .gridItem
     max-width: 100%
 
-  // Mapping based on [placeholder-1, placeholder-2, alise, placeholder-3, gumi]
-  
   // Row 1: Left - Main - Right
-  .gridItem:nth-child(2) // Left of Main
+  .gridItem:nth-child(2)
     grid-column: 1 / span 2
     grid-row: 1
-  .gridItem:nth-child(3) // MAIN (ALISE) - Center
+  .gridItem:nth-child(3) // MAIN
     grid-column: 3 / span 2
     grid-row: 1
     transform: scale(1.15)
     z-index: 10
-  .gridItem:nth-child(4) // Right of Main
+    padding: 0 1.5rem // Extra tablet space
+  .gridItem:nth-child(4)
     grid-column: 5 / span 2
     grid-row: 1
 
   // Row 2: 2 items centered
-  .gridItem:nth-child(1) // Furthest Left
+  .gridItem:nth-child(1)
     grid-column: 2 / span 2
     grid-row: 2
-  .gridItem:nth-child(5) // Furthest Right
+  .gridItem:nth-child(5)
     grid-column: 4 / span 2
     grid-row: 2
 
 @media (min-width: 1024px)
   .characterGrid
-    grid-template-columns: repeat(5, minmax(0, 1fr))
+    // Middle column is wider
+    grid-template-columns: 1fr 1fr 1.25fr 1fr 1fr
     gap: 2rem
     align-items: center
     justify-content: center
@@ -84,6 +87,7 @@
     margin-bottom: 0
     transform: scale(1.25)
     z-index: 10
+    padding: 0 2rem // Pushes neighbors away
 
   .companionItem
     grid-column: auto

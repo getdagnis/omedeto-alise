@@ -8,11 +8,11 @@
   gap: 0
   padding-bottom: 0.5rem
   position: relative
-  @media (min-width: 64rem)
+  @media (min-width: 1024px)
     max-width: 16rem
 
 .mainCharacter
-  @media (min-width: 64rem)
+  @media (min-width: 1024px)
     max-width: 20rem
 
 .characterCardMuted
@@ -30,7 +30,7 @@
   position: relative
   margin-top: 0.5rem
   margin-bottom: 0.25rem
-  @media (max-width: 40rem)
+  @media (max-width: 640px)
     transform: scale(0.8)
     margin-top: 0.25rem
     margin-bottom: 0
@@ -61,18 +61,18 @@
   z-index: 1
 
 .dropTargetNormal
-  width: min(13rem, 42vw)
-  height: min(13rem, 42vw)
-  @media (min-width: 64rem)
-    width: min(12rem, 18vw)
-    height: min(12rem, 18vw)
+  width: min(14rem, 50vw)
+  height: min(14rem, 50vw)
+  @media (min-width: 1024px)
+    width: min(12.5rem, 18vw)
+    height: min(12.5rem, 18vw)
 
 .dropTargetLarge
-  width: min(16rem, 55vw)
-  height: min(16rem, 55vw)
-  @media (min-width: 64rem)
-    width: min(14.5rem, 22vw)
-    height: min(14.5rem, 22vw)
+  width: min(17.5rem, 60vw)
+  height: min(17.5rem, 60vw)
+  @media (min-width: 1024px)
+    width: min(15rem, 22vw)
+    height: min(15rem, 22vw)
 
 .dropTargetHasLoop
   animation: dropTargetLoop 6s ease-in-out infinite
@@ -196,6 +196,41 @@
   width: 90%
   padding-bottom: 0.2rem
 
+.hintTooltip
+  position: absolute
+  bottom: 100%
+  left: 50%
+  transform: translateX(-50%)
+  background: rgba(10, 12, 30, 0.98)
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  color: white
+  padding: 4px 10px
+  border-radius: 4px
+  font-size: 9px
+  font-weight: 700
+  letter-spacing: 0.1em
+  white-space: nowrap
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3)
+  margin-bottom: 8px
+  z-index: 100
+  animation: hintTooltipPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+  &::after
+    content: ''
+    position: absolute
+    top: 100%
+    left: 50%
+    border: 5px solid transparent
+    border-top-color: rgba(10, 12, 30, 0.98)
+    transform: translateX(-50%)
+
+@keyframes hintTooltipPop
+  from
+    opacity: 0
+    transform: translateX(-50%) translateY(10px) scale(0.8)
+  to
+    opacity: 1
+    transform: translateX(-50%) translateY(0) scale(1)
+
 .characterSoundTag
   color: var(--character-title, var(--color-text-muted))
   box-shadow: 0 0.1rem 0.5rem rgba(0, 0, 0, 0.4)
@@ -245,13 +280,12 @@
   position: relative
   z-index: 15
   margin-top: 0
-  // Crucial: keep actions same size regardless of parent scaling
   transform-origin: center top
-  @media (min-width: 64rem)
+  @media (min-width: 1024px)
     .mainCharacter &
-       transform: scale(0.8) // Counter-act the 1.25x scaling of main char to match companions
+       transform: scale(0.8)
 
-  @media (max-width: 40rem)
+  @media (max-width: 640px)
     transform: scale(0.85)
     gap: 0.15rem
 
@@ -269,7 +303,7 @@
   align-items: center
   justify-content: center
   gap: 0.3rem
-  @media (max-width: 40rem)
+  @media (max-width: 640px)
     width: 2rem
     height: 1.4rem
     font-size: 0.65rem
@@ -281,7 +315,7 @@
 
 .actionLabel
   font-size: 0.65rem
-  font-weight: 900
+  font-weight: 700
   letter-spacing: 0.05em
   margin-top: 0.1rem
 

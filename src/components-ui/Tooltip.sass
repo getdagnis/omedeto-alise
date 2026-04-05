@@ -2,21 +2,20 @@
 
 .react-aria-Tooltip
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.35)
-  border-radius: 999px
-  background: rgba(7, 9, 24, 0.96)
-  border: 1px solid rgba(255, 255, 255, 0.16)
-  color: rgba(255, 255, 255, 0.92)
+  border-radius: 4px // Square-ish look per user preference
+  background: rgba(10, 12, 30, 0.98) // Dark blue app background
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  color: white
   forced-color-adjust: none
   outline: none
-  padding: 0.3rem 0.65rem
+  padding: 4px 10px
   max-width: 200px
-  /* fixes FF gap */
   transform: translate3d(0, 0, 0)
   transition: transform 200ms, opacity 200ms
   font-family: var(--font-body)
-  font-size: 0.62rem
+  font-size: 9px // Matches hint style
   font-weight: 700
-  letter-spacing: 0.08em
+  letter-spacing: 0.1em
   text-transform: uppercase
   white-space: nowrap
 
@@ -49,7 +48,4 @@
 
   .react-aria-OverlayArrow svg
     display: block
-    fill: rgba(7, 9, 24, 0.96)
-    // We don't have an easy way to put a border on the SVG arrow that matches the main box border
-    // but the original .actionTooltip had a border on the arrow.
-    // For now we match the background.
+    fill: rgba(10, 12, 30, 0.98)
