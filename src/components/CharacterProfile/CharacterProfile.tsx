@@ -1,25 +1,26 @@
 import React, { useMemo, useEffect, useState, useRef, type CSSProperties } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faArrowLeft, 
-  faTrophy, 
-  faStar, 
-  faXmark, 
-  faLock, 
-  faUser, 
-  faMusic,
-  faChevronRight,
-  faChevronLeft,
-  faPlus,
-  faChevronUp,
-  faChevronDown,
-  faHeart as faHeartSolid
-} from '@fortawesome/free-solid-svg-icons';
-import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
-import { Button, Chip, Meter } from '../../components-ui';
-import type { CharacterOption, SoundOption, SoundCategory } from '../../config';
-import { COMBOS, ACHIEVEMENTS } from '../../config';
+  ArrowLeft,
+  Trophy,
+  Star,
+  X,
+  Lock,
+  UserRoundPen,
+  Music,
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  ChevronUp,
+  ChevronDown,
+  Heart as HeartSolid
+} from 'lucide-react';
+import { Heart as HeartRegular } from 'lucide-react';
+import { Button, Chip, Meter, Notice } from '../../components-ui';
+import type { CharacterOption, SoundOption } from '../../config';
+import { COMBOS, ACHIEVEMENTS, CHARACTER_IMAGE_OPTIONS } from '../../config';
 import styles from './CharacterProfile.module.sass';
+
+const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 
 export type CharacterColorOption = {
   readonly id: string;
@@ -59,7 +60,7 @@ type LibraryTab = 'favs' | 'cat' | 'mood' | 'all';
 
 /**
  * CharacterProfile
- * Redesigned with Filterable Library, JS Scrolling and Unified Cloud
+ * Enforces character selection before sound picking.
  */
 export function CharacterProfile({
   characterId,
@@ -86,33 +87,34 @@ export function CharacterProfile({
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [draftCustomization, setDraftCustomization] = useState(characterCustomizations[characterId] || {});
+  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const characterName = draftCustomization?.name?.trim() || character.name;
   const characterImage = draftCustomization?.image || character.img;
   
+  // Check if character is "selected" (has an image chosen beyond placeholder)
+  const isCharacterSelected = useMemo(() => {
+    return !!draftCustomization.image;
+  }, [draftCustomization.image]);
+
+  useEffect(() => {
+    if (activeTab === 'sounds' && !isCharacterSelected) {
+       setIsNoticeOpen(true);
+    }
+  }, [activeTab, isCharacterSelected]);
+
   const constellationSounds = useMemo(() => {
     const ids = draftCustomization?.soundIds || character.sounds.map(s => s.id);
     return ids.map(id => soundCatalogById.get(id)).filter((s): s is SoundOption => !!s);
   }, [character.sounds, draftCustomization?.soundIds, soundCatalogById]);
 
-  // Library Sorting/Filtering Logic
   const filteredLibrary = useMemo(() => {
     let base = [...character.sounds];
-    
-    if (libTab === 'favs') {
-      base = base.filter(s => favoriteSoundIds.includes(s.id));
-    }
+    if (libTab === 'favs') base = base.filter(s => favoriteSoundIds.includes(s.id));
+    if (libTab === 'cat' && activeFilter) base = base.filter(s => s.category === activeFilter);
+    if (libTab === 'mood' && activeFilter) base = base.filter(s => s.mood === activeFilter);
 
-    if (libTab === 'cat' && activeFilter) {
-      base = base.filter(s => s.category === activeFilter);
-    }
-
-    if (libTab === 'mood' && activeFilter) {
-      base = base.filter(s => s.mood === activeFilter);
-    }
-
-    // Grouping for 'all', 'favs' (or 'cat'/'mood' when no filter selected)
     if ((libTab === 'all' || libTab === 'favs') || !activeFilter) {
       const grouped: Record<string, SoundOption[]> = {};
       base.forEach(s => {
@@ -122,23 +124,15 @@ export function CharacterProfile({
       });
       return grouped;
     }
-
-    return base; // Flat list for cat/mood with filter
+    return base;
   }, [character.sounds, libTab, activeFilter, favoriteSoundIds]);
 
   const filterOptions = useMemo(() => {
-    if (libTab === 'cat') {
-      const cats = new Set(character.sounds.map(s => s.category));
-      return Array.from(cats);
-    }
-    if (libTab === 'mood') {
-      const moods = new Set(character.sounds.map(s => s.mood).filter(Boolean));
-      return Array.from(moods);
-    }
+    if (libTab === 'cat') return Array.from(new Set(character.sounds.map(s => s.category)));
+    if (libTab === 'mood') return Array.from(new Set(character.sounds.map(s => s.mood).filter(Boolean)));
     return [];
   }, [character.sounds, libTab]);
 
-  // Sync discovered combos
   const activeSet = useMemo(() => new Set(activeSounds), [activeSounds]);
   useEffect(() => {
     COMBOS.forEach(combo => {
@@ -177,10 +171,7 @@ export function CharacterProfile({
   const handleScroll = (dir: 'up' | 'down') => {
     if (!scrollRef.current) return;
     const amount = window.innerHeight * 0.7;
-    scrollRef.current.scrollBy({
-      top: dir === 'up' ? -amount : amount,
-      behavior: 'smooth'
-    });
+    scrollRef.current.scrollBy({ top: dir === 'up' ? -amount : amount, behavior: 'smooth' });
   };
 
   const handleUpdateDraft = (patch: any) => {
@@ -198,6 +189,7 @@ export function CharacterProfile({
       <div key={sound.id} className={styles.libraryItemRow}>
         <button 
           className={`${styles.libraryItem} ${isSelected ? styles.libraryItemActive : ''}`}
+          disabled={!isCharacterSelected}
           onClick={() => {
              const currentIds = draftCustomization.soundIds || character.sounds.map(s => s.id);
              if (isSelected) {
@@ -209,13 +201,10 @@ export function CharacterProfile({
         >
           <div className={styles.libraryItemDot} style={{ background: `var(${sound.colorToken})` }} />
           <span className={styles.libraryItemName}>{sound.name.toUpperCase()}</span>
-          <FontAwesomeIcon icon={faPlus} className={styles.libraryItemPlus} />
+          <Plus size={10} className={styles.libraryItemPlus} />
         </button>
-        <button 
-          className={`${styles.favBtn} ${isFav ? styles.favBtnActive : ''}`}
-          onClick={() => onToggleFavoriteSound(sound.id)}
-        >
-          <FontAwesomeIcon icon={isFav ? faHeartSolid : faHeartRegular} />
+        <button className={`${styles.favBtn} ${isFav ? styles.favBtnActive : ''}`} onClick={() => onToggleFavoriteSound(sound.id)}>
+          <HeartSolid size={14} fill={isFav ? 'currentColor' : 'none'} />
         </button>
       </div>
     );
@@ -227,43 +216,40 @@ export function CharacterProfile({
       <aside className={`${styles.librarySidebar} ${isLibraryOpen ? styles.libraryOpen : ''}`}>
         <header className={styles.libraryHeader}>
           <div className={styles.libTabs}>
-            <button className={`${styles.libTab} ${libTab === 'favs' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('favs'); setActiveFilter(null); }}>FAVS</button>
-            <button className={`${styles.libTab} ${libTab === 'cat' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('cat'); setActiveFilter(null); }}>CAT</button>
-            <button className={`${styles.libTab} ${libTab === 'mood' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('mood'); setActiveFilter(null); }}>MOOD</button>
-            <button className={`${styles.libTab} ${libTab === 'all' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('all'); setActiveFilter(null); }}>ALL</button>
+            {['favs', 'cat', 'mood', 'all'].map((tab) => (
+              <button key={tab} className={`${styles.libTab} ${libTab === tab ? styles.libTabActive : ''}`} onClick={() => { setLibTab(tab as LibraryTab); setActiveFilter(null); }}>
+                {tab === 'cat' ? 'CAT' : tab.toUpperCase()}
+              </button>
+            ))}
           </div>
           <button className={styles.libraryToggle} onClick={() => setIsLibraryOpen(!isLibraryOpen)}>
-            <FontAwesomeIcon icon={isLibraryOpen ? faChevronLeft : faChevronRight} />
+            {isLibraryOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>
         </header>
 
         <div className={styles.libraryScrollWrap}>
-          <button className={styles.scrollArrow} onClick={() => handleScroll('up')}><FontAwesomeIcon icon={faChevronUp} /></button>
+          <button className={styles.scrollArrow} onClick={() => handleScroll('up')}><ChevronUp size={16} /></button>
           <div className={styles.libraryList} ref={scrollRef}>
-            {Array.isArray(filteredLibrary) ? (
+            {!isCharacterSelected ? (
+               <div className={styles.libraryEmpty}>PLEASE SELECT IDENTITY FIRST</div>
+            ) : Array.isArray(filteredLibrary) ? (
               filteredLibrary.map(renderLibraryItem)
             ) : (
               Object.entries(filteredLibrary).map(([cat, sounds]) => (
                 <div key={cat} className={styles.libGroup}>
                   <div className={styles.libGroupHeader}>{cat.toUpperCase()}</div>
-                  <div className={styles.libGroupContent}>
-                    {sounds.map(renderLibraryItem)}
-                  </div>
+                  <div className={styles.libGroupContent}>{sounds.map(renderLibraryItem)}</div>
                 </div>
               ))
             )}
           </div>
-          <button className={styles.scrollArrow} onClick={() => handleScroll('down')}><FontAwesomeIcon icon={faChevronDown} /></button>
+          <button className={styles.scrollArrow} onClick={() => handleScroll('down')}><ChevronDown size={16} /></button>
         </div>
 
-        {(libTab === 'cat' || libTab === 'mood') && (
+        {isCharacterSelected && (libTab === 'cat' || libTab === 'mood') && (
           <div className={styles.filterBar}>
             {filterOptions.map(opt => (
-              <button 
-                key={opt} 
-                className={`${styles.filterChip} ${activeFilter === opt ? styles.filterChipActive : ''}`}
-                onClick={() => setActiveFilter(activeFilter === opt ? null : opt)}
-              >
+              <button key={opt} className={`${styles.filterChip} ${activeFilter === opt ? styles.filterChipActive : ''}`} onClick={() => setActiveFilter(activeFilter === opt ? null : opt)}>
                 {opt?.toUpperCase()}
               </button>
             ))}
@@ -279,30 +265,30 @@ export function CharacterProfile({
         <header className={styles.header}>
           <div className={styles.headerLeft}>
             <Button variant="quiet" size="sm" className={styles.backButton} onPress={onClose}>
-              <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: 8 }} />
+              <ArrowLeft size={16} style={{ marginRight: 8 }} />
               <span>BACK TO STAGE</span>
             </Button>
             <h1 className={styles.characterName}>{characterName}</h1>
             <span className={styles.characterLevel}>{isMain ? 'YOUR IDENTITY' : "FRIEND'S PROFILE"} • LEVEL {unlockedLevel + 1}</span>
           </div>
           <button className={styles.closeButton} onClick={onClose} aria-label="Close">
-            <FontAwesomeIcon icon={faXmark} size="lg" />
+            <X size={24} />
           </button>
         </header>
 
         <div className={styles.profileTabs}>
           <button className={`${styles.tabLink} ${activeTab === 'sounds' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('sounds')}>
-            <FontAwesomeIcon icon={faMusic} />
+            <Music size={18} />
             <span>CONSTELLATION</span>
           </button>
           {!isMain && (
             <button className={`${styles.tabLink} ${activeTab === 'identity' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('identity')}>
-              <FontAwesomeIcon icon={faUser} />
+              <UserRoundPen size={18} />
               <span>IDENTITY</span>
             </button>
           )}
           <button className={`${styles.tabLink} ${activeTab === 'milestones' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('milestones')}>
-            <FontAwesomeIcon icon={faStar} />
+            <Star size={18} />
             <span>MILESTONES</span>
           </button>
         </div>
@@ -316,33 +302,14 @@ export function CharacterProfile({
               </div>
               
               <div className={styles.constellationStage}>
-                <img src={characterImage} alt="" className={styles.characterBg} />
+                <img src={characterImage || CHARACTER_PLACEHOLDER_PATH} alt="" className={styles.characterBg} />
                 <div className={styles.floatingWrap}>
-                  {constellationSounds.slice(0, 16).map((sound, i) => {
+                  {isCharacterSelected && constellationSounds.slice(0, 16).map((sound, i) => {
                     const isActive = activeSounds.includes(sound.id);
                     const pos = floatingPositions[i];
                     return (
-                      <div 
-                        key={sound.id}
-                        className={styles.floatingChip}
-                        style={{
-                          '--tx': `${pos.x}px`,
-                          '--ty': `${pos.y}px`,
-                          '--scale': pos.scale,
-                          '--delay': `${pos.delay}s`,
-                        } as CSSProperties}
-                      >
-                        <Chip
-                          tone={isActive ? 'title' : 'neutral'}
-                          size="md"
-                          className={`${styles.constellationChip} ${isActive ? styles.isActive : ''}`}
-                          onClick={() => onToggleSound(sound.id, sound.path)}
-                          style={
-                            isActive
-                              ? ({ '--sound-color': `var(${sound.colorToken})`, background: `var(${sound.colorToken})`, color: '#000', borderColor: 'transparent' } as CSSProperties)
-                              : {}
-                          }
-                        >
+                      <div key={sound.id} className={styles.floatingChip} style={{ '--tx': `${pos.x}px`, '--ty': `${pos.y}px`, '--scale': pos.scale, '--delay': `${pos.delay}s` } as CSSProperties}>
+                        <Chip tone={isActive ? 'title' : 'neutral'} size="md" className={`${styles.constellationChip} ${isActive ? styles.isActive : ''}`} onClick={() => onToggleSound(sound.id, sound.path)} style={isActive ? ({ '--sound-color': `var(${sound.colorToken})`, background: `var(${sound.colorToken})`, color: '#000', borderColor: 'transparent' } as CSSProperties) : {}}>
                           {sound.name.toUpperCase()}
                         </Chip>
                       </div>
@@ -357,31 +324,21 @@ export function CharacterProfile({
             <section className={styles.identitySection}>
                <div className={styles.identityLayout}>
                   <div className={styles.identityPreview}>
-                     <img src={characterImage} alt="" className={styles.identityImageLarge} />
+                     <img src={characterImage || CHARACTER_PLACEHOLDER_PATH} alt="" className={styles.identityImageLarge} />
                   </div>
                   <div className={styles.identityControls}>
                      <div className={styles.field}>
                         <span className={styles.fieldLabel}>NAME</span>
-                        <input 
-                          type="text" 
-                          className={styles.textInput}
-                          value={draftCustomization.name || ''} 
-                          placeholder={character.name}
-                          onChange={(e) => handleUpdateDraft({ name: e.target.value })}
-                        />
+                        <input type="text" className={styles.textInput} value={draftCustomization.name || ''} placeholder={character.name} onChange={(e) => handleUpdateDraft({ name: e.target.value })} />
                      </div>
 
                      <div className={styles.field}>
-                        <span className={styles.fieldLabel}>APPEARANCE</span>
+                        <span className={styles.fieldLabel}>APPEARANCE PRESETS</span>
                         <div className={styles.imageGrid}>
-                          {imageOptions.map((opt) => {
-                            const isSelected = characterImage === opt.src;
+                          {CHARACTER_IMAGE_OPTIONS.map((opt) => {
+                            const isSelected = draftCustomization.image === opt.src;
                             return (
-                              <button
-                                key={opt.id}
-                                className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`}
-                                onClick={() => handleUpdateDraft({ image: opt.src })}
-                              >
+                              <button key={opt.id} className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`} onClick={() => handleUpdateDraft({ image: opt.src })}>
                                 <img src={opt.src} alt={opt.label} />
                               </button>
                             );
@@ -397,24 +354,17 @@ export function CharacterProfile({
             <div className={styles.milestonesArea}>
               <section className={styles.section}>
                 <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    <FontAwesomeIcon icon={faStar} style={{ marginRight: 8 }} />
-                    Combo Discovery
-                  </h2>
+                  <h2 className={styles.sectionTitle}><Star size={16} style={{ marginRight: 8 }} /> Combo Discovery</h2>
                   <span className={styles.sectionCount}>{discoveredComboIds.length} / {COMBOS.length}</span>
                 </div>
                 <div className={styles.comboGrid}>
                   {COMBOS.map((combo) => {
                     const isDiscovered = discoveredComboIds.includes(combo.id);
                     const isCurrentlyActive = combo.soundIds.every(id => activeSet.has(id));
-                    
                     return (
                       <div key={combo.id} className={`${styles.comboCard} ${!isDiscovered ? styles.isLocked : styles.isDiscovered} ${isCurrentlyActive ? styles.isCurrentlyActive : ''}`}>
                         <span className={`${styles.comboRarity} ${styles[combo.rarity]}`}>{combo.rarity}</span>
-                        <h3 className={styles.comboName}>
-                          {isDiscovered ? combo.name : '???'}
-                          {!isDiscovered && <FontAwesomeIcon icon={faLock} style={{ marginLeft: 8, fontSize: '0.8em', opacity: 0.5 }} />}
-                        </h3>
+                        <h3 className={styles.comboName}>{isDiscovered ? combo.name : '???'} {!isDiscovered && <Lock size={12} style={{ marginLeft: 8, opacity: 0.5 }} />}</h3>
                         <p className={styles.comboDescription}>{isDiscovered ? combo.description : 'Combine secret sounds to reveal.'}</p>
                         {isCurrentlyActive && <div className={styles.activeIndicator}>ACTIVE IN MIX</div>}
                       </div>
@@ -425,17 +375,14 @@ export function CharacterProfile({
 
               <section className={styles.section}>
                 <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    <FontAwesomeIcon icon={faTrophy} style={{ marginRight: 8 }} />
-                    Milestones
-                  </h2>
+                  <h2 className={styles.sectionTitle}><Trophy size={16} style={{ marginRight: 8 }} /> Milestones</h2>
                 </div>
                 <div className={styles.achievementList}>
                   {ACHIEVEMENTS.map((achievement) => {
                     const isUnlocked = [ACHIEVEMENTS[0].id].includes(achievement.id);
                     return (
                       <div key={achievement.id} className={`${styles.achievementItem} ${!isUnlocked ? styles.isLocked : ''}`}>
-                        <div className={styles.achievementIcon}><FontAwesomeIcon icon={faTrophy} /></div>
+                        <div className={styles.achievementIcon}><Trophy size={18} /></div>
                         <div className={styles.achievementText}>
                           <span className={styles.achievementTitle}>{achievement.title}</span>
                           <span className={styles.achievementDesc}>{achievement.description}</span>
@@ -463,6 +410,17 @@ export function CharacterProfile({
           </div>
         </footer>
       </main>
+
+      <Notice 
+        isOpen={isNoticeOpen}
+        onClose={() => {
+           setIsNoticeOpen(false);
+           setActiveTab('identity');
+        }}
+        title="Identity Required"
+        message="Please select a character identity before choosing sounds for your mix."
+        okLabel="GO TO IDENTITY"
+      />
     </div>
   );
 }

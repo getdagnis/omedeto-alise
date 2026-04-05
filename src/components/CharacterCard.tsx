@@ -1,17 +1,14 @@
 import type { CSSProperties, DragEvent } from 'react';
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faHeart as faHeartSolid,
-  faMusic,
-  faPen,
-  faRotateLeft,
-  faVolumeXmark,
-  faPlay,
-  faPause,
-  faUser,
-} from '@fortawesome/free-solid-svg-icons';
-import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
+import React, { useState, useCallback } from 'react';
+import { 
+  Music, 
+  UserRoundPen, 
+  Play, 
+  Pause, 
+  RotateCcw, 
+  VolumeX,
+  Heart
+} from 'lucide-react';
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
 import { Button, Chip, Tooltip, TooltipTrigger } from '../components-ui';
@@ -123,28 +120,56 @@ function CharacterCard({
   size = 'normal',
 }: CharacterCardProps) {
   const [isFlashing, setIsFlashing] = useState(false);
+  const [hintingSoundId, setHintingSoundId] = useState<string | null>(null);
+  
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
   const showName = displayName.trim().length > 0;
   const isLooping = (soundIds.length > 0 || forceLoop) && colors.length > 1;
 
-  // Pulse only if playing and not muted
   const soundsPlayingAndNotMuted = soundIds.length > 0 && !isMuted;
   const pulseClass = soundsPlayingAndNotMuted ? getDropTargetPulseClass(soundIds, soundCatalogById) : '';
 
-  // Greyed out UNLESS:
-  // a) sounds are playing and not muted
-  // b) is favorited
-  // c) forced loop (edit mode preview)
-  // d) is the Main character
   const isGreyedOut = !(soundsPlayingAndNotMuted || isFavorite || forceLoop || isMain);
 
-  const handleCharacterClick = () => {
+  const triggerSoundHint = useCallback(() => {
+    if (customization.soundIds && customization.soundIds.length > 0) {
+      customization.soundIds.forEach((id, index) => {
+        setTimeout(() => {
+          setHintingSoundId(id);
+          setTimeout(() => setHintingSoundId(null), 500);
+        }, index * 100);
+      });
+    }
+  }, [customization.soundIds]);
+
+  const handleTogglePlay = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (soundIds.length === 0) {
       setIsFlashing(true);
       setTimeout(() => setIsFlashing(false), 1500);
-    } else if (onSelect) {
-      onSelect();
+      return;
+    }
+    
+    // If we have sounds but NONE are active (isMuted essentially acting as pause here)
+    // Actually the logic from prompt says: if no sounds ACTIVATED but present
+    // Let's assume activeSounds (soundIds prop) means sounds in the mix
+    // if sounds are present in customization but not active in mix
+    if (onToggleMute) {
+      onToggleMute();
+      // If we are unmuting but nothing is playing, or just generally hint
+      if (isMuted) {
+         triggerSoundHint();
+      }
+    }
+  }, [soundIds.length, onToggleMute, isMuted, triggerSoundHint]);
+
+  const handleCharacterClick = () => {
+    if (customization.soundIds && customization.soundIds.length > 0) {
+       handleTogglePlay();
+    } else {
+      setIsFlashing(true);
+      setTimeout(() => setIsFlashing(false), 1500);
     }
   };
 
@@ -219,34 +244,14 @@ function CharacterCard({
             }}
             aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <FontAwesomeIcon icon={isFavorite ? faHeartSolid : faHeartRegular} />
+            <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
           </button>
         )}
 
-        {/* Image Edit Button */}
-        {onEditImage && (
-          <TooltipTrigger>
-            <Button
-              type="button"
-              variant="action"
-              size="sm"
-              shape="pill"
-              className={styles.imageEditButton}
-              onPress={() => {
-                onEditImage();
-              }}
-              aria-label="Change character image"
-            >
-              <FontAwesomeIcon icon={faPen} />
-            </Button>
-            <Tooltip>CHANGE IMAGE</Tooltip>
-          </TooltipTrigger>
-        )}
-
-        {/* Muted Icon Overlay (Only if sounds are active) */}
+        {/* Muted Icon Overlay */}
         {isMuted && soundIds.length > 0 && (
           <div className={styles.mutedOverlay}>
-            <FontAwesomeIcon icon={isMuted ? faPause : faVolumeXmark} />
+            <Pause size={48} />
           </div>
         )}
 
@@ -271,15 +276,16 @@ function CharacterCard({
               const soundName = sound?.name ?? soundId;
               const colorToken = sound?.colorToken;
               const isActive = soundIds.includes(soundId);
+              const isHinting = hintingSoundId === soundId;
 
               return (
                 <Chip
                   key={`${character.id}-slot-${index}`}
-                  className={`${styles.characterSoundTag} ${!isActive ? styles.soundTagPaused : ''}`}
+                  className={`${styles.characterSoundTag} ${!isActive ? styles.soundTagPaused : ''} ${isHinting ? styles.soundTagHinting : ''}`}
                   tone="neutral"
                   size="sm"
                   style={
-                    isActive && colorToken
+                    (isActive || isHinting) && colorToken
                       ? { background: `var(${colorToken})`, color: '#000', borderColor: 'transparent' }
                       : {}
                   }
@@ -305,7 +311,7 @@ function CharacterCard({
           {isMain ? (
             <>
               <div className={styles.characterActionWrap}>
-                <TooltipTrigger>
+                <TooltipTrigger isOpen={(customization.soundIds?.length === 0 && isFlashing) || undefined}>
                   <Button
                     type="button"
                     variant="action"
@@ -317,13 +323,13 @@ function CharacterCard({
                     }}
                     aria-label="View Profile"
                   >
-                    <FontAwesomeIcon icon={faUser} />
-                    {soundIds.length === 0 && <span className={styles.actionLabel}>ALISE</span>}
+                    <UserRoundPen size={14} />
+                    {soundIds.length === 0 && <span className={styles.actionLabel}>CHAR</span>}
                   </Button>
-                  <Tooltip>PROFILE</Tooltip>
+                  <Tooltip>{customization.soundIds?.length === 0 ? "add sounds" : "PROFILE"}</Tooltip>
                 </TooltipTrigger>
               </div>
-              {soundIds.length > 0 && (
+              {customization.soundIds && customization.soundIds.length > 0 && (
                 <>
                   <div className={styles.characterActionWrap}>
                     <TooltipTrigger>
@@ -333,12 +339,10 @@ function CharacterCard({
                         size="sm"
                         shape="pill"
                         className={styles.characterActionButton}
-                        onPress={() => {
-                          if (onToggleMute) onToggleMute();
-                        }}
+                        onPress={() => handleTogglePlay()}
                         aria-label={isMuted ? 'Play Mix' : 'Pause Mix'}
                       >
-                        <FontAwesomeIcon icon={isMuted ? faPlay : faPause} />
+                        {isMuted ? <Play size={14} /> : <Pause size={14} />}
                       </Button>
                       <Tooltip>{isMuted ? 'PLAY' : 'PAUSE'}</Tooltip>
                     </TooltipTrigger>
@@ -356,7 +360,7 @@ function CharacterCard({
                         }}
                         aria-label="Reset character"
                       >
-                        <FontAwesomeIcon icon={faRotateLeft} />
+                        <RotateCcw size={14} />
                       </Button>
                       <Tooltip>RESET</Tooltip>
                     </TooltipTrigger>
@@ -367,7 +371,7 @@ function CharacterCard({
           ) : (
             <>
               <div className={styles.characterActionWrap}>
-                <TooltipTrigger isOpen={isFlashing || undefined}>
+                <TooltipTrigger isOpen={(customization.soundIds?.length === 0 && isFlashing) || undefined}>
                   <Button
                     type="button"
                     variant="action"
@@ -379,13 +383,13 @@ function CharacterCard({
                     }}
                     aria-label="Add sounds"
                   >
-                    <FontAwesomeIcon icon={faMusic} />
+                    <Music size={14} />
                     {soundIds.length === 0 && <span className={styles.actionLabel}>MIX</span>}
                   </Button>
-                  <Tooltip>SOUNDS</Tooltip>
+                  <Tooltip>{customization.soundIds?.length === 0 ? "add sounds" : "SOUNDS"}</Tooltip>
                 </TooltipTrigger>
               </div>
-              {soundIds.length > 0 && (
+              {customization.soundIds && customization.soundIds.length > 0 && (
                 <>
                   <div className={styles.characterActionWrap}>
                     <TooltipTrigger>
@@ -395,12 +399,10 @@ function CharacterCard({
                         size="sm"
                         shape="pill"
                         className={styles.characterActionButton}
-                        onPress={() => {
-                          if (onToggleMute) onToggleMute();
-                        }}
+                        onPress={() => handleTogglePlay()}
                         aria-label={isMuted ? 'Play Mix' : 'Pause Mix'}
                       >
-                        <FontAwesomeIcon icon={isMuted ? faPlay : faPause} />
+                        {isMuted ? <Play size={14} /> : <Pause size={14} />}
                       </Button>
                       <Tooltip>{isMuted ? 'PLAY' : 'PAUSE'}</Tooltip>
                     </TooltipTrigger>
@@ -418,7 +420,7 @@ function CharacterCard({
                         }}
                         aria-label="Reset character"
                       >
-                        <FontAwesomeIcon icon={faRotateLeft} />
+                        <RotateCcw size={14} />
                       </Button>
                       <Tooltip>RESET</Tooltip>
                     </TooltipTrigger>
