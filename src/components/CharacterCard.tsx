@@ -348,14 +348,14 @@ function CharacterCard({
                     variant="action"
                     size="sm"
                     shape="pill"
-                    className={`${styles.characterActionButton} ${soundIds.length === 0 ? styles.actionWithLabel : ''}`}
+                    className={`${styles.characterActionButton} ${customization.soundIds?.length === 0 ? styles.actionWithLabel : ''}`}
                     onPress={() => {
                       if (onOpenProfile) onOpenProfile();
                     }}
                     aria-label="View Profile"
                   >
                     <UserRoundPen size={14} />
-                    {soundIds.length === 0 && <span className={styles.actionLabel}>CHAR</span>}
+                    {customization.soundIds?.length === 0 && <span className={styles.actionLabel}>CHAR</span>}
                   </Button>
                   <Tooltip>{customization.soundIds?.length === 0 ? "add sounds" : "PROFILE"}</Tooltip>
                 </TooltipTrigger>
@@ -410,14 +410,14 @@ function CharacterCard({
                     variant="action"
                     size="sm"
                     shape="pill"
-                    className={`${styles.characterActionButton} ${soundIds.length === 0 ? styles.actionWithLabel : ''}`}
+                    className={`${styles.characterActionButton} ${customization.soundIds?.length === 0 ? styles.actionWithLabel : ''}`}
                     onPress={() => {
                       if (onOpenProfile) onOpenProfile();
                     }}
                     aria-label="Add sounds"
                   >
                     <Music size={14} />
-                    {soundIds.length === 0 && <span className={styles.actionLabel}>MIX</span>}
+                    {customization.soundIds?.length === 0 && <span className={styles.actionLabel}>MIX</span>}
                   </Button>
                   <Tooltip>{customization.soundIds?.length === 0 ? "add sounds" : "SOUNDS"}</Tooltip>
                 </TooltipTrigger>
