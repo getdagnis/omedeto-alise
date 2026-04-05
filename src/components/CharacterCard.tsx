@@ -1,12 +1,11 @@
 import type { CSSProperties, DragEvent } from 'react';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { 
   Music, 
   UserRoundPen, 
   Play, 
   Pause, 
   RotateCcw, 
-  VolumeX,
   Heart
 } from 'lucide-react';
 import styles from './CharacterCard.module.sass';
@@ -15,6 +14,11 @@ import { Button, Chip, Tooltip, TooltipTrigger } from '../components-ui';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const FAV_BUTTON = false;
+
+// Magic numbers for animations
+const HINT_FLASH_DURATION = 500; // 0.5s
+const HINT_PROGRESSIVE_DELAY = 100; // 0.1s
+const ENTRANCE_FLASH_DELAY = 200; // 0.2s
 
 type CharacterCustomization = {
   name?: string;
@@ -120,7 +124,8 @@ function CharacterCard({
   size = 'normal',
 }: CharacterCardProps) {
   const [isFlashing, setIsFlashing] = useState(false);
-  const [hintingSoundId, setHintingSoundId] = useState<string | null>(null);
+  const [hintingIds, setHintingIds] = useState<Set<string>>(new Set());
+  const prevSoundIdsLengthRef = useRef(customization.soundIds?.length ?? 0);
   
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
@@ -132,37 +137,63 @@ function CharacterCard({
 
   const isGreyedOut = !(soundsPlayingAndNotMuted || isFavorite || forceLoop || isMain);
 
+  // Entrance flash when sounds are added
+  useEffect(() => {
+    const currentLen = customization.soundIds?.length ?? 0;
+    if (currentLen > prevSoundIdsLengthRef.current) {
+       customization.soundIds?.forEach((id, index) => {
+         setTimeout(() => {
+           setHintingIds(prev => new Set(prev).add(id));
+           setTimeout(() => {
+             setHintingIds(prev => {
+               const next = new Set(prev);
+               next.delete(id);
+               return next;
+             });
+           }, HINT_FLASH_DURATION);
+         }, index * ENTRANCE_FLASH_DELAY);
+       });
+    }
+    prevSoundIdsLengthRef.current = currentLen;
+  }, [customization.soundIds]);
+
   const triggerSoundHint = useCallback(() => {
     if (customization.soundIds && customization.soundIds.length > 0) {
       customization.soundIds.forEach((id, index) => {
         setTimeout(() => {
-          setHintingSoundId(id);
-          setTimeout(() => setHintingSoundId(null), 500);
-        }, index * 100);
+          setHintingIds(prev => new Set(prev).add(id));
+          setTimeout(() => {
+            setHintingIds(prev => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+          }, HINT_FLASH_DURATION);
+        }, index * HINT_PROGRESSIVE_DELAY);
       });
     }
   }, [customization.soundIds]);
 
   const handleTogglePlay = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (soundIds.length === 0) {
+    
+    // No sounds at all
+    if (!customization.soundIds || customization.soundIds.length === 0) {
       setIsFlashing(true);
       setTimeout(() => setIsFlashing(false), 1500);
       return;
     }
+
+    // Sounds present but NONE are active in mix
+    if (soundIds.length === 0) {
+       triggerSoundHint();
+       return;
+    }
     
-    // If we have sounds but NONE are active (isMuted essentially acting as pause here)
-    // Actually the logic from prompt says: if no sounds ACTIVATED but present
-    // Let's assume activeSounds (soundIds prop) means sounds in the mix
-    // if sounds are present in customization but not active in mix
     if (onToggleMute) {
       onToggleMute();
-      // If we are unmuting but nothing is playing, or just generally hint
-      if (isMuted) {
-         triggerSoundHint();
-      }
     }
-  }, [soundIds.length, onToggleMute, isMuted, triggerSoundHint]);
+  }, [customization.soundIds, soundIds.length, onToggleMute, triggerSoundHint]);
 
   const handleCharacterClick = () => {
     if (customization.soundIds && customization.soundIds.length > 0) {
@@ -276,12 +307,12 @@ function CharacterCard({
               const soundName = sound?.name ?? soundId;
               const colorToken = sound?.colorToken;
               const isActive = soundIds.includes(soundId);
-              const isHinting = hintingSoundId === soundId;
+              const isHinting = hintingIds.has(soundId);
 
               return (
                 <Chip
                   key={`${character.id}-slot-${index}`}
-                  className={`${styles.characterSoundTag} ${!isActive ? styles.soundTagPaused : ''} ${isHinting ? styles.soundTagHinting : ''}`}
+                  className={`${styles.characterSoundTag} ${isActive || isHinting ? '' : styles.soundTagPaused} ${isHinting ? styles.soundTagHinting : ''}`}
                   tone="neutral"
                   size="sm"
                   style={
@@ -340,31 +371,33 @@ function CharacterCard({
                         shape="pill"
                         className={styles.characterActionButton}
                         onPress={() => handleTogglePlay()}
-                        aria-label={isMuted ? 'Play Mix' : 'Pause Mix'}
+                        aria-label={soundsPlayingAndNotMuted ? 'Pause Mix' : 'Play Mix'}
                       >
-                        {isMuted ? <Play size={14} /> : <Pause size={14} />}
+                        {soundsPlayingAndNotMuted ? <Pause size={14} /> : <Play size={14} />}
                       </Button>
-                      <Tooltip>{isMuted ? 'PLAY' : 'PAUSE'}</Tooltip>
+                      <Tooltip>{soundsPlayingAndNotMuted ? 'PAUSE' : 'PLAY'}</Tooltip>
                     </TooltipTrigger>
                   </div>
-                  <div className={styles.characterActionWrap}>
-                    <TooltipTrigger>
-                      <Button
-                        type="button"
-                        variant="action"
-                        size="sm"
-                        shape="pill"
-                        className={styles.characterActionButton}
-                        onPress={() => {
-                          if (onReset) onReset();
-                        }}
-                        aria-label="Reset character"
-                      >
-                        <RotateCcw size={14} />
-                      </Button>
-                      <Tooltip>RESET</Tooltip>
-                    </TooltipTrigger>
-                  </div>
+                  {soundsPlayingAndNotMuted && (
+                    <div className={styles.characterActionWrap}>
+                      <TooltipTrigger>
+                        <Button
+                          type="button"
+                          variant="action"
+                          size="sm"
+                          shape="pill"
+                          className={styles.characterActionButton}
+                          onPress={() => {
+                            if (onReset) onReset();
+                          }}
+                          aria-label="Reset character"
+                        >
+                          <RotateCcw size={14} />
+                        </Button>
+                        <Tooltip>RESET</Tooltip>
+                      </TooltipTrigger>
+                    </div>
+                  )}
                 </>
               )}
             </>
@@ -400,31 +433,33 @@ function CharacterCard({
                         shape="pill"
                         className={styles.characterActionButton}
                         onPress={() => handleTogglePlay()}
-                        aria-label={isMuted ? 'Play Mix' : 'Pause Mix'}
+                        aria-label={soundsPlayingAndNotMuted ? 'Pause Mix' : 'Play Mix'}
                       >
-                        {isMuted ? <Play size={14} /> : <Pause size={14} />}
+                        {soundsPlayingAndNotMuted ? <Pause size={14} /> : <Play size={14} />}
                       </Button>
-                      <Tooltip>{isMuted ? 'PLAY' : 'PAUSE'}</Tooltip>
+                      <Tooltip>{soundsPlayingAndNotMuted ? 'PAUSE' : 'PLAY'}</Tooltip>
                     </TooltipTrigger>
                   </div>
-                  <div className={styles.characterActionWrap}>
-                    <TooltipTrigger>
-                      <Button
-                        type="button"
-                        variant="action"
-                        size="sm"
-                        shape="pill"
-                        className={styles.characterActionButton}
-                        onPress={() => {
-                          if (onReset) onReset();
-                        }}
-                        aria-label="Reset character"
-                      >
-                        <RotateCcw size={14} />
-                      </Button>
-                      <Tooltip>RESET</Tooltip>
-                    </TooltipTrigger>
-                  </div>
+                  {soundsPlayingAndNotMuted && (
+                    <div className={styles.characterActionWrap}>
+                      <TooltipTrigger>
+                        <Button
+                          type="button"
+                          variant="action"
+                          size="sm"
+                          shape="pill"
+                          className={styles.characterActionButton}
+                          onPress={() => {
+                            if (onReset) onReset();
+                          }}
+                          aria-label="Reset character"
+                        >
+                          <RotateCcw size={14} />
+                        </Button>
+                        <Tooltip>RESET</Tooltip>
+                      </TooltipTrigger>
+                    </div>
+                  )}
                 </>
               )}
             </>

@@ -13,7 +13,7 @@
 
 .mainCharacter
   @media (min-width: 64rem)
-    max-width: 20rem // Keep it larger on desktop
+    max-width: 20rem
 
 .characterCardMuted
   --character-title: #ddd !important
@@ -215,19 +215,23 @@
   color: rgba(255, 255, 255, 0.4) !important
 
 .soundTagHinting
-  animation: soundHint 0.5s ease-out forwards
+  animation: soundHint 0.5s ease-in-out
+  z-index: 20
 
 @keyframes soundHint
   0%
     transform: scale(1)
-    filter: brightness(1)
+    opacity: 0.4
+    filter: grayscale(1) brightness(1)
   50%
-    transform: scale(1.2)
-    filter: brightness(1.5)
-    box-shadow: 0 0 15px currentColor
+    transform: scale(1.4)
+    opacity: 1
+    filter: grayscale(0) brightness(1.8)
+    box-shadow: 0 0 25px currentColor
   100%
     transform: scale(1)
-    filter: brightness(1)
+    opacity: 0.4
+    filter: grayscale(1) brightness(1)
 
 .characterSoundTagEmpty
   display: none
@@ -241,6 +245,12 @@
   position: relative
   z-index: 15
   margin-top: 0
+  // Crucial: keep actions same size regardless of parent scaling
+  transform-origin: center top
+  @media (min-width: 64rem)
+    .mainCharacter &
+       transform: scale(0.8) // Counter-act the 1.25x scaling of main char to match companions
+
   @media (max-width: 40rem)
     transform: scale(0.85)
     gap: 0.15rem
@@ -250,38 +260,6 @@
   display: flex
   align-items: center
   justify-content: center
-
-.actionTooltip
-  position: absolute
-  bottom: calc(100% + 0.4rem)
-  left: 50%
-  transform: translateX(-50%)
-  min-width: max-content
-  padding: 0.3rem 0.65rem
-  border-radius: 999px
-  background: rgba(7, 9, 24, 0.96)
-  border: 1px solid rgba(255, 255, 255, 0.16)
-  color: rgba(255, 255, 255, 0.92)
-  font-family: var(--font-body)
-  font-size: 0.62rem
-  font-weight: 700
-  letter-spacing: 0.08em
-  text-transform: uppercase
-  white-space: nowrap
-  pointer-events: none
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.35)
-
-  &::after
-    content: ''
-    position: absolute
-    top: 100%
-    left: 50%
-    width: 0.45rem
-    height: 0.45rem
-    background: rgba(7, 9, 24, 0.96)
-    border-right: 1px solid rgba(255, 255, 255, 0.16)
-    border-bottom: 1px solid rgba(255, 255, 255, 0.16)
-    transform: translate(-50%, -50%) rotate(45deg)
 
 .characterActionButton
   width: 2.4rem
@@ -303,31 +281,9 @@
 
 .actionLabel
   font-size: 0.65rem
-  font-weight: 700
+  font-weight: 900
   letter-spacing: 0.05em
   margin-top: 0.1rem
-
-.actionButtonFlash
-  animation: actionButtonFlash 0.5s ease-in-out 3
-
-@keyframes actionButtonFlash
-  0%, 100%
-    transform: scale(1)
-    background: rgba(8, 8, 18, 0.85)
-  50%
-    transform: scale(1.3)
-    background: var(--color-mood-tokyo-1)
-    box-shadow: 0 0 1.5rem var(--color-mood-tokyo-1)
-
-.imageEditButton
-  position: absolute
-  bottom: 0.7rem
-  left: 50%
-  transform: translateX(-50%)
-  z-index: 10
-  min-width: 2.4rem
-  height: 1.6rem
-  font-size: 0.75rem
 
 .favoriteButton
   position: absolute
@@ -345,11 +301,6 @@
   z-index: 20
   transition: none
   font-size: 0.8rem
-
-.favoriteButtonActive
-  color: #ff4d4d
-  border-color: rgba(255, 77, 77, 0.4)
-  background: rgba(255, 77, 77, 0.1)
 
 .mutedOverlay
   position: absolute
