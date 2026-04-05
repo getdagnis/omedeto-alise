@@ -14,6 +14,7 @@ type CharacterCustomizationMap = Record<string, CharacterCustomization>;
 
 type CharacterGridProps = {
   characters: CharacterOption[];
+  mainCharacterId: string;
   favoriteCharacterId: string;
   customizations: CharacterCustomizationMap;
   activeSoundsByCharacter: Record<string, string[]>;
@@ -31,10 +32,13 @@ type CharacterGridProps = {
   onOpenSoundPicker: (characterId: string) => void;
   onToggleSound: (characterId: string, soundId: string) => void;
   onRemoveSound: (characterId: string, soundId: string) => void;
+  onToggleMute: (characterId: string) => void;
+  onOpenProfile: (characterId: string) => void;
 };
 
 function CharacterGrid({
   characters,
+  mainCharacterId,
   favoriteCharacterId,
   customizations,
   activeSoundsByCharacter,
@@ -52,6 +56,8 @@ function CharacterGrid({
   onOpenSoundPicker,
   onToggleSound,
   onRemoveSound,
+  onToggleMute,
+  onOpenProfile,
 }: CharacterGridProps) {
   return (
     <section className={styles.characterStage}>
@@ -62,10 +68,11 @@ function CharacterGrid({
           const isFavorite = character.id === favoriteCharacterId;
           const isImageLoaded = Boolean(loadedCharacterMap[character.id]);
           const isMuted = mutedCharacterIds.has(character.id);
+          const isMain = character.id === mainCharacterId;
 
           const lastSoundId = characterSoundIds[characterSoundIds.length - 1];
           const lastSoundColorToken = lastSoundId ? soundCatalogById.get(lastSoundId)?.colorToken : null;
-          // Only use character default if NO sound is playing. Otherwise use sound color.
+          
           const autoBackground = lastSoundColorToken
             ? `var(${lastSoundColorToken})`
             : character.primaryColor || 'rgba(255, 255, 255, 0.08)';
@@ -74,42 +81,48 @@ function CharacterGrid({
             if (customization.colorModes && customization.colorModes.length > 0) {
               return customization.colorModes.map((c) => (c === 'auto' ? autoBackground : `var(${c})`));
             }
-
-            const defaultColor = character.primaryColor || autoBackground;
-
-            return [defaultColor];
+            return [character.primaryColor || autoBackground];
           })();
 
-          const ringColor = `${colors[0]}99`; // Use primary color with approx 60% opacity for the ring
+          const ringColor = `${colors[0]}99`;
 
           return (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              customization={customization}
-              soundIds={characterSoundIds}
-              soundCatalogById={soundCatalogById}
-              isFavorite={isFavorite}
-              isDropActive={false}
-              isGlowBurst={isGlowBurst}
-              comboWord={comboWord}
-              colors={colors}
-              ringColor={ringColor}
-              isImageLoaded={isImageLoaded}
-              isMuted={isMuted}
-              onSelect={() => onSelectCharacter(character.id)}
-              onToggleFavorite={() => onToggleFavorite(character.id)}
-              onDragOver={(event) => {
-                event.preventDefault();
-              }}
-              onDrop={(event) => onDropSound(event, character.id)}
-              onImageLoad={() => onImageLoad(character.id)}
-              onEdit={() => onEditCharacter(character.id)}
-              onReset={() => onResetCharacter(character.id)}
-              onOpenSoundPicker={() => onOpenSoundPicker(character.id)}
-              onToggleSound={(soundId) => onToggleSound(character.id, soundId)}
-              onRemoveSound={(soundId) => onRemoveSound(character.id, soundId)}
-            />
+            <div 
+              key={character.id} 
+              className={`
+                ${styles.gridItem} 
+                ${isMain ? styles.mainItem : styles.companionItem}
+              `}
+            >
+              <CharacterCard
+                character={character}
+                customization={customization}
+                soundIds={characterSoundIds}
+                soundCatalogById={soundCatalogById}
+                isFavorite={isFavorite}
+                isDropActive={false}
+                isGlowBurst={isGlowBurst}
+                comboWord={comboWord}
+                colors={colors}
+                ringColor={ringColor}
+                isImageLoaded={isImageLoaded}
+                isMuted={isMuted}
+                isMain={isMain}
+                size={isMain ? 'large' : 'normal'}
+                onSelect={() => onSelectCharacter(character.id)}
+                onToggleFavorite={() => onToggleFavorite(character.id)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => onDropSound(event, character.id)}
+                onImageLoad={() => onImageLoad(character.id)}
+                onEdit={() => onEditCharacter(character.id)}
+                onReset={() => onResetCharacter(character.id)}
+                onOpenSoundPicker={() => onOpenSoundPicker(character.id)}
+                onToggleSound={(soundId) => onToggleSound(character.id, soundId)}
+                onRemoveSound={(soundId) => onRemoveSound(character.id, soundId)}
+                onToggleMute={() => onToggleMute(character.id)}
+                onOpenProfile={() => onOpenProfile(character.id)}
+              />
+            </div>
           );
         })}
       </div>

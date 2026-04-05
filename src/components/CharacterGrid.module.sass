@@ -1,30 +1,62 @@
 .characterStage
-  display: grid
-  justify-items: center
-  gap: 0.85rem
+  display: flex
+  justify-content: center
+  align-items: center
   width: 100%
+  min-height: 60vh
   user-select: none
+  padding: 2rem 0
+  overflow: hidden
 
 .characterGrid
   width: 100%
+  max-width: 1600px // More flexible width
   display: grid
-  gap: 1rem 1rem
-  grid-template-columns: repeat(2, minmax(0, 1fr))
-  grid-template-rows: repeat(3, auto)
-  align-items: start
-  justify-content: stretch
-  align-content: start
-  overflow: visible
-  padding: 0.25rem 0.25rem 0.6rem
+  gap: 1.5rem
+  grid-template-columns: repeat(2, 1fr)
+  padding: 1rem
+  justify-items: center
+  align-items: center
+  margin: 0 auto
 
-@media (min-width: 40rem)
-  .characterGrid
-    grid-template-columns: repeat(3, minmax(0, 1fr))
-    grid-template-rows: repeat(2, auto)
-    gap: 1rem 1.15rem
+.gridItem
+  display: flex
+  justify-content: center
+  width: 100%
+  min-width: 0
+
+// Mobile: Main on top (large), 4 companions in 2x2
+.mainItem
+  grid-column: 1 / span 2
+  order: -1
+  margin-bottom: 1rem
+
+.companionItem
+  order: 1
 
 @media (min-width: 64rem)
   .characterGrid
-    grid-template-columns: repeat(6, minmax(0, 1fr))
-    grid-template-rows: 1fr
-    gap: 1rem 1.25rem
+    // 5 columns, flexible
+    grid-template-columns: repeat(5, minmax(0, 1fr))
+    gap: 1rem
+    align-items: center
+    justify-content: center
+    padding: 0 4rem
+
+  .mainItem
+    grid-column: auto
+    order: 0
+    margin-bottom: 0
+    
+    // Scale up the central character
+    transform: scale(1.2)
+    z-index: 10
+
+  .companionItem
+    grid-column: auto
+    order: 0
+    // Slightly push side characters apart if needed
+    &:nth-child(2)
+      margin-right: 1rem
+    &:nth-child(4)
+      margin-left: 1rem

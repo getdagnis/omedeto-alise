@@ -1,5 +1,6 @@
 .characterCard
   width: 100%
+  max-width: 20rem
   height: 100%
   display: flex
   flex-direction: column
@@ -7,6 +8,8 @@
   gap: 0
   padding-bottom: 0.5rem
   position: relative
+  @media (min-width: 64rem)
+    max-width: 16rem
 
 .characterCardMuted
   --character-title: #ddd !important
@@ -23,6 +26,10 @@
   position: relative
   margin-top: 0.5rem
   margin-bottom: 0.25rem
+  @media (max-width: 40rem)
+    transform: scale(0.8)
+    margin-top: 0.25rem
+    margin-bottom: 0
 
 .dropTarget
   --circle-size: 76.9%
@@ -50,12 +57,18 @@
   z-index: 1
 
 .dropTargetNormal
-  width: min(14rem, 50vw)
-  height: min(14rem, 50vw)
+  width: min(13rem, 42vw)
+  height: min(13rem, 42vw)
+  @media (min-width: 64rem)
+    width: min(12rem, 18vw)
+    height: min(12rem, 18vw)
 
 .dropTargetLarge
-  width: min(17rem, 60vw)
-  height: min(17rem, 60vw)
+  width: min(16rem, 55vw)
+  height: min(16rem, 55vw)
+  @media (min-width: 64rem)
+    width: min(12rem, 18vw)
+    height: min(12rem, 18vw)
 
 .dropTargetHasLoop
   animation: dropTargetLoop 6s ease-in-out infinite
@@ -209,6 +222,9 @@
   position: relative
   z-index: 15
   margin-top: 0
+  @media (max-width: 40rem)
+    transform: scale(0.85)
+    gap: 0.15rem
 
 .characterActionWrap
   position: relative
@@ -252,6 +268,10 @@
   width: 2.4rem
   height: 1.6rem
   font-size: 0.75rem
+  @media (max-width: 40rem)
+    width: 2rem
+    height: 1.4rem
+    font-size: 0.65rem
 
 .actionButtonFlash
   animation: actionButtonFlash 0.5s ease-in-out 3

@@ -170,6 +170,8 @@ function App() {
   const [isLowGraphics, setIsLowGraphics] = useState(() => getStoredLowGraphicsMode());
 
   const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
+  const mainCharacterId = 'alise';
+  const stageCharacterIds = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'gumi'];
 
   const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({});
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
@@ -481,9 +483,9 @@ function App() {
   }, [clearPreviewAudio, navigate]);
 
   const applyProfileSelection = useCallback(
-    (characterId: string) => {
-      const nextSelected = pickerSelectedSoundIds;
-      updateCharacterCustomization(characterId, { soundIds: nextSelected });
+    (characterId: string, patch?: CharacterCustomization) => {
+      const nextSelected = patch?.soundIds ?? pickerSelectedSoundIds;
+      updateCharacterCustomization(characterId, { ...patch, soundIds: nextSelected });
       unmuteCharacter(characterId);
       const currentActive = activeSoundsByCharacter[characterId] ?? [];
       currentActive.forEach((soundId) => {
@@ -527,6 +529,14 @@ function App() {
     window.setTimeout(() => setComboWord(null), 2200);
   }, [activeSoundsByCharacter, recordComboDiscovered]);
 
+  const toggleMuteMix = useCallback((characterId: string) => {
+    toggleMuteCharacter(characterId);
+  }, [toggleMuteCharacter]);
+
+  const stageCharacters = useMemo(() => {
+    return stageCharacterIds.map(id => CHARACTERS.find(c => c.id === id)).filter((c): c is any => !!c);
+  }, [stageCharacterIds]);
+
   const activeBackgroundImage = useMemo(() => {
     const activeBackgroundKey = BACKGROUND_IMAGE_KEYS[backgroundIndex] ?? BACKGROUND_IMAGE_KEYS[0];
     const suffix = isMobileVerticalDevice ? BG_MOBILE_SUFFIX : BG_DESKTOP_SUFFIX;
@@ -564,6 +574,7 @@ function App() {
         ) : profileCharacterId ? (
           <CharacterProfile
             characterId={profileCharacterId}
+            character={CHARACTERS.find(c => c.id === profileCharacterId)!}
             characters={CHARACTERS}
             characterCustomizations={characterCustomizations}
             activeSounds={pickerSelectedSoundIds}
@@ -572,10 +583,13 @@ function App() {
             soundCatalogById={soundCatalogById}
             onClose={closeProfile}
             onToggleSound={(soundId, path) => toggleProfileSound(soundId, path)}
-            onApply={() => applyProfileSelection(profileCharacterId)}
+            onApply={(patch) => applyProfileSelection(profileCharacterId, patch)}
             onNavigateShop={() => navigate('/shop')}
             discoveredComboIds={progressionState.discoveredComboIds}
             onRecordCombo={recordComboDiscovered}
+            colorOptions={CHARACTER_COLOR_OPTIONS}
+            imageOptions={CHARACTER_IMAGE_OPTIONS}
+            isMain={profileCharacterId === mainCharacterId}
           />
         ) : (
           <>
@@ -585,7 +599,8 @@ function App() {
                 <p className={styles.titleName}>ALISE <span>in</span> TOKYO!</p>
               </header>
               <CharacterGrid
-                characters={CHARACTERS}
+                characters={stageCharacters}
+                mainCharacterId={mainCharacterId}
                 favoriteCharacterId={favoriteCharacterId}
                 customizations={characterCustomizations}
                 activeSoundsByCharacter={activeSoundsByCharacter}
@@ -603,6 +618,8 @@ function App() {
                 onOpenSoundPicker={handleCharacterClick}
                 onToggleSound={setSingleSound}
                 onRemoveSound={removeSoundFromCharacter}
+                onToggleMute={toggleMuteMix}
+                onOpenProfile={(id) => navigate(`/${id}/profile`)}
               />
             </section>
             <EditCharacterModal
