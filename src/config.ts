@@ -35,6 +35,7 @@ export type Combo = {
   soundIds: string[];
   description: string;
   rarity: 'common' | 'rare' | 'ultra';
+  image?: string; // @keep
 };
 
 export type Achievement = {
@@ -46,6 +47,22 @@ export type Achievement = {
 };
 
 export const COMBOS: Combo[] = [
+  {
+    id: 'tokyo-rises',
+    name: 'Tokyo Rises',
+    soundIds: ['fly-me', 'synth-rise', 'synth-garden'], // Added garden as glow proxy if glow doesn't exist, let's check sounds
+    description: 'A shimmering celestial melody.',
+    rarity: 'common',
+    image: '/cards/_temp1.png',
+  },
+  {
+    id: 'cyber-pulse',
+    name: 'Cyber Pulse',
+    soundIds: ['energy', 'candy-machine', 'alert'],
+    description: 'The heartbeat of the neon city.',
+    rarity: 'rare',
+    image: '/cards/_temp2.png',
+  },
   {
     id: 'starlight',
     name: 'Starlight!',
@@ -98,6 +115,7 @@ export type CharacterOption = {
   name: string;
   img: string;
   mixLabel: string;
+  japaneseName: string; // @keep
   titleColor: string;
   primaryColor: string;
   secondaryColor: string;
@@ -692,6 +710,7 @@ export const CHARACTERS: CharacterOption[] = [
     name: 'ALISE',
     img: '/alise-1.png',
     mixLabel: "Alise's Mix!",
+    japaneseName: 'アリス', // @keep
     titleColor: 'white',
     primaryColor: '#7c3aed',
     secondaryColor: '#ff0040',
@@ -742,9 +761,10 @@ export const CHARACTERS: CharacterOption[] = [
   },
   {
     id: 'gumi',
-    name: 'Mystery',
-    img: '/alise-1.svg',
-    mixLabel: "Mystery's Mix!",
+    name: 'GUMI (グミ)',
+    img: '/gumi-1.png',
+    mixLabel: "Gumi's Mix!",
+    japaneseName: 'グミ', // @keep
     titleColor: 'white',
     primaryColor: '#6ede3e',
     secondaryColor: '#234315',
@@ -795,9 +815,10 @@ export const CHARACTERS: CharacterOption[] = [
   },
   {
     id: 'hanako',
-    name: 'Secret',
-    img: '/alise-1.svg',
-    mixLabel: "Secret's Mix!",
+    name: 'Hanako-kun (地縛少年花子くん)',
+    img: '/hanako-1.png',
+    mixLabel: "Hanako's Mix!",
+    japaneseName: '花子', // @keep
     titleColor: 'white',
     primaryColor: '#ef4444',
     secondaryColor: '#990026',
@@ -851,6 +872,7 @@ export const CHARACTERS: CharacterOption[] = [
     name: 'Unknown',
     img: '/alise-1.svg',
     mixLabel: 'Unknown Mix',
+    japaneseName: '不明', // @keep
     titleColor: PLACEHOLDER_SCHEMES[0].titleColor,
     primaryColor: PLACEHOLDER_SCHEMES[0].primaryColor,
     secondaryColor: PLACEHOLDER_SCHEMES[0].secondaryColor,
@@ -863,6 +885,7 @@ export const CHARACTERS: CharacterOption[] = [
     name: 'Invisible',
     img: '/alise-1.svg',
     mixLabel: 'Invisible Mix',
+    japaneseName: '透明', // @keep
     titleColor: PLACEHOLDER_SCHEMES[1].titleColor,
     primaryColor: PLACEHOLDER_SCHEMES[1].primaryColor,
     secondaryColor: PLACEHOLDER_SCHEMES[1].secondaryColor,
@@ -875,6 +898,7 @@ export const CHARACTERS: CharacterOption[] = [
     name: 'Hidden',
     img: '/alise-1.svg',
     mixLabel: 'Hidden Mix',
+    japaneseName: '隠し', // @keep
     titleColor: PLACEHOLDER_SCHEMES[2].titleColor,
     primaryColor: PLACEHOLDER_SCHEMES[2].primaryColor,
     secondaryColor: PLACEHOLDER_SCHEMES[2].secondaryColor,
@@ -885,8 +909,8 @@ export const CHARACTERS: CharacterOption[] = [
 ];
 
 export const CHARACTER_IMAGE_OPTIONS = [
+  { id: 'placeholder', label: 'Custom', src: '/alise-1.svg' },
   { id: 'alise', label: 'Alise', src: '/alise-1.png' },
-  { id: 'gumi', label: 'Gumi', src: '/gumi-1.png' },
-  { id: 'hanako', label: 'Hanako', src: '/hanako-1.png' },
-  { id: 'placeholder', label: 'Placeholder', src: '/alise-1.svg' },
+  { id: 'gumi', label: 'GUMI (グミ)', src: '/gumi-1.png' },
+  { id: 'hanako', label: 'Hanako-kun (地縛少年花子くん)', src: '/hanako-1.png' },
 ] as const;

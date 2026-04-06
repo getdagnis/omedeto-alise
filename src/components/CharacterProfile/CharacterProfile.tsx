@@ -1,5 +1,5 @@
-import React, { useMemo, useEffect, useState, useRef, type CSSProperties } from 'react';
-import {
+import React, { useMemo, useEffect, useState, useRef, type CSSProperties, useCallback } from 'react';
+import { 
   ArrowLeft,
   Trophy,
   Star,
@@ -13,9 +13,12 @@ import {
   ChevronUp,
   ChevronDown,
   Heart as HeartSolid,
+  Sparkles,
+  AudioLines,
+  Circle
 } from 'lucide-react';
 import { Heart as HeartRegular } from 'lucide-react';
-import { Button, Chip, Meter, Notice } from '../../components-ui';
+import { Button, Chip, Notice } from '../../components-ui';
 import type { CharacterOption, SoundOption } from '../../config';
 import { COMBOS, ACHIEVEMENTS, CHARACTER_IMAGE_OPTIONS } from '../../config';
 import styles from './CharacterProfile.module.sass';
@@ -38,10 +41,7 @@ export type CharacterProfileProps = {
   characterId: string;
   character: CharacterOption;
   characters: CharacterOption[];
-  characterCustomizations: Record<
-    string,
-    { name?: string; image?: string; soundIds?: string[]; colorModes?: string[] }
-  >;
+  characterCustomizations: Record<string, { name?: string; image?: string; soundIds?: string[]; cloudSoundIds?: string[]; colorModes?: string[] }>;
   activeSounds: string[];
   unlockedLevel: number;
   soundsPerCharacter: number;
@@ -59,11 +59,11 @@ export type CharacterProfileProps = {
   onToggleFavoriteSound: (soundId: string) => void;
 };
 
-type LibraryTab = 'favs' | 'cat' | 'mood' | 'all';
+type LibraryTab = 'favs' | 'cat' | 'mood' | 'chars';
 
 /**
  * CharacterProfile
- * Enforces character selection before sound picking.
+ * Refined layout with fixed/centered panels and compact header.
  */
 export function CharacterProfile({
   characterId,
@@ -86,66 +86,74 @@ export function CharacterProfile({
   onToggleFavoriteSound,
 }: CharacterProfileProps) {
   const [activeTab, setActiveTab] = useState<'sounds' | 'identity' | 'milestones'>('sounds');
-  const [libTab, setLibTab] = useState<LibraryTab>('all');
+  const [libTab, setLibTab] = useState<LibraryTab>('chars');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(true);
   const [draftCustomization, setDraftCustomization] = useState(characterCustomizations[characterId] || {});
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+  const [expandedComboId, setExpandedComboId] = useState<string | null>(null);
+  const [hoveredComboId, setHoveredComboId] = useState<string | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [isBottomReached, setIsBottomReached] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set(['voice', 'beats', 'drums', 'animals', 'melody', 'creepy', 'calm', 'other', 'alise', 'gumi', 'hanako']));
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const characterName = draftCustomization?.name?.trim() || character.name;
   const characterImage = draftCustomization?.image || character.img;
-
-  // Check if character is "selected" (has an image chosen beyond placeholder)
+  
+  const PREDEFINED_IDS = ['alise', 'gumi', 'hanako'];
+  const isPredefined = PREDEFINED_IDS.includes(characterId);
+  
   const isCharacterSelected = useMemo(() => {
-    return !!draftCustomization.image;
-  }, [draftCustomization.image]);
+    return isPredefined || !!draftCustomization.image;
+  }, [isPredefined, draftCustomization.image]);
 
   useEffect(() => {
     if (activeTab === 'sounds' && !isCharacterSelected) {
-      setIsNoticeOpen(true);
+       setIsNoticeOpen(true);
     }
   }, [activeTab, isCharacterSelected]);
 
   const constellationSounds = useMemo(() => {
-    const ids = draftCustomization?.soundIds || character.sounds.map((s) => s.id);
-    return ids.map((id) => soundCatalogById.get(id)).filter((s): s is SoundOption => !!s);
-  }, [character.sounds, draftCustomization?.soundIds, soundCatalogById]);
+    const ids = draftCustomization?.cloudSoundIds || character.sounds.map(s => s.id).slice(0, 24);
+    return ids.map(id => soundCatalogById.get(id)).filter((s): s is SoundOption => !!s);
+  }, [character.sounds, draftCustomization?.cloudSoundIds, soundCatalogById]);
 
-  const filteredLibrary = useMemo(() => {
-    let base = [...character.sounds];
-    if (libTab === 'favs') base = base.filter((s) => favoriteSoundIds.includes(s.id));
-    if (libTab === 'cat' && activeFilter) base = base.filter((s) => s.category === activeFilter);
-    if (libTab === 'mood' && activeFilter) base = base.filter((s) => s.mood === activeFilter);
+  const cloudCompletedComboIds = useMemo(() => {
+    const cloudSet = new Set(constellationSounds.map(s => s.id));
+    return COMBOS.filter(c => c.soundIds.every(id => cloudSet.has(id))).map(c => c.id);
+  }, [constellationSounds]);
 
-    if (libTab === 'all' || libTab === 'favs' || !activeFilter) {
-      const grouped: Record<string, SoundOption[]> = {};
-      base.forEach((s) => {
-        const cat = s.category || 'other';
-        if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(s);
-      });
-      return grouped;
-    }
-    return base;
-  }, [character.sounds, libTab, activeFilter, favoriteSoundIds]);
+  const soundToComboMap = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    COMBOS.forEach(c => {
+      if (cloudCompletedComboIds.includes(c.id)) {
+        c.soundIds.forEach(id => {
+          if (!map[id]) map[id] = [];
+          map[id].push(c.id);
+        });
+      }
+    });
+    return map;
+  }, [cloudCompletedComboIds]);
 
-  const filterOptions = useMemo(() => {
-    if (libTab === 'cat') return Array.from(new Set(character.sounds.map((s) => s.category)));
-    if (libTab === 'mood') return Array.from(new Set(character.sounds.map((s) => s.mood).filter(Boolean)));
-    return [];
-  }, [character.sounds, libTab]);
+  const stageActiveSet = useMemo(() => new Set(activeSounds), [activeSounds]);
 
-  const activeSet = useMemo(() => new Set(activeSounds), [activeSounds]);
+  const focusedSoundIds = useMemo(() => {
+    if (!hoveredComboId) return null;
+    const combo = COMBOS.find(c => c.id === hoveredComboId);
+    return combo ? new Set(combo.soundIds) : null;
+  }, [hoveredComboId]);
+
   useEffect(() => {
-    COMBOS.forEach((combo) => {
-      if (combo.soundIds.every((id) => activeSet.has(id))) {
+    COMBOS.forEach(combo => {
+      if (combo.soundIds.every(id => stageActiveSet.has(id))) {
         if (!discoveredComboIds.includes(combo.id)) {
           onRecordCombo?.(combo.id);
         }
       }
     });
-  }, [activeSet, discoveredComboIds, onRecordCombo]);
+  }, [stageActiveSet, discoveredComboIds, onRecordCombo]);
 
   const scheme = character.schemes[0];
   const cssVars = {
@@ -157,14 +165,14 @@ export function CharacterProfile({
 
   const floatingPositions = useMemo(() => {
     const positions = [];
-    const count = 16;
+    const count = 24; 
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
-      const radius = 110 + Math.sin(i * 1.5) * 40;
+      const radius = 135 + (Math.sin(i * 1.5) * 65);
       positions.push({
         x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * (radius * 0.75),
-        scale: 0.9 + Math.sin(i * 2.2) * 0.2,
+        y: Math.sin(angle) * (radius * 0.72),
+        scale: 0.85 + (Math.sin(i * 2.2) * 0.2),
         delay: Math.sin(i * 0.8) * 2,
       });
     }
@@ -177,41 +185,189 @@ export function CharacterProfile({
     scrollRef.current.scrollBy({ top: dir === 'up' ? -amount : amount, behavior: 'smooth' });
   };
 
+  const handleScrollJump = (dir: 'top' | 'bottom') => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollTo({
+      top: dir === 'top' ? 0 : scrollRef.current.scrollHeight,
+      behavior: 'smooth'
+    });
+  };
+
+  const onListScroll = useCallback(() => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      setScrollTop(scrollTop);
+      setIsBottomReached(scrollTop + clientHeight >= scrollHeight - 5);
+    }
+  }, []);
+
+  const toggleGroup = (group: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return next;
+    });
+  };
+
   const handleUpdateDraft = (patch: any) => {
-    setDraftCustomization((prev) => ({ ...prev, ...patch }));
+    setDraftCustomization(prev => ({ ...prev, ...patch }));
   };
 
   const handleApply = () => {
-    onApply(draftCustomization);
+    const finalSounds = activeSounds.slice(0, 6);
+    onApply({ ...draftCustomization, soundIds: finalSounds, cloudSoundIds: constellationSounds.map(s => s.id) });
   };
 
+  const handleComboClick = (comboId: string) => {
+    const combo = COMBOS.find(c => c.id === comboId);
+    if (!combo) return;
+
+    const allInMix = combo.soundIds.every(id => activeSounds.includes(id));
+    if (allInMix) {
+      combo.soundIds.forEach(id => {
+        const s = soundCatalogById.get(id);
+        if (s) onToggleSound(id, s.path);
+      });
+    } else {
+      const nextSounds = [...activeSounds];
+      combo.soundIds.forEach(id => {
+        if (!nextSounds.includes(id) && nextSounds.length < 6) {
+          const s = soundCatalogById.get(id);
+          if (s) {
+            onToggleSound(id, s.path);
+            nextSounds.push(id);
+          }
+        }
+      });
+    }
+  };
+
+  const handleSoundDoubleClick = (soundId: string, path: string) => {
+    const combos = soundToComboMap[soundId];
+    if (combos && combos.length > 0) {
+      handleComboClick(combos[0]);
+    }
+  };
+
+  const favoriteSounds = useMemo(() => {
+    return character.sounds.filter(s => favoriteSoundIds.includes(s.id));
+  }, [character.sounds, favoriteSoundIds]);
+
+  const groupedLibrary = useMemo(() => {
+    let base = [...character.sounds];
+    if (libTab === 'favs') {
+      base = base.filter(s => favoriteSoundIds.includes(s.id));
+    }
+
+    if (libTab === 'cat' && activeFilter) {
+      base = base.filter(s => s.category === activeFilter);
+    }
+    if (libTab === 'mood' && activeFilter) {
+      base = base.filter(s => s.mood === activeFilter);
+    }
+
+    const grouped: Record<string, SoundOption[]> = {};
+
+    if (libTab === 'chars') {
+      const charMapping: Record<string, string[]> = {
+        hanako: ['horror', 'polyphon', 'trombone', 'violins', 'laugh', 'cry', 'giggle', 'goat', 'monks'],
+        gumi: [],
+        alise: []
+      };
+      
+      base.forEach(s => {
+        let group = 'other';
+        if (charMapping.hanako.includes(s.id) || s.category === 'creepy') group = 'hanako';
+        else if (['beats', 'voice', 'melody'].includes(s.category)) group = 'gumi';
+        else if (s.category === 'voice') group = 'alise';
+        
+        if (!grouped[group]) grouped[group] = [];
+        grouped[group].push(s);
+      });
+    } else if (!activeFilter) {
+      base.forEach(s => {
+        const key = libTab === 'cat' ? s.category : (libTab === 'mood' ? s.mood : 'all');
+        const finalKey = key || 'other';
+        if (!grouped[finalKey]) grouped[finalKey] = [];
+        grouped[finalKey].push(s);
+      });
+    } else {
+      return base;
+    }
+    return grouped;
+  }, [character.sounds, libTab, activeFilter, favoriteSoundIds]);
+
+  const filterOptions = useMemo(() => {
+    if (libTab === 'cat') return Array.from(new Set(character.sounds.map(s => s.category)));
+    if (libTab === 'mood') return Array.from(new Set(character.sounds.map(s => s.mood).filter(Boolean)));
+    return [];
+  }, [character.sounds, libTab]);
+
   const renderLibraryItem = (sound: SoundOption) => {
-    const isSelected = constellationSounds.some((s) => s.id === sound.id);
+    const isSelectedInCloud = constellationSounds.some(s => s.id === sound.id);
     const isFav = favoriteSoundIds.includes(sound.id);
+    const isActiveInMix = activeSounds.includes(sound.id);
+
     return (
-      <div key={sound.id} className={styles.libraryItemRow}>
-        <button
-          className={`${styles.libraryItem} ${isSelected ? styles.libraryItemActive : ''}`}
+      <div key={sound.id} className={`${styles.libraryItemRow} ${isSelectedInCloud ? styles.itemInCloud : ''}`}>
+        <button 
+          className={`${styles.libraryItem} ${isSelectedInCloud ? styles.libraryItemActive : ''}`}
           disabled={!isCharacterSelected}
           onClick={() => {
-            const currentIds = draftCustomization.soundIds || character.sounds.map((s) => s.id);
-            if (isSelected) {
-              handleUpdateDraft({ soundIds: currentIds.filter((id) => id !== sound.id) });
-            } else {
-              handleUpdateDraft({ soundIds: [...currentIds, sound.id] });
-            }
+             const currentIds = constellationSounds.map(s => s.id);
+             if (isSelectedInCloud) {
+               handleUpdateDraft({ cloudSoundIds: currentIds.filter(id => id !== sound.id) });
+             } else {
+               if (currentIds.length < 24) {
+                 handleUpdateDraft({ cloudSoundIds: [...currentIds, sound.id] });
+                 if (!isActiveInMix) {
+                    onToggleSound(sound.id, sound.path);
+                 }
+               }
+             }
           }}
         >
-          <div className={styles.libraryItemDot} style={{ background: `var(${sound.colorToken})` }} />
+          <div 
+            className={styles.libraryItemDot} 
+            style={{ background: `var(${sound.colorToken})` }}
+            onClick={(e) => {
+               e.stopPropagation();
+               onToggleSound(sound.id, sound.path);
+            }}
+          >
+             <AudioLines size={8} className={styles.dotIcon} />
+          </div>
           <span className={styles.libraryItemName}>{sound.name.toUpperCase()}</span>
-          <Plus size={10} className={styles.libraryItemPlus} />
+          <div className={styles.libraryItemActions}>
+            {isSelectedInCloud ? <X size={14} className={styles.libActionIcon} /> : <Plus size={14} className={styles.libActionIcon} />}
+          </div>
         </button>
-        <button
-          className={`${styles.favBtn} ${isFav ? styles.favBtnActive : ''}`}
-          onClick={() => onToggleFavoriteSound(sound.id)}
-        >
+        <button className={`${styles.favBtn} ${isFav ? styles.favBtnActive : ''}`} onClick={() => onToggleFavoriteSound(sound.id)}>
           <HeartSolid size={14} fill={isFav ? 'currentColor' : 'none'} />
         </button>
+      </div>
+    );
+  };
+
+  const renderGroup = (key: string, title: string, sounds: SoundOption[]) => {
+    const isCollapsed = collapsedGroups.has(key);
+    const hasSelected = sounds.some(s => constellationSounds.some(cs => cs.id === s.id));
+
+    return (
+      <div key={key} className={`${styles.libGroup} ${isCollapsed ? styles.libGroupCollapsed : ''}`}>
+        <div className={styles.libGroupHeader} onClick={() => toggleGroup(key)}>
+          <div className={styles.groupHeaderLeft}>
+            <span>{title.toUpperCase()}</span>
+            {isCollapsed && hasSelected && (
+              <div className={styles.groupIndicators}>
+                <Circle size={6} fill="currentColor" className={styles.indicatorIcon} />
+              </div>
+            )}
+          </div>
+          <ChevronDown size={10} className={styles.groupArrow} />
+        </div>
+        {!isCollapsed && <div className={styles.libGroupContent}>{sounds.map(renderLibraryItem)}</div>}
       </div>
     );
   };
@@ -220,57 +376,55 @@ export function CharacterProfile({
     <div className={styles.profilePage} style={cssVars}>
       {/* Sidebar Library */}
       <aside className={`${styles.librarySidebar} ${isLibraryOpen ? styles.libraryOpen : ''}`}>
+        <div className={styles.libraryHandle} onClick={() => setIsLibraryOpen(!isLibraryOpen)}>
+           <span className={styles.handleLabel}>SOUND LIBRARY</span>
+           <Music size={14} className={styles.handleIcon} />
+        </div>
+
         <header className={styles.libraryHeader}>
+          <h6 className={styles.libraryTitle}>SOUND LIBRARY</h6>
           <div className={styles.libTabs}>
-            {['favs', 'cat', 'mood', 'all'].map((tab) => (
-              <button
-                key={tab}
-                className={`${styles.libTab} ${libTab === tab ? styles.libTabActive : ''}`}
-                onClick={() => {
-                  setLibTab(tab as LibraryTab);
-                  setActiveFilter(null);
-                }}
-              >
-                {tab === 'cat' ? 'CAT' : tab.toUpperCase()}
-              </button>
-            ))}
+            <button className={`${styles.libTab} ${libTab === 'favs' ? styles.libTabActive : ''}`} disabled={favoriteSoundIds.length === 0} onClick={() => { setLibTab('favs'); setActiveFilter(null); }}>FAVS</button>
+            <button className={`${styles.libTab} ${libTab === 'cat' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('cat'); setActiveFilter(null); }}>CAT</button>
+            <button className={`${styles.libTab} ${libTab === 'mood' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('mood'); }}>MOOD</button>
+            <button className={`${styles.libTab} ${libTab === 'chars' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('chars'); setActiveFilter(null); }}>CHARS</button>
           </div>
-          <button className={styles.libraryToggle} onClick={() => setIsLibraryOpen(!isLibraryOpen)}>
-            {isLibraryOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-          </button>
         </header>
 
         <div className={styles.libraryScrollWrap}>
-          <button className={styles.scrollArrow} onClick={() => handleScroll('up')}>
+          <button 
+            className={styles.scrollArrow} 
+            disabled={scrollTop === 0}
+            onClick={() => handleScroll('up')}
+            onDoubleClick={() => handleScrollJump('top')}
+          >
             <ChevronUp size={16} />
           </button>
-          <div className={styles.libraryList} ref={scrollRef}>
+          <div className={styles.libraryList} ref={scrollRef} onScroll={onListScroll}>
             {!isCharacterSelected ? (
-              <div className={styles.libraryEmpty}>PLEASE SELECT IDENTITY FIRST</div>
-            ) : Array.isArray(filteredLibrary) ? (
-              filteredLibrary.map(renderLibraryItem)
+               <div className={styles.libraryEmpty}>PLEASE SELECT IDENTITY FIRST</div>
+            ) : Array.isArray(groupedLibrary) ? (
+               groupedLibrary.map(renderLibraryItem)
             ) : (
-              Object.entries(filteredLibrary).map(([cat, sounds]) => (
-                <div key={cat} className={styles.libGroup}>
-                  <div className={styles.libGroupHeader}>{cat.toUpperCase()}</div>
-                  <div className={styles.libGroupContent}>{sounds.map(renderLibraryItem)}</div>
-                </div>
+              Object.entries(groupedLibrary).map(([key, sounds]) => (
+                renderGroup(key, key, sounds)
               ))
             )}
           </div>
-          <button className={styles.scrollArrow} onClick={() => handleScroll('down')}>
+          <button 
+            className={styles.scrollArrow} 
+            disabled={isBottomReached}
+            onClick={() => handleScroll('down')}
+            onDoubleClick={() => handleScrollJump('bottom')}
+          >
             <ChevronDown size={16} />
           </button>
         </div>
 
         {isCharacterSelected && (libTab === 'cat' || libTab === 'mood') && (
           <div className={styles.filterBar}>
-            {filterOptions.map((opt) => (
-              <button
-                key={opt}
-                className={`${styles.filterChip} ${activeFilter === opt ? styles.filterChipActive : ''}`}
-                onClick={() => setActiveFilter(activeFilter === opt ? null : opt)}
-              >
+            {filterOptions.map(opt => (
+              <button key={opt} className={`${styles.filterChip} ${activeFilter === opt ? styles.filterChipActive : ''}`} onClick={() => setActiveFilter(activeFilter === opt ? null : opt)}>
                 {opt?.toUpperCase()}
               </button>
             ))}
@@ -278,23 +432,22 @@ export function CharacterProfile({
         )}
 
         <div className={styles.libraryFooter}>
-          <Button variant="secondary" size="sm" onPress={onNavigateShop}>
-            GET MORE
-          </Button>
+           <Button variant="secondary" size="sm" className={styles.getMoreBtn} onPress={onNavigateShop}>
+             <Music size={12} />
+             <span>GET MORE</span>
+           </Button>
         </div>
       </aside>
 
       <main className={styles.mainContent}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <Button variant="quiet" size="sm" className={styles.backButton} onPress={onClose}>
-              <ArrowLeft size={16} style={{ marginRight: 8 }} />
+            <button className={styles.backLink} onClick={onClose}>
               <span>BACK TO STAGE</span>
-            </Button>
+              <ChevronRight size={14} />
+            </button>
             <h1 className={styles.characterName}>{characterName}</h1>
-            <span className={styles.characterLevel}>
-              {isMain ? 'YOUR IDENTITY' : "FRIEND'S PROFILE"} • LEVEL {unlockedLevel + 1}
-            </span>
+            <span className={styles.characterLevel}>{isMain ? 'YOUR IDENTITY' : "FRIEND'S PROFILE"} • LEVEL {unlockedLevel + 1}</span>
           </div>
           <button className={styles.closeButton} onClick={onClose} aria-label="Close">
             <X size={24} />
@@ -302,26 +455,15 @@ export function CharacterProfile({
         </header>
 
         <div className={styles.profileTabs}>
-          <button
-            className={`${styles.tabLink} ${activeTab === 'sounds' ? styles.tabLinkActive : ''}`}
-            onClick={() => setActiveTab('sounds')}
-          >
+          <button className={`${styles.tabLink} ${activeTab === 'sounds' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('sounds')}>
             <Music size={18} />
             <span>CONSTELLATION</span>
           </button>
-          {!isMain && (
-            <button
-              className={`${styles.tabLink} ${activeTab === 'identity' ? styles.tabLinkActive : ''}`}
-              onClick={() => setActiveTab('identity')}
-            >
-              <UserRoundPen size={18} />
-              <span>IDENTITY</span>
-            </button>
-          )}
-          <button
-            className={`${styles.tabLink} ${activeTab === 'milestones' ? styles.tabLinkActive : ''}`}
-            onClick={() => setActiveTab('milestones')}
-          >
+          <button className={`${styles.tabLink} ${activeTab === 'identity' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('identity')}>
+            <UserRoundPen size={18} />
+            <span>IDENTITY</span>
+          </button>
+          <button className={`${styles.tabLink} ${activeTab === 'milestones' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('milestones')}>
             <Star size={18} />
             <span>MILESTONES</span>
           </button>
@@ -332,50 +474,92 @@ export function CharacterProfile({
             <section className={styles.constellationSection}>
               <div className={styles.constellationHeader}>
                 <h2 className={styles.constellationTitle}>THE CONSTELLATION</h2>
-                <p className={styles.constellationDesc}>Select sounds from library to populate your cloud.</p>
+                <p className={styles.constellationSubtitle}>Highlight up to 6 sounds for your mix.</p>
               </div>
-
+              
               <div className={styles.constellationStage}>
                 <img src={characterImage || CHARACTER_PLACEHOLDER_PATH} alt="" className={styles.characterBg} />
-                <div className={styles.floatingWrap}>
-                  {isCharacterSelected &&
-                    constellationSounds.slice(0, 16).map((sound, i) => {
-                      const isActive = activeSounds.includes(sound.id);
-                      const pos = floatingPositions[i];
-                      return (
-                        <div
-                          key={sound.id}
-                          className={styles.floatingChip}
-                          style={
-                            {
-                              '--tx': `${pos.x}px`,
-                              '--ty': `${pos.y}px`,
-                              '--scale': pos.scale,
-                              '--delay': `${pos.delay}s`,
-                            } as CSSProperties
-                          }
-                        >
-                          <Chip
-                            tone={isActive ? 'title' : 'neutral'}
-                            size="md"
-                            className={`${styles.constellationChip} ${isActive ? styles.isActive : ''}`}
-                            onClick={() => onToggleSound(sound.id, sound.path)}
-                            style={
-                              isActive
-                                ? ({
-                                    '--sound-color': `var(${sound.colorToken})`,
-                                    background: `var(${sound.colorToken})`,
-                                    color: '#000',
-                                    borderColor: 'transparent',
-                                  } as CSSProperties)
-                                : {}
-                            }
-                          >
-                            {sound.name.toUpperCase()}
-                          </Chip>
+                
+                {/* Combo Deck */}
+                <div className={styles.comboDeck}>
+                  {cloudCompletedComboIds.map(comboId => {
+                    const combo = COMBOS.find(c => c.id === comboId)!;
+                    const isExpanded = expandedComboId === comboId;
+                    const isAllSelected = combo.soundIds.every(id => activeSounds.includes(id));
+                    return (
+                      <div 
+                        key={comboId} 
+                        className={`${styles.deckCard} ${isExpanded ? styles.deckCardExpanded : ''} ${isAllSelected ? styles.deckCardSelected : ''}`}
+                        onClick={() => setExpandedComboId(expandedComboId === comboId ? null : comboId)}
+                        onMouseEnter={() => setHoveredComboId(comboId)}
+                        onMouseLeave={() => setHoveredComboId(null)}
+                      >
+                        {combo.image && <img src={combo.image} alt="" className={styles.deckCardImg} />}
+                        <div className={styles.deckCardInner}>
+                          {isExpanded && (
+                            <div className={styles.deckCardInfo}>
+                               <h4 className={styles.deckComboTitle}>{combo.name}</h4>
+                               <p className={styles.deckComboDesc}>{combo.description}</p>
+                               <span className={styles.deckAuthor}>Author: Alise</span>
+                               <Button variant="primary" size="sm" className={styles.comboToggleBtn} onPress={() => {
+                                  handleComboClick(comboId);
+                               }}>
+                                  {isAllSelected ? 'REMOVE ALL' : 'SELECT ALL'}
+                                </Button>
+                            </div>
+                          )}
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className={styles.floatingWrap}>
+                  {isCharacterSelected && constellationSounds.map((sound, i) => {
+                    const isActive = activeSounds.includes(sound.id);
+                    const pos = floatingPositions[i] || { x: 0, y: 0, scale: 1, delay: 0 };
+                    const soundCombos = soundToComboMap[sound.id] || [];
+                    const isPartOfCompletedCombo = soundCombos.length > 0;
+                    const isDimmed = focusedSoundIds && !focusedSoundIds.has(sound.id);
+                    const isPulsing = isActive && stageActiveSet.has(sound.id);
+
+                    return (
+                      <div 
+                        key={sound.id} 
+                        className={`${styles.floatingChip} ${isDimmed ? styles.isDimmed : ''}`} 
+                        style={{ '--tx': `${pos.x}px`, '--ty': `${pos.y}px`, '--scale': pos.scale, '--delay': `${pos.delay}s` } as CSSProperties}
+                        onDoubleClick={() => handleSoundDoubleClick(sound.id, sound.path)}
+                      >
+                        <Chip 
+                          tone={isActive ? 'title' : 'neutral'} 
+                          size="md" 
+                          className={`${styles.constellationChip} ${isActive ? styles.isActive : ''} ${isPulsing ? styles.isPulsing : ''}`} 
+                          onClick={() => {
+                             if (!isActive && activeSounds.length >= 6) return;
+                             onToggleSound(sound.id, sound.path);
+                          }}
+                          style={isActive ? ({ '--sound-color': `var(${sound.colorToken})`, background: `var(${sound.colorToken})`, color: '#000', borderColor: 'transparent' } as CSSProperties) : {}}
+                        >
+                          {sound.name.toUpperCase()}
+                          {isPartOfCompletedCombo && <Sparkles size={8} className={styles.comboSparkle} />}
+                        </Chip>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className={styles.slotSystem}>
+                   <span className={styles.slotLabel}>{activeSounds.length} / 6 slots:</span>
+                   <div className={styles.slotsWrap}>
+                      {[...Array(6)].map((_, i) => {
+                         const isFull = i < activeSounds.length;
+                         return (
+                           <div key={i} className={`${styles.slot} ${isFull ? styles.slotFull : ''}`}>
+                              {isFull ? 'X' : ''}
+                           </div>
+                         );
+                      })}
+                   </div>
                 </div>
               </div>
             </section>
@@ -383,45 +567,51 @@ export function CharacterProfile({
 
           {activeTab === 'identity' && (
             <section className={styles.identitySection}>
-              <div className={styles.identityLayout}>
-                <div className={styles.identityPreview}>
-                  <img
-                    src={characterImage || CHARACTER_PLACEHOLDER_PATH}
-                    alt=""
-                    className={styles.identityImageLarge}
-                  />
-                </div>
-                <div className={styles.identityControls}>
-                  <div className={styles.field}>
-                    <span className={styles.fieldLabel}>NAME</span>
-                    <input
-                      type="text"
-                      className={styles.textInput}
-                      value={draftCustomization.name || ''}
-                      placeholder={character.name}
-                      onChange={(e) => handleUpdateDraft({ name: e.target.value })}
-                    />
+               <div className={styles.identityLayout}>
+                  <div className={styles.identityPreview}>
+                     <img src={characterImage || CHARACTER_PLACEHOLDER_PATH} alt="" className={styles.identityImageLarge} />
                   </div>
+                  <div className={styles.identityControls}>
+                     <div className={styles.field}>
+                        <span className={styles.fieldLabel}>NAME</span>
+                        <input 
+                          type="text" 
+                          className={styles.textInput} 
+                          value={draftCustomization.name || ''} 
+                          placeholder={character.name} 
+                          onChange={(e) => handleUpdateDraft({ name: e.target.value.slice(0, 12) })} 
+                          disabled={isPredefined}
+                        />
+                     </div>
 
-                  <div className={styles.field}>
-                    <span className={styles.fieldLabel}>APPEARANCE PRESETS</span>
-                    <div className={styles.imageGrid}>
-                      {CHARACTER_IMAGE_OPTIONS.map((opt) => {
-                        const isSelected = draftCustomization.image === opt.src;
-                        return (
-                          <button
-                            key={opt.id}
-                            className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`}
-                            onClick={() => handleUpdateDraft({ image: opt.src })}
-                          >
-                            <img src={opt.src} alt={opt.label} />
-                          </button>
-                        );
-                      })}
-                    </div>
+                     <div className={styles.field}>
+                        <span className={styles.fieldLabel}>CHARACTER TYPES</span>
+                        <div className={styles.imageGrid}>
+                          {CHARACTER_IMAGE_OPTIONS.map((opt) => {
+                            const isSelected = draftCustomization.image === opt.src;
+                            const isLocked = isPredefined && draftCustomization.image !== opt.src;
+                            return (
+                              <button 
+                                key={opt.id} 
+                                className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''} ${isLocked ? styles.imageOptionLocked : ''}`} 
+                                onClick={() => !isLocked && handleUpdateDraft({ image: opt.src })}
+                                disabled={isLocked}
+                              >
+                                <img src={opt.src} alt={opt.label} />
+                                {isLocked && <Lock size={12} className={styles.lockIcon} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                     </div>
+                     {characterId === 'alise' && (
+                        <div className={styles.identityActions}>
+                           <Button variant="secondary" size="sm" onPress={() => {}}>UNLINK FROM ALISE</Button>
+                           <Button variant="quiet" size="sm" onPress={() => {}}>RESET CHARACTER</Button>
+                        </div>
+                     )}
                   </div>
-                </div>
-              </div>
+               </div>
             </section>
           )}
 
@@ -429,30 +619,18 @@ export function CharacterProfile({
             <div className={styles.milestonesArea}>
               <section className={styles.section}>
                 <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    <Star size={16} style={{ marginRight: 8 }} /> Combo Discovery
-                  </h2>
-                  <span className={styles.sectionCount}>
-                    {discoveredComboIds.length} / {COMBOS.length}
-                  </span>
+                  <h2 className={styles.sectionTitle}><Star size={16} style={{ marginRight: 8 }} /> Combo Discovery</h2>
+                  <span className={styles.sectionCount}>{discoveredComboIds.length} / {COMBOS.length}</span>
                 </div>
                 <div className={styles.comboGrid}>
                   {COMBOS.map((combo) => {
                     const isDiscovered = discoveredComboIds.includes(combo.id);
-                    const isCurrentlyActive = combo.soundIds.every((id) => activeSet.has(id));
+                    const isCurrentlyActive = combo.soundIds.every(id => stageActiveSet.has(id));
                     return (
-                      <div
-                        key={combo.id}
-                        className={`${styles.comboCard} ${!isDiscovered ? styles.isLocked : styles.isDiscovered} ${isCurrentlyActive ? styles.isCurrentlyActive : ''}`}
-                      >
+                      <div key={combo.id} className={`${styles.comboCard} ${!isDiscovered ? styles.isLocked : styles.isDiscovered} ${isCurrentlyActive ? styles.isCurrentlyActive : ''}`}>
                         <span className={`${styles.comboRarity} ${styles[combo.rarity]}`}>{combo.rarity}</span>
-                        <h3 className={styles.comboName}>
-                          {isDiscovered ? combo.name : '???'}{' '}
-                          {!isDiscovered && <Lock size={12} style={{ marginLeft: 8, opacity: 0.5 }} />}
-                        </h3>
-                        <p className={styles.comboDescription}>
-                          {isDiscovered ? combo.description : 'Combine secret sounds to reveal.'}
-                        </p>
+                        <h3 className={styles.comboName}>{isDiscovered ? combo.name : '???'} {!isDiscovered && <Lock size={12} style={{ marginLeft: 8, opacity: 0.5 }} />}</h3>
+                        <p className={styles.comboDescription}>{isDiscovered ? combo.description : 'Combine secret sounds to reveal.'}</p>
                         {isCurrentlyActive && <div className={styles.activeIndicator}>ACTIVE IN MIX</div>}
                       </div>
                     );
@@ -462,21 +640,14 @@ export function CharacterProfile({
 
               <section className={styles.section}>
                 <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    <Trophy size={16} style={{ marginRight: 8 }} /> Milestones
-                  </h2>
+                  <h2 className={styles.sectionTitle}><Trophy size={16} style={{ marginRight: 8 }} /> Milestones</h2>
                 </div>
                 <div className={styles.achievementList}>
                   {ACHIEVEMENTS.map((achievement) => {
                     const isUnlocked = [ACHIEVEMENTS[0].id].includes(achievement.id);
                     return (
-                      <div
-                        key={achievement.id}
-                        className={`${styles.achievementItem} ${!isUnlocked ? styles.isLocked : ''}`}
-                      >
-                        <div className={styles.achievementIcon}>
-                          <Trophy size={18} />
-                        </div>
+                      <div key={achievement.id} className={`${styles.achievementItem} ${!isUnlocked ? styles.isLocked : ''}`}>
+                        <div className={styles.achievementIcon}><Trophy size={18} /></div>
                         <div className={styles.achievementText}>
                           <span className={styles.achievementTitle}>{achievement.title}</span>
                           <span className={styles.achievementDesc}>{achievement.description}</span>
@@ -492,35 +663,21 @@ export function CharacterProfile({
         </div>
 
         <footer className={styles.footerActions}>
-          <div className={styles.footerLeft}>
-            <div className={styles.capacityHeader}>
-              <span className={styles.capacityLabel}>MIX CAPACITY</span>
-              <span className={styles.capacityValue}>
-                {activeSounds.length} / {soundsPerCharacter}
-              </span>
-            </div>
-            <Meter
-              aria-label="Mix capacity"
-              value={(activeSounds.length / soundsPerCharacter) * 100}
-              className={styles.profileMeter}
-            />
-          </div>
           <div className={styles.footerRight}>
-            <Button variant="primary" size="lg" className={styles.applyButton} onPress={handleApply}>
-              APPLY TO STAGE
-            </Button>
+            <Button variant="quiet" size="sm" onPress={() => setDraftCustomization(characterCustomizations[characterId] || {})}>REVERT</Button>
+            <Button variant="primary" size="lg" className={styles.applyButton} onPress={handleApply}>APPLY TO STAGE</Button>
           </div>
         </footer>
       </main>
 
-      <Notice
+      <Notice 
         isOpen={isNoticeOpen}
         onClose={() => {
-          setIsNoticeOpen(false);
-          setActiveTab('identity');
+           setIsNoticeOpen(false);
+           setActiveTab('identity');
         }}
         title="Identity Required"
-        message="First select an identity for your character and choose a name!"
+        message="Please select a character identity before choosing sounds for your mix."
         okLabel="GO TO IDENTITY"
       />
     </div>

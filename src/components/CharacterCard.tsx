@@ -1,6 +1,13 @@
 import type { CSSProperties, DragEvent } from 'react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Music, UserRoundPen, Play, Pause, RotateCcw, Heart } from 'lucide-react';
+import { 
+  Music, 
+  UserRoundPen, 
+  Play, 
+  Pause, 
+  RotateCcw, 
+  Heart
+} from 'lucide-react';
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
 import { Button, Chip, Tooltip, TooltipTrigger } from '../components-ui';
@@ -121,7 +128,7 @@ function CharacterCard({
   const [hintingIds, setHintingIds] = useState<Set<string>>(new Set());
   const [showHintTooltip, setShowHintTooltip] = useState(false);
   const prevSoundIdsLengthRef = useRef(customization.soundIds?.length ?? 0);
-
+  
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
   const showName = displayName.trim().length > 0;
@@ -136,18 +143,18 @@ function CharacterCard({
   useEffect(() => {
     const currentLen = customization.soundIds?.length ?? 0;
     if (currentLen > prevSoundIdsLengthRef.current) {
-      customization.soundIds?.forEach((id, index) => {
-        setTimeout(() => {
-          setHintingIds((prev) => new Set(prev).add(id));
-          setTimeout(() => {
-            setHintingIds((prev) => {
-              const next = new Set(prev);
-              next.delete(id);
-              return next;
-            });
-          }, HINT_FLASH_DURATION);
-        }, index * ENTRANCE_FLASH_DELAY);
-      });
+       customization.soundIds?.forEach((id, index) => {
+         setTimeout(() => {
+           setHintingIds(prev => new Set(prev).add(id));
+           setTimeout(() => {
+             setHintingIds(prev => {
+               const next = new Set(prev);
+               next.delete(id);
+               return next;
+             });
+           }, HINT_FLASH_DURATION);
+         }, index * ENTRANCE_FLASH_DELAY);
+       });
     }
     prevSoundIdsLengthRef.current = currentLen;
   }, [customization.soundIds]);
@@ -155,17 +162,13 @@ function CharacterCard({
   const triggerSoundHint = useCallback(() => {
     if (customization.soundIds && customization.soundIds.length > 0) {
       setShowHintTooltip(true);
-      // Increased duration as requested
-      setTimeout(
-        () => setShowHintTooltip(false),
-        customization.soundIds.length * HINT_PROGRESSIVE_DELAY + HINT_FLASH_DURATION + TOOLTIP_EXTRA_DURATION,
-      );
-
+      setTimeout(() => setShowHintTooltip(false), customization.soundIds.length * HINT_PROGRESSIVE_DELAY + HINT_FLASH_DURATION + TOOLTIP_EXTRA_DURATION);
+      
       customization.soundIds.forEach((id, index) => {
         setTimeout(() => {
-          setHintingIds((prev) => new Set(prev).add(id));
+          setHintingIds(prev => new Set(prev).add(id));
           setTimeout(() => {
-            setHintingIds((prev) => {
+            setHintingIds(prev => {
               const next = new Set(prev);
               next.delete(id);
               return next;
@@ -176,31 +179,28 @@ function CharacterCard({
     }
   }, [customization.soundIds]);
 
-  const handleTogglePlay = useCallback(
-    (e?: React.MouseEvent) => {
-      if (e) e.stopPropagation();
+  const handleTogglePlay = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    
+    if (!customization.soundIds || customization.soundIds.length === 0) {
+      setIsFlashing(true);
+      setTimeout(() => setIsFlashing(false), 1500);
+      return;
+    }
 
-      if (!customization.soundIds || customization.soundIds.length === 0) {
-        setIsFlashing(true);
-        setTimeout(() => setIsFlashing(false), 1500);
-        return;
-      }
-
-      if (soundIds.length === 0) {
-        triggerSoundHint();
-        return;
-      }
-
-      if (onToggleMute) {
-        onToggleMute();
-      }
-    },
-    [customization.soundIds, soundIds.length, onToggleMute, triggerSoundHint],
-  );
+    if (soundIds.length === 0) {
+       triggerSoundHint();
+       return;
+    }
+    
+    if (onToggleMute) {
+      onToggleMute();
+    }
+  }, [customization.soundIds, soundIds.length, onToggleMute, triggerSoundHint]);
 
   const handleCharacterClick = () => {
     if (customization.soundIds && customization.soundIds.length > 0) {
-      handleTogglePlay();
+       handleTogglePlay();
     } else {
       setIsFlashing(true);
       setTimeout(() => setIsFlashing(false), 1500);
@@ -240,11 +240,14 @@ function CharacterCard({
         } as CSSProperties
       }
     >
-      {showName && (
+      <div className={styles.characterHeader}>
         <Chip tone="title" font="goofy" size="lg" className={styles.characterName}>
-          {displayName.toUpperCase()}'S MIX
+          {displayName.toUpperCase()}'S MIX!
         </Chip>
-      )}
+        {character.japaneseName && (
+          <span className={styles.japaneseSubtitle}>{character.japaneseName}</span>
+        )}
+      </div>
 
       <div
         className={`${styles.dropTarget} ${pulseClass} ${isDropActive ? styles.dropTargetActive : ''} ${
@@ -307,7 +310,11 @@ function CharacterCard({
 
         {!hideSounds && customization.soundIds && customization.soundIds.length > 0 && (
           <div className={styles.characterSoundList}>
-            {showHintTooltip && <div className={styles.hintTooltip}>ACTIVATE A SOUND!</div>}
+            {showHintTooltip && (
+              <div className={styles.hintTooltip}>
+                ACTIVATE!
+              </div>
+            )}
             {customization.soundIds.map((soundId, index) => {
               const sound = soundCatalogById.get(soundId);
               const soundName = sound?.name ?? soundId;
@@ -361,10 +368,9 @@ function CharacterCard({
                     aria-label="View Profile"
                   >
                     <UserRoundPen size={14} />
-                    {/* user note: keep next line changes or ask */}
                     {noSoundsInLibrary && <span className={styles.actionLabel}>{character.name.toUpperCase()}</span>}
                   </Button>
-                  <Tooltip>{noSoundsInLibrary ? 'add sounds!' : 'PROFILE'}</Tooltip>
+                  <Tooltip>{noSoundsInLibrary ? "add sounds!" : "PROFILE"}</Tooltip>
                 </TooltipTrigger>
               </div>
               {customization.soundIds && customization.soundIds.length > 0 && (
@@ -426,7 +432,7 @@ function CharacterCard({
                     <Music size={14} />
                     {noSoundsInLibrary && <span className={styles.actionLabel}>{character.name.toUpperCase()}</span>}
                   </Button>
-                  <Tooltip>{noSoundsInLibrary ? 'add sounds!' : 'SOUNDS'}</Tooltip>
+                  <Tooltip>{noSoundsInLibrary ? "add sounds!" : "SOUNDS"}</Tooltip>
                 </TooltipTrigger>
               </div>
               {customization.soundIds && customization.soundIds.length > 0 && (

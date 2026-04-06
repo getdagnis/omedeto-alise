@@ -75,12 +75,14 @@ type CharacterCustomization = {
   name?: string;
   colorModes?: string[];
   image?: string;
-  soundIds?: string[];
+  soundIds?: string[];      // Active Selection (max 6)
+  cloudSoundIds?: string[]; // Constellation Pool (max 24)
 };
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
 
-const CHARACTER_CUSTOM_STORAGE_KEY = 'alise-in-tokyo-character-custom-v2';
+const INITIAL_CLOUDS_COUNT = 24; // @keep
+const CHARACTER_CUSTOM_STORAGE_KEY = 'alise-in-tokyo-character-custom-v5';
 
 const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
   if (typeof window === 'undefined') {
@@ -90,7 +92,22 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
   try {
     const stored = window.localStorage.getItem(CHARACTER_CUSTOM_STORAGE_KEY);
     if (!stored) {
-      return {};
+      // INITIAL STATE FOR NEW USER - @keep start
+      return {
+        'alise': {
+          image: '/alise-1.png',
+          name: 'Alise',
+          // 6 selected sounds from 2 initial combos
+          soundIds: ['fly-me', 'synth-rise', 'synth-garden', 'energy', 'candy-machine', 'alert'],
+          // Constellation Pool
+          cloudSoundIds: ['fly-me', 'synth-rise', 'synth-garden', 'energy', 'candy-machine', 'alert', 
+                    'kick1', 'noise1', 'peace1', 'tomorrow', 'alien', 'busy',
+                    'anthenna', 'cartoon', 'drama', 'machines', 'synth-garden', 'synth-grow',
+                    'synth-space', 'kick1', 'beat1', 'beat2', 'beat3', 'monks'
+                   ].slice(0, INITIAL_CLOUDS_COUNT)
+        }
+      };
+      // @keep end
     }
 
     const parsed = JSON.parse(stored);
@@ -118,6 +135,9 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
       }
       if (Array.isArray(typed.soundIds)) {
         next.soundIds = typed.soundIds.filter((s) => typeof s === 'string').slice(0, MAX_CHARACTER_SOUNDS);
+      }
+      if (Array.isArray(typed.cloudSoundIds)) {
+        next.cloudSoundIds = typed.cloudSoundIds.filter((s) => typeof s === 'string').slice(0, INITIAL_CLOUDS_COUNT);
       }
 
       sanitized[key] = next;
@@ -173,7 +193,9 @@ function App() {
   const mainCharacterId = 'alise';
   const stageCharacterIds = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'gumi'];
 
-  const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({});
+  const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({
+    'alise': [] // Starts empty - @keep
+  });
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
   const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
     parseCharacterCustomStorage(),
@@ -308,9 +330,10 @@ function App() {
 
   const toggleProfileSound = useCallback(
     (soundId: string, path: string) => {
+      const isAlreadySelected = pickerSelectedSoundIds.includes(soundId);
+
       setPickerSelectedSoundIds((previous) => {
-        const isSelected = previous.includes(soundId);
-        if (isSelected) {
+        if (isAlreadySelected) {
           return previous.filter((id) => id !== soundId);
         }
         if (previous.length >= currentLevelInfo.soundsPerCharacter) {
@@ -319,13 +342,15 @@ function App() {
         return [...previous, soundId];
       });
       
-      if (previewingSoundId === soundId) {
-        stopPickerPreview();
+      if (isAlreadySelected) {
+        if (previewingSoundId === soundId) {
+          stopPickerPreview();
+        }
       } else {
         startPickerPreview(soundId, path);
       }
     },
-    [currentLevelInfo.soundsPerCharacter, previewingSoundId, startPickerPreview, stopPickerPreview],
+    [currentLevelInfo.soundsPerCharacter, pickerSelectedSoundIds, previewingSoundId, startPickerPreview, stopPickerPreview],
   );
 
   const unmuteCharacter = useCallback((characterId: string) => {

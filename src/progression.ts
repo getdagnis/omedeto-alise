@@ -89,6 +89,6 @@ export const DEFAULT_PROGRESSION_STATE: ProgressionState = {
   favoriteSoundIds: [],
   discoveredComboIds: [],
   minutesPlayed: 0,
-  unlockedLevel: 0,
+  unlockedLevel: 2, // Starts at Level 2 - @keep
   walletBalance: 1000,
 };

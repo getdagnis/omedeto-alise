@@ -9,13 +9,13 @@
   "theme_color": "#2d0f77",
   "icons": [
     {
-      "src": "/gumi-1.png",
+      "src": "/chars/gumi-1.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/hanako-1.png",
+      "src": "/chars/hanako-1.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
