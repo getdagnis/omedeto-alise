@@ -708,7 +708,7 @@ export const CHARACTERS: CharacterOption[] = [
   {
     id: 'alise',
     name: 'ALISE',
-    img: '/chars/alise-1.png',
+    img: '/chars/alise-lvl2-2.png',
     mixLabel: "Alise's Mix!",
     japaneseName: 'アリス', // @keep
     titleColor: 'white',

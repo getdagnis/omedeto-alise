@@ -10,6 +10,9 @@ import { Menu } from './components/Menu/Menu';
 import Shop from './components/Shop/Shop';
 import Admin from './components/Admin/Admin';
 import SandboxUI from './screens/SandboxUI';
+import PlatformTest1 from './screens/PlatformTests/PlatformTest1';
+import PlatformTest2 from './screens/PlatformTests/PlatformTest2';
+import PlatformTest3 from './screens/PlatformTests/PlatformTest3';
 import { useProgression } from './hooks/useProgression';
 import { PROGRESSION_LEVELS } from './progression';
 import { Button } from './components-ui';
@@ -238,7 +241,10 @@ function App() {
   const isShopOpen = currentPath === '/shop';
   const isAdminOpen = currentPath === '/admin';
   const isSandboxUIOpen = currentPath === '/sandbox';
-  const isInternalRoute = isAdminOpen || isSandboxUIOpen;
+  const isPlatformTest1 = currentPath === '/platform-test-1';
+  const isPlatformTest2 = currentPath === '/platform-test-2';
+  const isPlatformTest3 = currentPath === '/platform-test-3';
+  const isInternalRoute = isAdminOpen || isSandboxUIOpen || isPlatformTest1 || isPlatformTest2 || isPlatformTest3;
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
@@ -661,17 +667,24 @@ function App() {
       <div className={styles.backgroundOverlay} />
       <main className={styles.content}>
         {isInternalRoute ? (
-          <section className={styles.internalPage}>
-            <header className={styles.internalPageHeader}>
-              <Button variant="secondary" size="sm" onPress={() => navigate('/')}>
-                Back
-              </Button>
-            </header>
-            <div className={styles.internalPageBody}>
-              {isAdminOpen && <Admin onPreviewSound={togglePreviewSound} previewingSoundId={previewingSoundId} />}
-              {isSandboxUIOpen && <SandboxUI />}
-            </div>
-          </section>
+          <>
+            {(isAdminOpen || isSandboxUIOpen) && (
+              <section className={styles.internalPage}>
+                <header className={styles.internalPageHeader}>
+                  <Button variant="secondary" size="sm" onPress={() => navigate('/')}>
+                    Back
+                  </Button>
+                </header>
+                <div className={styles.internalPageBody}>
+                  {isAdminOpen && <Admin onPreviewSound={togglePreviewSound} previewingSoundId={previewingSoundId} />}
+                  {isSandboxUIOpen && <SandboxUI />}
+                </div>
+              </section>
+            )}
+            {isPlatformTest1 && <PlatformTest1 onClose={() => navigate('/')} />}
+            {isPlatformTest2 && <PlatformTest2 onClose={() => navigate('/')} />}
+            {isPlatformTest3 && <PlatformTest3 onClose={() => navigate('/')} />}
+          </>
         ) : profileCharacterId ? (
           <CharacterProfile
             characterId={profileCharacterId}
