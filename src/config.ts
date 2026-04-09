@@ -708,7 +708,7 @@ export const CHARACTERS: CharacterOption[] = [
   {
     id: 'alise',
     name: 'ALISE',
-    img: '/alise-1.png',
+    img: '/chars/alise-1.png',
     mixLabel: "Alise's Mix!",
     japaneseName: 'アリス', // @keep
     titleColor: 'white',
@@ -762,7 +762,7 @@ export const CHARACTERS: CharacterOption[] = [
   {
     id: 'gumi',
     name: 'GUMI (グミ)',
-    img: '/gumi-1.png',
+    img: '/chars/gumi-1.png',
     mixLabel: "Gumi's Mix!",
     japaneseName: 'グミ', // @keep
     titleColor: 'white',
@@ -816,7 +816,7 @@ export const CHARACTERS: CharacterOption[] = [
   {
     id: 'hanako',
     name: 'Hanako-kun (地縛少年花子くん)',
-    img: '/hanako-1.png',
+    img: '/chars/hanako-1.png',
     mixLabel: "Hanako's Mix!",
     japaneseName: '花子', // @keep
     titleColor: 'white',
@@ -910,7 +910,7 @@ export const CHARACTERS: CharacterOption[] = [
 
 export const CHARACTER_IMAGE_OPTIONS = [
   { id: 'placeholder', label: 'Custom', src: '/alise-1.svg' },
-  { id: 'alise', label: 'Alise', src: '/alise-1.png' },
-  { id: 'gumi', label: 'GUMI (グミ)', src: '/gumi-1.png' },
-  { id: 'hanako', label: 'Hanako-kun (地縛少年花子くん)', src: '/hanako-1.png' },
+  { id: 'alise', label: 'Alise', src: '/chars/alise-1.png' },
+  { id: 'gumi', label: 'GUMI (グミ)', src: '/chars/gumi-1.png' },
+  { id: 'hanako', label: 'Hanako-kun (地縛少年花子くん)', src: '/chars/hanako-1.png' },
 ] as const;

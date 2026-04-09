@@ -1,0 +1,342 @@
+.mixDesk
+  display: flex
+  flex-direction: column
+  width: 100vw
+  height: 100vh
+  background: #080a10
+  color: white
+  overflow: hidden
+  font-family: monospace
+
+  @media (min-width: 821px)
+    flex-direction: row // Splits left/right on desktop instead of top/bottom
+
+.visualizerArea
+  flex: 1
+  position: relative
+  display: flex
+  flex-direction: column
+  background: radial-gradient(circle at center, #151a2a 0%, #080a10 100%)
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1)
+  overflow: hidden
+  @media (min-width: 821px)
+    border-bottom: none
+    border-right: 2px solid rgba(255, 255, 255, 0.1)
+
+.topHeader
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  padding: 1rem
+  display: flex
+  align-items: flex-start
+  justify-content: space-between
+  z-index: 20
+  background: linear-gradient(to bottom, rgba(8, 10, 16, 0.8), transparent)
+
+.backBtn
+  margin: 0
+
+.charHeader
+  position: absolute
+  top: 1rem
+  left: 50%
+  transform: translateX(-50%)
+  z-index: 50
+  h1
+    margin: 0
+    font-size: 1.25rem
+    letter-spacing: 0.3em
+    color: #ffcc00
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.5)
+    text-align: center
+
+.stageContent
+  flex: 1
+  display: flex
+  align-items: center
+  justify-content: center
+  position: relative
+  margin-top: 2rem
+
+.stageChar
+  position: absolute
+  bottom: 0
+  height: 90%
+  max-width: 80%
+  object-fit: contain
+  z-index: 10
+  filter: drop-shadow(0 0 30px rgba(255, 204, 0, 0.2))
+  pointer-events: none
+
+.recordConstellation
+  position: absolute
+  width: 300px
+  height: 300px
+  border-radius: 50%
+  border: 1px dashed rgba(255, 255, 255, 0.1)
+  z-index: 5
+  display: flex
+  align-items: center
+  justify-content: center
+  transition: transform 0.1s linear
+  @media (min-width: 48rem)
+    width: 400px
+    height: 400px
+
+.spinning
+  animation: spin 10s linear infinite
+
+@keyframes spin
+  from
+    transform: rotate(0deg)
+  to
+    transform: rotate(360deg)
+
+.ring1, .ring2
+  position: absolute
+  border-radius: 50%
+  border: 1px dashed rgba(255, 204, 0, 0.2)
+
+.ring1
+  width: 75%
+  height: 75%
+
+.ring2
+  width: 50%
+  height: 50%
+  border: 1px solid rgba(255, 255, 255, 0.05)
+
+.node
+  position: absolute
+  color: black
+  padding: 0.25rem 0.75rem
+  border-radius: 1rem
+  font-size: 0.6rem
+  font-weight: 700
+  pointer-events: auto
+  cursor: pointer
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.5)
+
+// --- SOUND RACK / LIBRARY ---
+.soundRackArea
+  flex: 1
+  background: #0d111a
+  display: flex
+  flex-direction: column
+  position: relative
+  box-shadow: inset 0 20px 30px rgba(0, 0, 0, 0.5)
+
+.libraryHeader
+  padding: 1rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05)
+  display: flex
+  flex-direction: column
+  gap: 0.75rem
+
+.libraryTitle
+  font-size: 0.6875rem
+  font-weight: 700
+  letter-spacing: 0.15em
+  color: var(--character-secondary, #a855f7)
+  margin: 0
+  display: flex
+  align-items: center
+
+.libTabs
+  display: flex
+  width: 100%
+  gap: 0.25rem
+  background: rgba(255, 255, 255, 0.03)
+  padding: 0.1875rem
+  border-radius: 0.5rem
+
+.libTab
+  flex: 1
+  background: transparent
+  border: none
+  color: white
+  opacity: 0.4
+  font-size: 0.5625rem
+  font-weight: 700
+  padding: 0.375rem 0
+  border-radius: 0.375rem
+  cursor: pointer
+  transition: all 0.2s ease
+  &:hover
+    opacity: 0.7
+
+.libTabActive
+  opacity: 1
+  background: rgba(255, 255, 255, 0.1)
+  color: var(--character-secondary, #a855f7)
+
+// Horizontal Swiping Rack
+.rackScroll
+  flex: 1
+  display: flex
+  gap: 1rem
+  padding: 1rem
+  overflow-x: auto
+  align-items: center
+  position: relative
+  scrollbar-width: none
+  &::-webkit-scrollbar
+    display: none
+
+.cartridge
+  flex-shrink: 0
+  width: 120px
+  height: 140px
+  background: rgba(255, 255, 255, 0.02)
+  border-radius: 0.75rem
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  display: flex
+  flex-direction: column
+  cursor: grab
+  transition: all 0.2s
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2)
+  padding: 0.75rem
+  &:hover, &.cartridgeActive
+    transform: translateY(-5px)
+    background: rgba(255, 255, 255, 0.05)
+    border-color: rgba(255, 255, 255, 0.2)
+
+.cartridgeActive
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4)
+
+.cartridgeTop
+  display: flex
+  justify-content: space-between
+  align-items: flex-start
+  width: 100%
+
+.libraryItemDot
+  width: 1.5rem
+  height: 1.5rem
+  border-radius: 50%
+  display: flex
+  align-items: center
+  justify-content: center
+  overflow: hidden
+  box-shadow: 0 0 10px currentColor
+
+.dotIcon
+  opacity: 0.8
+  color: black
+
+.favBtn
+  background: transparent
+  border: none
+  color: white
+  opacity: 0.2
+  cursor: pointer
+  padding: 0
+  &:hover
+    opacity: 0.8
+
+.favBtnActive
+  opacity: 1
+  color: #ff4d4d
+
+.cartridgeBody
+  flex: 1
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: flex-end
+  gap: 0.5rem
+  margin-top: 0.5rem
+
+.cartName
+  font-weight: 700
+  font-size: 0.75rem
+  color: rgba(255, 255, 255, 0.8)
+  text-align: center
+  letter-spacing: 0.05em
+
+.cartGrips
+  display: flex
+  flex-direction: column
+  gap: 2px
+  width: 100%
+  align-items: center
+
+.cartGrip
+  width: 40%
+  height: 2px
+  background: rgba(255, 255, 255, 0.2)
+  border-radius: 1px
+
+// Master Control Footer
+.masterControl
+  flex-shrink: 0
+  background: rgba(10, 12, 20, 0.95)
+  backdrop-filter: blur(10px)
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  padding: 1rem
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  z-index: 20
+
+.masterInfo
+  display: flex
+  justify-content: space-between
+  align-items: center
+  width: 100%
+  span
+    font-size: 0.625rem
+    font-weight: 700
+    color: rgba(255, 255, 255, 0.4)
+    letter-spacing: 0.1em
+
+.slotsWrap
+  display: flex
+  gap: 0.25rem
+
+.slot
+  width: 1.5rem
+  height: 0.5rem
+  border-radius: 0.25rem
+  background: rgba(255, 255, 255, 0.1)
+  display: flex
+  align-items: center
+  justify-content: center
+  font-size: 0.3rem
+  font-weight: 700
+  color: transparent
+
+.slotFull
+  background: rgba(255, 255, 255, 0.5)
+  color: rgba(0, 0, 0, 0.6)
+
+.actionRow
+  display: flex
+  gap: 1rem
+  align-items: stretch
+
+.playIconBtn
+  background: rgba(255, 255, 255, 0.1)
+  color: white
+  border: none
+  width: 3.5rem
+  height: 3.5rem
+  border-radius: 50%
+  display: flex
+  align-items: center
+  justify-content: center
+  cursor: pointer
+  transition: all 0.2s
+  flex-shrink: 0
+  &:hover
+    background: rgba(255, 255, 255, 0.2)
+
+.ejectBtn
+  flex: 1
+  display: flex
+  justify-content: center
+  align-items: center
+  font-weight: 900
+  letter-spacing: 0.1em

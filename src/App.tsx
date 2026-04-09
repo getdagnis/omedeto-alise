@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faArrowLeft,
-} from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
@@ -75,7 +73,7 @@ type CharacterCustomization = {
   name?: string;
   colorModes?: string[];
   image?: string;
-  soundIds?: string[];      // Active Selection (max 6)
+  soundIds?: string[]; // Active Selection (max 6)
   cloudSoundIds?: string[]; // Constellation Pool (max 24)
 };
 
@@ -94,18 +92,39 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
     if (!stored) {
       // INITIAL STATE FOR NEW USER - @keep start
       return {
-        'alise': {
-          image: '/alise-1.png',
+        alise: {
+          image: '/chars/alise-1.png',
           name: 'Alise',
           // 6 selected sounds from 2 initial combos
           soundIds: ['fly-me', 'synth-rise', 'synth-garden', 'energy', 'candy-machine', 'alert'],
           // Constellation Pool
-          cloudSoundIds: ['fly-me', 'synth-rise', 'synth-garden', 'energy', 'candy-machine', 'alert', 
-                    'kick1', 'noise1', 'peace1', 'tomorrow', 'alien', 'busy',
-                    'anthenna', 'cartoon', 'drama', 'machines', 'synth-garden', 'synth-grow',
-                    'synth-space', 'kick1', 'beat1', 'beat2', 'beat3', 'monks'
-                   ].slice(0, INITIAL_CLOUDS_COUNT)
-        }
+          cloudSoundIds: [
+            'fly-me',
+            'synth-rise',
+            'synth-garden',
+            'energy',
+            'candy-machine',
+            'alert',
+            'kick1',
+            'noise1',
+            'peace1',
+            'tomorrow',
+            'alien',
+            'busy',
+            'anthenna',
+            'cartoon',
+            'drama',
+            'machines',
+            'synth-garden',
+            'synth-grow',
+            'synth-space',
+            'kick1',
+            'beat1',
+            'beat2',
+            'beat3',
+            'monks',
+          ].slice(0, INITIAL_CLOUDS_COUNT),
+        },
       };
       // @keep end
     }
@@ -194,7 +213,7 @@ function App() {
   const stageCharacterIds = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'gumi'];
 
   const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({
-    'alise': [] // Starts empty - @keep
+    alise: [], // Starts empty - @keep
   });
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
   const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
@@ -341,7 +360,7 @@ function App() {
         }
         return [...previous, soundId];
       });
-      
+
       if (isAlreadySelected) {
         if (previewingSoundId === soundId) {
           stopPickerPreview();
@@ -350,7 +369,13 @@ function App() {
         startPickerPreview(soundId, path);
       }
     },
-    [currentLevelInfo.soundsPerCharacter, pickerSelectedSoundIds, previewingSoundId, startPickerPreview, stopPickerPreview],
+    [
+      currentLevelInfo.soundsPerCharacter,
+      pickerSelectedSoundIds,
+      previewingSoundId,
+      startPickerPreview,
+      stopPickerPreview,
+    ],
   );
 
   const unmuteCharacter = useCallback((characterId: string) => {
@@ -374,11 +399,13 @@ function App() {
     setMutedCharacterIds((previous) => {
       const next = new Set(previous);
       const isMuting = !next.has(characterId);
-      if (isMuting) next.add(characterId); else next.delete(characterId);
+      if (isMuting) next.add(characterId);
+      else next.delete(characterId);
       Object.entries(audioRefs.current).forEach(([key, audio]) => {
         if (key.startsWith(`${characterId}:`)) {
           audio.muted = isMuting;
-          if (isMuting) audio.pause(); else void audio.play().catch(() => undefined);
+          if (isMuting) audio.pause();
+          else void audio.play().catch(() => undefined);
         }
       });
       return next;
@@ -395,7 +422,11 @@ function App() {
       const isRemoving = activeSoundsByCharacter[characterId]?.includes(soundId);
       if (isRemoving) {
         const audio = audioRefs.current[audioKey];
-        if (audio) { audio.pause(); audio.currentTime = 0; delete audioRefs.current[audioKey]; }
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          delete audioRefs.current[audioKey];
+        }
         activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
           (e) => !(e.characterId === characterId && e.soundId === soundId),
         );
@@ -407,7 +438,11 @@ function App() {
           if (oldestSoundId) {
             const oldAudioKey = buildAudioKey(characterId, oldestSoundId);
             const oldAudio = audioRefs.current[oldAudioKey];
-            if (oldAudio) { oldAudio.pause(); oldAudio.currentTime = 0; delete audioRefs.current[oldAudioKey]; }
+            if (oldAudio) {
+              oldAudio.pause();
+              oldAudio.currentTime = 0;
+              delete audioRefs.current[oldAudioKey];
+            }
             activeSoundOrderRef.current = activeSoundOrderRef.current.filter(
               (e) => !(e.characterId === characterId && e.soundId === oldestSoundId),
             );
@@ -430,14 +465,25 @@ function App() {
         return { ...previous, [characterId]: nextList };
       });
     },
-    [buildAudioKey, soundCatalogById, unmuteCharacter, recordSoundPlayed, currentLevelInfo.soundsPerCharacter, activeSoundsByCharacter],
+    [
+      buildAudioKey,
+      soundCatalogById,
+      unmuteCharacter,
+      recordSoundPlayed,
+      currentLevelInfo.soundsPerCharacter,
+      activeSoundsByCharacter,
+    ],
   );
 
   const removeSoundFromCharacter = useCallback(
     (characterId: string, soundId: string) => {
       const audioKey = buildAudioKey(characterId, soundId);
       const audio = audioRefs.current[audioKey];
-      if (audio) { audio.pause(); audio.currentTime = 0; delete audioRefs.current[audioKey]; }
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        delete audioRefs.current[audioKey];
+      }
       setActiveSoundsByCharacter((previous) => ({
         ...previous,
         [characterId]: (previous[characterId] ?? []).filter((id) => id !== soundId),
@@ -460,7 +506,11 @@ function App() {
       currentActive.forEach((soundId) => {
         const audioKey = buildAudioKey(characterId, soundId);
         const audio = audioRefs.current[audioKey];
-        if (audio) { audio.pause(); audio.currentTime = 0; delete audioRefs.current[audioKey]; }
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          delete audioRefs.current[audioKey];
+        }
       });
       activeSoundOrderRef.current = activeSoundOrderRef.current.filter((e) => e.characterId !== characterId);
       setActiveSoundsByCharacter((previous) => ({ ...previous, [characterId]: [] }));
@@ -517,7 +567,11 @@ function App() {
       currentActive.forEach((soundId) => {
         const audioKey = buildAudioKey(characterId, soundId);
         const audio = audioRefs.current[audioKey];
-        if (audio) { audio.pause(); audio.currentTime = 0; delete audioRefs.current[audioKey]; }
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          delete audioRefs.current[audioKey];
+        }
       });
       activeSoundOrderRef.current = activeSoundOrderRef.current.filter((entry) => entry.characterId !== characterId);
       nextSelected.forEach((soundId) => {
@@ -534,7 +588,16 @@ function App() {
       setActiveSoundsByCharacter((previous) => ({ ...previous, [characterId]: nextSelected }));
       closeProfile();
     },
-    [activeSoundsByCharacter, buildAudioKey, closeProfile, pickerSelectedSoundIds, recordSoundPlayed, soundCatalogById, unmuteCharacter, updateCharacterCustomization],
+    [
+      activeSoundsByCharacter,
+      buildAudioKey,
+      closeProfile,
+      pickerSelectedSoundIds,
+      recordSoundPlayed,
+      soundCatalogById,
+      unmuteCharacter,
+      updateCharacterCustomization,
+    ],
   );
 
   useEffect(() => {
@@ -555,12 +618,15 @@ function App() {
     window.setTimeout(() => setComboWord(null), 2200);
   }, [activeSoundsByCharacter, recordComboDiscovered]);
 
-  const toggleMuteMix = useCallback((characterId: string) => {
-    toggleMuteCharacter(characterId);
-  }, [toggleMuteCharacter]);
+  const toggleMuteMix = useCallback(
+    (characterId: string) => {
+      toggleMuteCharacter(characterId);
+    },
+    [toggleMuteCharacter],
+  );
 
   const stageCharacters = useMemo(() => {
-    return stageCharacterIds.map(id => CHARACTERS.find(c => c.id === id)).filter((c): c is any => !!c);
+    return stageCharacterIds.map((id) => CHARACTERS.find((c) => c.id === id)).filter((c): c is any => !!c);
   }, [stageCharacterIds]);
 
   const activeBackgroundImage = useMemo(() => {
@@ -570,14 +636,21 @@ function App() {
   }, [backgroundIndex, isMobileVerticalDevice]);
 
   const activeCharacter = CHARACTERS.find((c) => c.id === favoriteCharacterId) || CHARACTERS[0];
-  const activeScheme = activeCharacter?.schemes?.[0] ?? { titleColor: 'white', primaryColor: '#600b87cc', secondaryColor: '#ff0040a1', soundboardColor: '#29063acc' };
+  const activeScheme = activeCharacter?.schemes?.[0] ?? {
+    titleColor: 'white',
+    primaryColor: '#600b87cc',
+    secondaryColor: '#ff0040a1',
+    soundboardColor: '#29063acc',
+  };
   const isBlockingOverlayOpen = Boolean(editingCharacterId || profileCharacterId);
   const isMenuVisible = isMenuOpen && !isInternalRoute;
 
   const lvl2NextLevel = PROGRESSION_LEVELS[2];
   const lvl2NextReq = lvl2NextLevel.requirements;
   const lvl2UnlockNextLines = [
-    lvl2NextReq.charactersCustomized ? `Customize images/colors on ${lvl2NextReq.charactersCustomized} characters.` : null,
+    lvl2NextReq.charactersCustomized
+      ? `Customize images/colors on ${lvl2NextReq.charactersCustomized} characters.`
+      : null,
     lvl2NextReq.minutesPlayed ? `Mix for ${lvl2NextReq.minutesPlayed} minutes.` : null,
     lvl2NextReq.soundsPlayed ? `Trigger ${lvl2NextReq.soundsPlayed} different sound clips.` : null,
   ].filter((line): line is string => Boolean(line));
@@ -590,7 +663,9 @@ function App() {
         {isInternalRoute ? (
           <section className={styles.internalPage}>
             <header className={styles.internalPageHeader}>
-              <Button variant="secondary" size="sm" onPress={() => navigate('/')}>Back</Button>
+              <Button variant="secondary" size="sm" onPress={() => navigate('/')}>
+                Back
+              </Button>
             </header>
             <div className={styles.internalPageBody}>
               {isAdminOpen && <Admin onPreviewSound={togglePreviewSound} previewingSoundId={previewingSoundId} />}
@@ -600,7 +675,7 @@ function App() {
         ) : profileCharacterId ? (
           <CharacterProfile
             characterId={profileCharacterId}
-            character={CHARACTERS.find(c => c.id === profileCharacterId)!}
+            character={CHARACTERS.find((c) => c.id === profileCharacterId)!}
             characters={CHARACTERS}
             characterCustomizations={characterCustomizations}
             activeSounds={pickerSelectedSoundIds}
@@ -621,10 +696,22 @@ function App() {
           />
         ) : (
           <>
-            <section className={styles.panel} style={{ '--character-title': activeScheme.titleColor, '--character-primary': activeScheme.primaryColor, '--character-secondary': activeScheme.secondaryColor, '--character-soundboard': activeScheme.soundboardColor } as CSSProperties}>
+            <section
+              className={styles.panel}
+              style={
+                {
+                  '--character-title': activeScheme.titleColor,
+                  '--character-primary': activeScheme.primaryColor,
+                  '--character-secondary': activeScheme.secondaryColor,
+                  '--character-soundboard': activeScheme.soundboardColor,
+                } as CSSProperties
+              }
+            >
               <header className={styles.titleBlock}>
                 <h1 className={styles.titleJapanese}>アリス・イン・トーキョー</h1>
-                <p className={styles.titleName}>ALISE <span>in</span> TOKYO!</p>
+                <p className={styles.titleName}>
+                  ALISE <span>in</span> TOKYO!
+                </p>
               </header>
               <CharacterGrid
                 characters={stageCharacters}
@@ -639,9 +726,16 @@ function App() {
                 comboWord={comboWord}
                 onSelectCharacter={handleCharacterClick}
                 onToggleFavorite={handleToggleFavorite}
-                onDropSound={(event, id) => { event.preventDefault(); const s = event.dataTransfer.getData('text/plain'); if (s) setSingleSound(id, s); }}
+                onDropSound={(event, id) => {
+                  event.preventDefault();
+                  const s = event.dataTransfer.getData('text/plain');
+                  if (s) setSingleSound(id, s);
+                }}
                 onImageLoad={(id) => setLoadedCharacterMap((p) => ({ ...p, [id]: true }))}
-                onEditCharacter={(id) => { setInitialEditTab('colors'); navigate(`/${id}/edit`); }}
+                onEditCharacter={(id) => {
+                  setInitialEditTab('colors');
+                  navigate(`/${id}/edit`);
+                }}
                 onResetCharacter={resetCharacter}
                 onOpenSoundPicker={handleCharacterClick}
                 onToggleSound={setSingleSound}
@@ -667,18 +761,57 @@ function App() {
               onUpdateCustomization={updateCharacterCustomization}
               onOpenShop={() => navigate('/shop')}
             />
-            <Shop isOpen={isShopOpen} onClose={() => navigate('/')} walletBalance={progressionState.walletBalance} currencySymbol={LOCALIZATIONS.currencySymbol} ownedSoundIds={progressionState.ownedSoundIds} onBuySound={buySound} onPreviewSound={togglePreviewSound} previewingSoundId={previewingSoundId} />
-            <Button type="button" variant="secondary" shape="pill" className={styles.refreshButton} onPress={resetBoard}>Reset Board</Button>
+            <Shop
+              isOpen={isShopOpen}
+              onClose={() => navigate('/')}
+              walletBalance={progressionState.walletBalance}
+              currencySymbol={LOCALIZATIONS.currencySymbol}
+              ownedSoundIds={progressionState.ownedSoundIds}
+              onBuySound={buySound}
+              onPreviewSound={togglePreviewSound}
+              previewingSoundId={previewingSoundId}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              shape="pill"
+              className={styles.refreshButton}
+              onPress={resetBoard}
+            >
+              Reset Board
+            </Button>
             {!isBlockingOverlayOpen && (
               <div className={styles.hamburgerWrap} onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 <div className={`${styles.hamburger} ${isMenuVisible ? styles.hamburgerActive : ''}`}>
-                  <span className={styles.hamburgerBox}><span className={styles.hamburgerInner}></span></span>
+                  <span className={styles.hamburgerBox}>
+                    <span className={styles.hamburgerInner}></span>
+                  </span>
                 </div>
               </div>
             )}
-            {!isBlockingOverlayOpen && <Menu isOpen={isMenuVisible} onClose={() => setIsMenuOpen(false)} onNavigate={navigate} isLowGraphics={isLowGraphics} onToggleLowGraphics={() => setIsLowGraphics(!isLowGraphics)} />}
-            <ProgressionMeter state={progressionState} currentLevelInfo={currentLevelInfo} nextLevelInfo={nextLevelInfo} />
-            <AchievementUnlockedModal isOpen={isLvl2AchievementOpen} onClose={() => setIsLvl2AchievementOpen(false)} title="Achievement unlocked: Level 2" message="Congrats! Level 2 Soundmixer unlocked." unlockNextTitle="To unlock Level 3:" unlockNextLines={lvl2UnlockNextLines} buttonLabel="Hurrah!" />
+            {!isBlockingOverlayOpen && (
+              <Menu
+                isOpen={isMenuVisible}
+                onClose={() => setIsMenuOpen(false)}
+                onNavigate={navigate}
+                isLowGraphics={isLowGraphics}
+                onToggleLowGraphics={() => setIsLowGraphics(!isLowGraphics)}
+              />
+            )}
+            <ProgressionMeter
+              state={progressionState}
+              currentLevelInfo={currentLevelInfo}
+              nextLevelInfo={nextLevelInfo}
+            />
+            <AchievementUnlockedModal
+              isOpen={isLvl2AchievementOpen}
+              onClose={() => setIsLvl2AchievementOpen(false)}
+              title="Achievement unlocked: Level 2"
+              message="Congrats! Level 2 Soundmixer unlocked."
+              unlockNextTitle="To unlock Level 3:"
+              unlockNextLines={lvl2UnlockNextLines}
+              buttonLabel="Hurrah!"
+            />
           </>
         )}
       </main>

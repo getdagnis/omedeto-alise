@@ -1,0 +1,348 @@
+.workspace
+  display: flex
+  flex-direction: column
+  width: 100vw
+  height: 100vh
+  background: radial-gradient(circle at center, #1a0b2e 0%, #0a0514 100%)
+  color: white
+  overflow: hidden
+  font-family: monospace
+
+  @media (min-width: 821px)
+    flex-direction: row-reverse
+
+.stageArea
+  flex: 1
+  position: relative
+  display: flex
+  flex-direction: column
+  overflow: hidden
+  @media (min-width: 821px)
+    flex: 2
+
+.topHeader
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  padding: 1rem
+  display: flex
+  align-items: flex-start
+  justify-content: space-between
+  z-index: 20
+  background: linear-gradient(to bottom, rgba(10, 5, 20, 0.8), transparent)
+
+.backBtn
+  margin: 0
+
+.topActions
+  display: flex
+  flex-direction: column
+  gap: 0.5rem
+  @media (min-width: 48rem)
+    flex-direction: row
+
+.iconBtn
+  background: rgba(255, 255, 255, 0.1)
+  border: 1px solid rgba(255, 255, 255, 0.05)
+  color: white
+  width: 2.5rem
+  height: 2.5rem
+  border-radius: 50%
+  display: flex
+  align-items: center
+  justify-content: center
+  cursor: pointer
+  transition: all 0.2s
+  backdrop-filter: blur(10px)
+  &:hover, &.active
+    background: #a855f7
+    color: black
+    border-color: transparent
+
+.stageContent
+  flex: 1
+  position: relative
+  display: flex
+  align-items: center
+  justify-content: center
+
+.hologram
+  height: 80%
+  max-width: 90%
+  object-fit: contain
+  opacity: 0.3
+  filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.3))
+  mix-blend-mode: screen
+
+.constellationOverlay
+  position: absolute
+  inset: 0
+  pointer-events: none
+
+.node
+  position: absolute
+  transform: translate(-50%, -50%)
+  pointer-events: auto
+
+// --- THE INTEGRATED LIBRARY ---
+.libraryPanel
+  flex: 1
+  background: rgba(10, 10, 20, 0.95)
+  backdrop-filter: blur(20px)
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  display: flex
+  flex-direction: column
+  overflow: hidden
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5)
+  
+  @media (min-width: 821px)
+    flex: none
+    width: 22rem
+    border-top: none
+    border-right: 1px solid rgba(255, 255, 255, 0.1)
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5)
+
+.libraryHeader
+  flex-shrink: 0
+  padding: 0.5rem 1rem 1rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05)
+  display: flex
+  flex-direction: column
+  align-items: center
+  gap: 0.75rem
+
+.libraryHandle
+  width: 40px
+  height: 4px
+  background: rgba(255, 255, 255, 0.2)
+  border-radius: 2px
+  margin-bottom: 0.5rem
+  @media (min-width: 821px)
+    display: none
+
+.libraryTitle
+  font-size: 0.6875rem
+  font-weight: 700
+  letter-spacing: 0.15em
+  color: var(--character-secondary, #a855f7)
+  margin: 0
+  align-self: flex-start
+  opacity: 0.9
+
+.libTabs
+  display: flex
+  width: 100%
+  gap: 0.25rem
+  background: rgba(255, 255, 255, 0.03)
+  padding: 0.1875rem
+  border-radius: 0.5rem
+
+.libTab
+  flex: 1
+  background: transparent
+  border: none
+  color: white
+  opacity: 0.4
+  font-size: 0.5625rem
+  font-weight: 700
+  padding: 0.375rem 0
+  border-radius: 0.375rem
+  cursor: pointer
+  transition: all 0.2s ease
+  &:hover
+    opacity: 0.7
+  &:disabled
+    opacity: 0.1
+    cursor: not-allowed
+
+.libTabActive
+  opacity: 1
+  background: rgba(255, 255, 255, 0.1)
+  color: var(--character-secondary, #a855f7)
+
+.libraryList
+  flex: 1
+  overflow-y: auto
+  padding: 0.625rem 1rem
+  display: flex
+  flex-direction: column
+  gap: 0.125rem
+  scrollbar-width: none
+  &::-webkit-scrollbar
+    display: none
+
+.libraryItemRow
+  display: flex
+  align-items: center
+  gap: 0.25rem
+  padding-right: 0.25rem
+  background: rgba(255, 255, 255, 0.01)
+  border-radius: 0.5rem
+  margin-bottom: 0.0625rem
+  transition: background 0.2s ease
+  &:hover
+    background: rgba(255, 255, 255, 0.03)
+
+.libraryItem
+  flex: 1
+  display: flex
+  align-items: center
+  gap: 0.625rem
+  padding: 0.5rem 0.75rem
+  background: transparent
+  border: 1px solid transparent
+  border-radius: 0.5rem
+  cursor: pointer
+  transition: all 0.2s ease
+  text-align: left
+  min-height: 2.5rem
+
+.libraryItemActive
+  background: rgba(255, 255, 255, 0.04)
+  border-color: rgba(255, 255, 255, 0.08)
+
+.libraryItemDot
+  width: 0.875rem
+  height: 0.875rem
+  border-radius: 50%
+  flex-shrink: 0
+  position: relative
+  display: flex
+  align-items: center
+  justify-content: center
+  overflow: hidden
+
+.dotIcon
+  position: absolute
+  opacity: 0
+  transition: opacity 0.2s ease
+  color: black
+  .libraryItem:hover &
+    opacity: 1
+
+.libraryItemName
+  flex: 1
+  font-size: 0.75rem
+  font-weight: 700
+  color: rgba(255, 255, 255, 0.8)
+  letter-spacing: 0.05em
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+  max-width: 16ch
+
+.libraryItemActions
+  display: flex
+  align-items: center
+  justify-content: center
+  width: 1.5rem
+  margin-left: auto
+
+.libActionIcon
+  opacity: 0.3
+  transition: transform 0.3s ease, opacity 0.2s ease
+  .libraryItem:hover &
+    opacity: 0.8
+
+.itemInCloud .libActionIcon
+  color: var(--character-secondary, #a855f7)
+
+.favBtn
+  background: transparent
+  border: none
+  color: white
+  opacity: 0.15
+  cursor: pointer
+  padding: 0.5rem
+  transition: all 0.2s ease
+  &:hover
+    opacity: 0.6
+
+.favBtnActive
+  opacity: 1
+  color: #ff4d4d
+
+.bottomApplyBar
+  flex-shrink: 0
+  padding: 1rem
+  border-top: 1px solid rgba(255, 255, 255, 0.05)
+  background: rgba(0, 0, 0, 0.2)
+
+.applyBtn
+  width: 100%
+  display: flex
+  justify-content: center
+  align-items: center
+
+// Drawer (Identity/Milestones)
+.drawer
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background: rgba(10, 5, 20, 0.98)
+  backdrop-filter: blur(20px)
+  transform: translateY(100%)
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+  display: flex
+  flex-direction: column
+  z-index: 100
+  @media (min-width: 821px)
+    left: auto
+    width: 24rem
+    transform: translateX(100%)
+
+.drawerOpen
+  transform: translateY(0)
+  @media (min-width: 821px)
+    transform: translateX(0)
+
+.drawerHeader
+  display: flex
+  align-items: center
+  justify-content: space-between
+  padding: 1.5rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1)
+  h3
+    margin: 0
+    font-size: 1rem
+    letter-spacing: 0.1em
+    color: #a855f7
+
+.closeDrawerBtn
+  background: transparent
+  border: none
+  color: white
+  opacity: 0.5
+  cursor: pointer
+  display: flex
+  align-items: center
+  justify-content: center
+  &:hover
+    opacity: 1
+
+.drawerContent
+  flex: 1
+  padding: 1.5rem
+  overflow-y: auto
+
+.mockIdentity, .mockMilestones
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  p
+    font-size: 0.7rem
+    opacity: 0.5
+    margin: 0
+
+.mockCard
+  background: rgba(255, 255, 255, 0.05)
+  border-radius: 0.5rem
+  padding: 1rem
+  font-size: 0.8rem
+  text-align: center
+  img
+    width: 100%
+    border-radius: 0.25rem
