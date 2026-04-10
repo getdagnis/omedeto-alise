@@ -697,17 +697,17 @@ function App() {
             soundCatalogById={soundCatalogById}
             onClose={closeProfile}
             onToggleSound={(soundId, path) => toggleProfileSound(soundId, path)}
+            onPreviewSound={(soundId, path) => togglePreviewSound(soundId, path)}
             onApply={(patch) => applyProfileSelection(profileCharacterId, patch)}
             onNavigateShop={() => navigate('/shop')}
             discoveredComboIds={progressionState.discoveredComboIds}
             onRecordCombo={recordComboDiscovered}
             colorOptions={CHARACTER_COLOR_OPTIONS}
             imageOptions={CHARACTER_IMAGE_OPTIONS}
-            isMain={profileCharacterId === mainCharacterId}
+            isMain={profileCharacterId === favoriteCharacterId}
             favoriteSoundIds={progressionState.favoriteSoundIds}
             onToggleFavoriteSound={toggleFavoriteSound}
-          />
-        ) : (
+          />        ) : (
           <>
             <section
               className={styles.panel}

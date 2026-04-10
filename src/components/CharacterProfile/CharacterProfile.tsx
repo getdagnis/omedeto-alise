@@ -15,10 +15,13 @@ import {
   Heart as HeartSolid,
   Sparkles,
   AudioLines,
-  Circle
+  Circle,
+  Square,
+  SquareCheckBig
 } from 'lucide-react';
 import { Heart as HeartRegular } from 'lucide-react';
 import { Button, Chip, Notice } from '../../components-ui';
+import { useFloatingText, FloatingTextContainer } from '../../components-ui/FloatingText';
 import type { CharacterOption, SoundOption } from '../../config';
 import { COMBOS, ACHIEVEMENTS, CHARACTER_IMAGE_OPTIONS } from '../../config';
 import styles from './CharacterProfile.module.sass';
@@ -53,6 +56,7 @@ export type CharacterProfileProps = {
   isMain?: boolean;
   onClose: () => void;
   onToggleSound: (soundId: string, path: string) => void;
+  onPreviewSound: (soundId: string, path: string) => void;
   onApply: (patch?: any) => void;
   onNavigateShop: () => void;
   onRecordCombo?: (comboId: string) => void;
@@ -80,6 +84,7 @@ export function CharacterProfile({
   isMain = false,
   onClose,
   onToggleSound,
+  onPreviewSound,
   onApply,
   onNavigateShop,
   onRecordCombo,
@@ -88,10 +93,13 @@ export function CharacterProfile({
   const [activeTab, setActiveTab] = useState<'sounds' | 'identity' | 'milestones'>('sounds');
   const [libTab, setLibTab] = useState<LibraryTab>('chars');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [isLibraryOpen, setIsLibraryOpen] = useState(true);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 820 : true);
+  const [isComboSidebarOpen, setIsComboSidebarOpen] = useState(false);
+  const [sessionAddedSounds, setSessionAddedSounds] = useState<string[]>([]);
+  const { items: floatingItems, addText: addFloatingText } = useFloatingText();
+  const floatingTextIndexRef = useRef(0);
   const [draftCustomization, setDraftCustomization] = useState(characterCustomizations[characterId] || {});
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
-  const [expandedComboId, setExpandedComboId] = useState<string | null>(null);
   const [hoveredComboId, setHoveredComboId] = useState<string | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [isBottomReached, setIsBottomReached] = useState(false);
@@ -219,6 +227,23 @@ export function CharacterProfile({
     onApply({ ...draftCustomization, soundIds: finalSounds, cloudSoundIds: constellationSounds.map(s => s.id) });
   };
 
+  const handleComboQuickSelect = (comboId: string) => {
+    const combo = COMBOS.find(c => c.id === comboId);
+    if (!combo) return;
+
+    // Deselect all current active sounds
+    activeSounds.forEach(id => {
+      const s = soundCatalogById.get(id);
+      if (s) onToggleSound(id, s.path);
+    });
+
+    // Select combo sounds
+    combo.soundIds.forEach(id => {
+      const s = soundCatalogById.get(id);
+      if (s) onToggleSound(id, s.path);
+    });
+  };
+
   const handleComboClick = (comboId: string) => {
     const combo = COMBOS.find(c => c.id === comboId);
     if (!combo) return;
@@ -314,13 +339,43 @@ export function CharacterProfile({
         <button 
           className={`${styles.libraryItem} ${isSelectedInCloud ? styles.libraryItemActive : ''}`}
           disabled={!isCharacterSelected}
-          onClick={() => {
+          onClick={() => onPreviewSound(sound.id, sound.path)}
+        >
+          <div 
+            className={styles.libraryItemDot} 
+            style={{ background: `var(${sound.colorToken})` }}
+          >
+             <AudioLines size={8} className={styles.dotIcon} />
+          </div>
+          <span className={styles.libraryItemName}>{sound.name.toUpperCase()}</span>
+        </button>
+
+        <button 
+          className={`${styles.selectBtn} ${isSelectedInCloud ? styles.selectBtnActive : ''}`}
+          disabled={!isCharacterSelected}
+          onClick={(e) => {
              const currentIds = constellationSounds.map(s => s.id);
              if (isSelectedInCloud) {
                handleUpdateDraft({ cloudSoundIds: currentIds.filter(id => id !== sound.id) });
+               // Also remove from mix if it's there
+               if (isActiveInMix) {
+                 onToggleSound(sound.id, sound.path);
+               }
              } else {
                if (currentIds.length < 24) {
                  handleUpdateDraft({ cloudSoundIds: [...currentIds, sound.id] });
+                 if (!sessionAddedSounds.includes(sound.id)) {
+                   setSessionAddedSounds(prev => [...prev, sound.id]);
+                 }
+                 const messages = ["added!", "added!", "also added!", "sure, added!", "you got it..."];
+                 const msg = messages[floatingTextIndexRef.current % messages.length];
+                 floatingTextIndexRef.current++;
+                 
+                 const rect = e.currentTarget.getBoundingClientRect();
+                 const x = rect.left + rect.width / 2;
+                 const y = rect.top;
+                 addFloatingText(msg, x, y, `var(${sound.colorToken})`);
+
                  if (!isActiveInMix) {
                     onToggleSound(sound.id, sound.path);
                  }
@@ -328,21 +383,9 @@ export function CharacterProfile({
              }
           }}
         >
-          <div 
-            className={styles.libraryItemDot} 
-            style={{ background: `var(${sound.colorToken})` }}
-            onClick={(e) => {
-               e.stopPropagation();
-               onToggleSound(sound.id, sound.path);
-            }}
-          >
-             <AudioLines size={8} className={styles.dotIcon} />
-          </div>
-          <span className={styles.libraryItemName}>{sound.name.toUpperCase()}</span>
-          <div className={styles.libraryItemActions}>
-            {isSelectedInCloud ? <X size={14} className={styles.libActionIcon} /> : <Plus size={14} className={styles.libActionIcon} />}
-          </div>
+          {isSelectedInCloud ? <SquareCheckBig size={14} /> : <Square size={14} />}
         </button>
+
         <button className={`${styles.favBtn} ${isFav ? styles.favBtnActive : ''}`} onClick={() => onToggleFavoriteSound(sound.id)}>
           <HeartSolid size={14} fill={isFav ? 'currentColor' : 'none'} />
         </button>
@@ -374,14 +417,18 @@ export function CharacterProfile({
 
   return (
     <div className={styles.profilePage} style={cssVars}>
+      <FloatingTextContainer items={floatingItems} />
+      {(isLibraryOpen || isComboSidebarOpen) && <div className={styles.sidebarBackdrop} onClick={() => { setIsLibraryOpen(false); setIsComboSidebarOpen(false); }} />}
       {/* Sidebar Library */}
       <aside className={`${styles.librarySidebar} ${isLibraryOpen ? styles.libraryOpen : ''}`}>
         <div className={styles.libraryHandle} onClick={() => setIsLibraryOpen(!isLibraryOpen)}>
-           <span className={styles.handleLabel}>SOUND LIBRARY</span>
-           <Music size={14} className={styles.handleIcon} />
+           <span className={styles.handleLabel}>{isLibraryOpen ? 'CLOSE' : 'SOUNDS'}</span>
         </div>
 
         <header className={styles.libraryHeader}>
+          <div className={styles.onboardingSteps}>
+            <span>1. Identity</span> <ChevronRight size={8} /> <span className={styles.onboardingActive}>2. Library</span> <ChevronRight size={8} /> <span>3. Mix</span> <ChevronRight size={8} /> <span>4. Stage</span> <ChevronRight size={8} /> <span>5. Combos</span>
+          </div>
           <h6 className={styles.libraryTitle}>SOUND LIBRARY</h6>
           <div className={styles.libTabs}>
             <button className={`${styles.libTab} ${libTab === 'favs' ? styles.libTabActive : ''}`} disabled={favoriteSoundIds.length === 0} onClick={() => { setLibTab('favs'); setActiveFilter(null); }}>FAVS</button>
@@ -432,6 +479,17 @@ export function CharacterProfile({
         )}
 
         <div className={styles.libraryFooter}>
+           <Button 
+             variant={sessionAddedSounds.length > 0 ? "primary" : "secondary"} 
+             size="sm" 
+             className={styles.applySelectedBtn} 
+             onPress={() => {
+               setIsLibraryOpen(false);
+               setSessionAddedSounds([]);
+             }}
+           >
+             APPLY SELECTED SOUNDS
+           </Button>
            <Button variant="secondary" size="sm" className={styles.getMoreBtn} onPress={onNavigateShop}>
              <Music size={12} />
              <span>GET MORE</span>
@@ -480,40 +538,6 @@ export function CharacterProfile({
               <div className={styles.constellationStage}>
                 <img src={characterImage || CHARACTER_PLACEHOLDER_PATH} alt="" className={styles.characterBg} />
                 
-                {/* Combo Deck */}
-                <div className={styles.comboDeck}>
-                  {cloudCompletedComboIds.map(comboId => {
-                    const combo = COMBOS.find(c => c.id === comboId)!;
-                    const isExpanded = expandedComboId === comboId;
-                    const isAllSelected = combo.soundIds.every(id => activeSounds.includes(id));
-                    return (
-                      <div 
-                        key={comboId} 
-                        className={`${styles.deckCard} ${isExpanded ? styles.deckCardExpanded : ''} ${isAllSelected ? styles.deckCardSelected : ''}`}
-                        onClick={() => setExpandedComboId(expandedComboId === comboId ? null : comboId)}
-                        onMouseEnter={() => setHoveredComboId(comboId)}
-                        onMouseLeave={() => setHoveredComboId(null)}
-                      >
-                        {combo.image && <img src={combo.image} alt="" className={styles.deckCardImg} />}
-                        <div className={styles.deckCardInner}>
-                          {isExpanded && (
-                            <div className={styles.deckCardInfo}>
-                               <h4 className={styles.deckComboTitle}>{combo.name}</h4>
-                               <p className={styles.deckComboDesc}>{combo.description}</p>
-                               <span className={styles.deckAuthor}>Author: Alise</span>
-                               <Button variant="primary" size="sm" className={styles.comboToggleBtn} onPress={() => {
-                                  handleComboClick(comboId);
-                               }}>
-                                  {isAllSelected ? 'REMOVE ALL' : 'SELECT ALL'}
-                                </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
                 <div className={styles.floatingWrap}>
                   {isCharacterSelected && constellationSounds.map((sound, i) => {
                     const isActive = activeSounds.includes(sound.id);
@@ -552,9 +576,10 @@ export function CharacterProfile({
                    <span className={styles.slotLabel}>{activeSounds.length} / 6 slots:</span>
                    <div className={styles.slotsWrap}>
                       {[...Array(6)].map((_, i) => {
-                         const isFull = i < activeSounds.length;
+                         const soundId = activeSounds[i];
+                         const isFull = !!soundId;
                          return (
-                           <div key={i} className={`${styles.slot} ${isFull ? styles.slotFull : ''}`}>
+                           <div key={`${i}-${soundId || 'empty'}`} className={`${styles.slot} ${isFull ? styles.slotFull : ''}`}>
                               {isFull ? 'X' : ''}
                            </div>
                          );
@@ -669,6 +694,41 @@ export function CharacterProfile({
           </div>
         </footer>
       </main>
+
+      {/* Combo Sidebar (Right Side) */}
+      <aside className={`${styles.comboSidebar} ${isComboSidebarOpen ? styles.comboSidebarOpen : ''}`}>
+        <div className={styles.comboHandle} onClick={() => setIsComboSidebarOpen(!isComboSidebarOpen)}>
+           <span className={styles.handleLabel}>{isComboSidebarOpen ? 'CLOSE' : 'COMBOS'}</span>
+        </div>
+        <header className={styles.libraryHeader}>
+          <h6 className={styles.libraryTitle}>COMBO DECK</h6>
+        </header>
+        <div className={styles.libraryList}>
+          {cloudCompletedComboIds.length === 0 ? (
+            <div className={styles.libraryEmpty}>DISCOVER COMBOS TO UNLOCK CARDS</div>
+          ) : (
+            cloudCompletedComboIds.map(comboId => {
+              const combo = COMBOS.find(c => c.id === comboId)!;
+              const isAllSelected = combo.soundIds.every(id => activeSounds.includes(id));
+              return (
+                <div 
+                  key={comboId} 
+                  className={`${styles.sidebarComboCard} ${isAllSelected ? styles.sidebarComboCardSelected : ''}`}
+                  onClick={() => handleComboQuickSelect(comboId)}
+                  onMouseEnter={() => setHoveredComboId(comboId)}
+                  onMouseLeave={() => setHoveredComboId(null)}
+                >
+                  {combo.image && <img src={combo.image} alt="" className={styles.sidebarComboImg} />}
+                  <div className={styles.sidebarComboInner}>
+                    <h4 className={styles.sidebarComboTitle}>{combo.name}</h4>
+                    <span className={styles.sidebarComboRarity}>{combo.rarity}</span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </aside>
 
       <Notice 
         isOpen={isNoticeOpen}

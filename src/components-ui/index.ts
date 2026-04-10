@@ -45,3 +45,4 @@ export * from './Toast';
 export * from './ToggleButton';
 export * from './ToggleButtonGroup';
 export * from './Tooltip';
+export * from './FloatingText';
