@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import styles from './App.module.sass';
 import CharacterGrid from './components/CharacterGrid';
 import EditCharacterModal from './components/EditCharacterModal';
@@ -26,27 +24,16 @@ import {
   CHARACTERS,
   COMBOS,
   LOCALIZATIONS,
+  type CharacterOption,
+  type CharacterCustomization,
 } from './config';
 
-const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const BG_DESKTOP_SUFFIX = '1920';
 const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
 const MAX_SOUNDS_TOTAL = 12;
 const LOW_GRAPHICS_STORAGE_KEY = 'alise-in-tokyo-low-graphics';
 const MAX_CHARACTER_SOUNDS = 9;
-
-const preloadImage = (src: string) =>
-  new Promise<void>((resolve) => {
-    const image = new Image();
-    image.onload = () => resolve();
-    image.onerror = () => resolve();
-    image.src = src;
-
-    if (image.complete) {
-      resolve();
-    }
-  });
 
 const buildBackgroundImagePath = (backgroundKey: string, suffix: string) => `/${backgroundKey}-${suffix}.jpg`;
 
@@ -70,15 +57,6 @@ const getStoredLowGraphicsMode = () => {
   } catch {
     return false;
   }
-};
-
-type CharacterCustomization = {
-  name?: string;
-  colorModes?: string[];
-  image?: string;
-  soundIds?: string[]; // Active Selection (max 6)
-  cloudSoundIds?: string[]; // Constellation Pool (max 24)
-  identityId?: string | null;
 };
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
@@ -193,6 +171,8 @@ const CHARACTER_COLOR_OPTIONS = [
   })),
 ] as const;
 
+const STAGE_CHARACTER_IDS = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'placeholder-4'];
+
 function App() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
 
@@ -207,14 +187,12 @@ function App() {
     setCurrentPath(path);
   }, []);
 
-  const [backgroundIndex, setBackgroundIndex] = useState(0);
-  const [isMobileVerticalDevice, setIsMobileVerticalDevice] = useState(() => getIsMobileVerticalDevice());
-  const [isBackgroundRotationReady, setIsBackgroundRotationReady] = useState(false);
+  const [backgroundIndex] = useState(0);
+  const [isMobileVerticalDevice] = useState(() => getIsMobileVerticalDevice());
   const [isLowGraphics, setIsLowGraphics] = useState(() => getStoredLowGraphicsMode());
 
   const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
   const mainCharacterId = 'alise';
-  const stageCharacterIds = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'placeholder-4'];
 
   const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({
     alise: [], // Starts empty - @keep
@@ -225,7 +203,6 @@ function App() {
   );
   const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
   const [pickerSelectedSoundIds, setPickerSelectedSoundIds] = useState<string[]>([]);
-  const [initialEditTab, setInitialEditTab] = useState<'colors' | 'sounds'>('colors');
 
   const profileCharacterId = useMemo(() => {
     const match = currentPath.match(/^\/(.+)\/profile$/);
@@ -634,8 +611,8 @@ function App() {
   );
 
   const stageCharacters = useMemo(() => {
-    return stageCharacterIds.map((id) => CHARACTERS.find((c) => c.id === id)).filter((c): c is any => !!c);
-  }, [stageCharacterIds]);
+    return STAGE_CHARACTER_IDS.map((id) => CHARACTERS.find((c) => c.id === id)).filter((c): c is CharacterOption => !!c);
+  }, []);
 
   const activeBackgroundImage = useMemo(() => {
     const activeBackgroundKey = BACKGROUND_IMAGE_KEYS[backgroundIndex] ?? BACKGROUND_IMAGE_KEYS[0];
@@ -666,8 +643,7 @@ function App() {
   const otherCharactersClaimedIdentities = useMemo(() => {
     if (!profileCharacterId) return [];
 
-    return stageCharacterIds
-      .filter((id) => id !== profileCharacterId)
+    return STAGE_CHARACTER_IDS.filter((id) => id !== profileCharacterId)
       .map((id) => {
         const custom = characterCustomizations[id];
         // If customization exists and identityId is explicitly null, it's unlinked
@@ -677,7 +653,7 @@ function App() {
         return charBase?.identityId;
       })
       .filter((id): id is string => !!id);
-  }, [profileCharacterId, stageCharacterIds, characterCustomizations]);
+  }, [profileCharacterId, characterCustomizations]);
 
   return (
     <div className={`${styles.page} ${isLowGraphics ? styles.pageLowGraphics : ''}`}>
@@ -711,7 +687,6 @@ function App() {
             characterCustomizations={characterCustomizations}
             activeSounds={pickerSelectedSoundIds}
             unlockedLevel={progressionState.unlockedLevel}
-            soundsPerCharacter={currentLevelInfo.soundsPerCharacter}
             soundCatalogById={soundCatalogById}
             onClose={closeProfile}
             onToggleSound={(soundId, path) => toggleProfileSound(soundId, path)}
@@ -720,10 +695,9 @@ function App() {
             onNavigateShop={() => navigate('/shop')}
             discoveredComboIds={progressionState.discoveredComboIds}
             onRecordCombo={recordComboDiscovered}
-            colorOptions={CHARACTER_COLOR_OPTIONS}
-            imageOptions={CHARACTER_IMAGE_OPTIONS}
             isMain={profileCharacterId === favoriteCharacterId}
             favoriteSoundIds={progressionState.favoriteSoundIds}
+
             onToggleFavoriteSound={toggleFavoriteSound}
             characterLevels={progressionState.characterLevels}
             onUpgradeCharacter={upgradeCharacter}
@@ -766,12 +740,7 @@ function App() {
                   if (s) setSingleSound(id, s);
                 }}
                 onImageLoad={(id) => setLoadedCharacterMap((p) => ({ ...p, [id]: true }))}
-                onEditCharacter={(id) => {
-                  setInitialEditTab('colors');
-                  navigate(`/${id}/edit`);
-                }}
                 onResetCharacter={resetCharacter}
-                onOpenSoundPicker={handleCharacterClick}
                 onToggleSound={setSingleSound}
                 onRemoveSound={removeSoundFromCharacter}
                 onToggleMute={toggleMuteMix}
@@ -788,7 +757,6 @@ function App() {
               colorOptions={CHARACTER_COLOR_OPTIONS}
               imageOptions={CHARACTER_IMAGE_OPTIONS}
               ownedSoundIds={progressionState.ownedSoundIds}
-              initialTab={initialEditTab}
               unlockedLevel={progressionState.unlockedLevel}
               onClose={() => navigate('/')}
               onSelectCharacter={(id) => navigate(`/${id}/edit`)}

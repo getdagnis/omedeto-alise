@@ -257,7 +257,6 @@ function EditCharacterModal({
                         forceLoop={true}
                         showActions={false}
                         size="large"
-                        onEditImage={() => setIsImagePickerOpen(true)}
                       />
                     </div>
                   );

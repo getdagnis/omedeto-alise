@@ -1,5 +1,5 @@
 import React, { useState, type CSSProperties } from 'react';
-import { ChevronLeft, Music, UserRoundPen, Star, X, Plus, AudioLines, Heart as HeartSolid } from 'lucide-react';
+import { ChevronLeft, UserRoundPen, Star, X, Plus, AudioLines, Heart as HeartSolid } from 'lucide-react';
 import { Button, Chip } from '../../components-ui';
 import { ALL_SOUNDS } from '../../config';
 import styles from './PlatformTest1.module.sass';

@@ -27,9 +27,7 @@ type CharacterGridProps = {
   onToggleFavorite: (characterId: string) => void;
   onDropSound: (event: DragEvent<HTMLDivElement>, characterId: string) => void;
   onImageLoad: (characterId: string) => void;
-  onEditCharacter: (characterId: string) => void;
   onResetCharacter: (characterId: string) => void;
-  onOpenSoundPicker: (characterId: string) => void;
   onToggleSound: (characterId: string, soundId: string) => void;
   onRemoveSound: (characterId: string, soundId: string) => void;
   onToggleMute: (characterId: string) => void;
@@ -51,9 +49,7 @@ function CharacterGrid({
   onToggleFavorite,
   onDropSound,
   onImageLoad,
-  onEditCharacter,
   onResetCharacter,
-  onOpenSoundPicker,
   onToggleSound,
   onRemoveSound,
   onToggleMute,
@@ -114,9 +110,7 @@ function CharacterGrid({
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => onDropSound(event, character.id)}
                 onImageLoad={() => onImageLoad(character.id)}
-                onEdit={() => onEditCharacter(character.id)}
                 onReset={() => onResetCharacter(character.id)}
-                onOpenSoundPicker={() => onOpenSoundPicker(character.id)}
                 onToggleSound={(soundId) => onToggleSound(character.id, soundId)}
                 onRemoveSound={(soundId) => onRemoveSound(character.id, soundId)}
                 onToggleMute={() => onToggleMute(character.id)}

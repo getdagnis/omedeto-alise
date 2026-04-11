@@ -124,6 +124,15 @@ export type CharacterIdentityType = {
   images: CharacterIdentityImage[];
 };
 
+export type CharacterCustomization = {
+  name?: string;
+  colorModes?: string[];
+  image?: string;
+  soundIds?: string[]; // Active Selection (max 6)
+  cloudSoundIds?: string[]; // Constellation Pool (max 24)
+  identityId?: string | null;
+};
+
 export type CharacterOption = {
   id: string;
   name: string;
@@ -1087,6 +1096,9 @@ export const CHARACTERS: CharacterOption[] = [
 export const CHARACTER_IMAGE_OPTIONS = [
   { id: 'placeholder', label: 'Custom', src: '/alise-1.svg' },
   { id: 'alise', label: 'Alise', src: '/chars/alise-1.png' },
+  { id: 'foxy', label: 'Foxy', src: '/chars/foxy-1.png' },
   { id: 'gumi', label: 'GUMI (グミ)', src: '/chars/gumi-1.png' },
   { id: 'hanako', label: 'Hanako-kun (地縛少年花子くん)', src: '/chars/hanako-1.png' },
+  { id: 'kagamine', label: 'Kagamine Rin', src: '/chars/kagamine-rin-1.png' },
+  { id: 'honekoneko', label: 'Honekoneko', src: '/chars/honekoneko-1.png' },
 ] as const;

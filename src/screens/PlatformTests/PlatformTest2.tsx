@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Volume2, Gamepad2, Settings, ListVideo, Sparkles } from 'lucide-react';
+import { ChevronLeft, Volume2, Gamepad2, ListVideo, Sparkles } from 'lucide-react';
 import styles from './PlatformTest2.module.sass';
 
 export default function PlatformTest2({ onClose }: { onClose: () => void }) {

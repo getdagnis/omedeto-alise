@@ -48,10 +48,7 @@ type CharacterCardProps = {
   onDragLeave?: () => void;
   onDrop?: (event: DragEvent<HTMLDivElement>) => void;
   onImageLoad?: () => void;
-  onEdit?: () => void;
-  onEditImage?: () => void;
   onReset?: () => void;
-  onOpenSoundPicker?: () => void;
   onToggleSound?: (soundId: string) => void;
   onRemoveSound?: (soundId: string) => void;
   onToggleMute?: () => void;
@@ -109,10 +106,7 @@ function CharacterCard({
   onDragLeave,
   onDrop,
   onImageLoad,
-  onEdit,
-  onEditImage,
   onReset,
-  onOpenSoundPicker,
   onToggleSound,
   onRemoveSound,
   onToggleMute,
@@ -131,7 +125,6 @@ function CharacterCard({
   
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
-  const showName = displayName.trim().length > 0;
   const isLooping = (soundIds.length > 0 || forceLoop) && colors.length > 1;
 
   const soundsPlayingAndNotMuted = soundIds.length > 0 && !isMuted;

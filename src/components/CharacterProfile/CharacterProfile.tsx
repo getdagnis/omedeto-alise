@@ -1,6 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, type CSSProperties, useCallback } from 'react';
 import { 
-  ArrowLeft,
   Trophy,
   Star,
   X,
@@ -8,8 +7,6 @@ import {
   UserRoundPen,
   Music,
   ChevronRight,
-  ChevronLeft,
-  Plus,
   ChevronUp,
   ChevronDown,
   Heart as HeartSolid,
@@ -19,11 +16,11 @@ import {
   Square,
   SquareCheckBig
 } from 'lucide-react';
-import { Heart as HeartRegular } from 'lucide-react';
 import { Button, Chip, Notice } from '../../components-ui';
-import { useFloatingText, FloatingTextContainer } from '../../components-ui/FloatingText';
-import type { CharacterOption, SoundOption } from '../../config';
-import { COMBOS, ACHIEVEMENTS, CHARACTER_IMAGE_OPTIONS, CHARACTER_IDENTITIES } from '../../config';
+import { FloatingTextContainer } from '../../components-ui/FloatingText';
+import { useFloatingText } from '../../hooks/useFloatingText';
+import type { CharacterOption, SoundOption, CharacterCustomization } from '../../config';
+import { COMBOS, ACHIEVEMENTS, CHARACTER_IDENTITIES } from '../../config';
 import styles from './CharacterProfile.module.sass';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
@@ -44,14 +41,11 @@ export type CharacterProfileProps = {
   characterId: string;
   character: CharacterOption;
   characters: CharacterOption[];
-  characterCustomizations: Record<string, { name?: string; image?: string; soundIds?: string[]; cloudSoundIds?: string[]; colorModes?: string[]; identityId?: string }>;
+  characterCustomizations: Record<string, CharacterCustomization>;
   activeSounds: string[];
   unlockedLevel: number;
-  soundsPerCharacter: number;
   soundCatalogById: Map<string, SoundOption>;
   discoveredComboIds: string[];
-  colorOptions: readonly CharacterColorOption[];
-  imageOptions: readonly CharacterImageOption[];
   favoriteSoundIds: string[];
   characterLevels: Record<string, number>;
   claimedIdentityIds: string[];
@@ -59,7 +53,7 @@ export type CharacterProfileProps = {
   onClose: () => void;
   onToggleSound: (soundId: string, path: string) => void;
   onPreviewSound: (soundId: string, path: string) => void;
-  onApply: (patch?: any) => void;
+  onApply: (patch?: CharacterCustomization) => void;
   onNavigateShop: () => void;
   onRecordCombo?: (comboId: string) => void;
   onToggleFavoriteSound: (soundId: string) => void;
@@ -78,11 +72,8 @@ export function CharacterProfile({
   characterCustomizations,
   activeSounds,
   unlockedLevel,
-  soundsPerCharacter,
   soundCatalogById,
   discoveredComboIds,
-  colorOptions,
-  imageOptions,
   favoriteSoundIds,
   characterLevels,
   claimedIdentityIds,
@@ -122,16 +113,17 @@ export function CharacterProfile({
     return isPredefined || !!draftCustomization.image;
   }, [isPredefined, draftCustomization.image]);
 
-  useEffect(() => {
-    if (activeTab === 'sounds' && !isCharacterSelected) {
-       setIsNoticeOpen(true);
+  const handleTabChange = useCallback((tab: 'sounds' | 'identity' | 'milestones') => {
+    if (tab === 'sounds' && !isCharacterSelected) {
+      setIsNoticeOpen(true);
     }
-  }, [activeTab, isCharacterSelected]);
+    setActiveTab(tab);
+  }, [isCharacterSelected]);
 
   const constellationSounds = useMemo(() => {
     const ids = draftCustomization?.cloudSoundIds || character.sounds.map(s => s.id).slice(0, 24);
     return ids.map(id => soundCatalogById.get(id)).filter((s): s is SoundOption => !!s);
-  }, [character.sounds, draftCustomization?.cloudSoundIds, soundCatalogById]);
+  }, [character.sounds, draftCustomization.cloudSoundIds, soundCatalogById]);
 
   const cloudCompletedComboIds = useMemo(() => {
     const cloudSet = new Set(constellationSounds.map(s => s.id));
@@ -224,7 +216,7 @@ export function CharacterProfile({
     });
   };
 
-  const handleUpdateDraft = (patch: any) => {
+  const handleUpdateDraft = (patch: CharacterCustomization) => {
     setDraftCustomization(prev => ({ ...prev, ...patch }));
   };
 
@@ -274,16 +266,12 @@ export function CharacterProfile({
     }
   };
 
-  const handleSoundDoubleClick = (soundId: string, path: string) => {
+  const handleSoundDoubleClick = (soundId: string, _path: string) => {
     const combos = soundToComboMap[soundId];
     if (combos && combos.length > 0) {
       handleComboClick(combos[0]);
     }
   };
-
-  const favoriteSounds = useMemo(() => {
-    return character.sounds.filter(s => favoriteSoundIds.includes(s.id));
-  }, [character.sounds, favoriteSoundIds]);
 
   const groupedLibrary = useMemo(() => {
     let base = [...character.sounds];
@@ -519,15 +507,15 @@ export function CharacterProfile({
         </header>
 
         <div className={styles.profileTabs}>
-          <button className={`${styles.tabLink} ${activeTab === 'sounds' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('sounds')}>
+          <button className={`${styles.tabLink} ${activeTab === 'sounds' ? styles.tabLinkActive : ''}`} onClick={() => handleTabChange('sounds')}>
             <Music size={18} />
             <span>CONSTELLATION</span>
           </button>
-          <button className={`${styles.tabLink} ${activeTab === 'identity' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('identity')}>
+          <button className={`${styles.tabLink} ${activeTab === 'identity' ? styles.tabLinkActive : ''}`} onClick={() => handleTabChange('identity')}>
             <UserRoundPen size={18} />
             <span>IDENTITY</span>
           </button>
-          <button className={`${styles.tabLink} ${activeTab === 'milestones' ? styles.tabLinkActive : ''}`} onClick={() => setActiveTab('milestones')}>
+          <button className={`${styles.tabLink} ${activeTab === 'milestones' ? styles.tabLinkActive : ''}`} onClick={() => handleTabChange('milestones')}>
             <Star size={18} />
             <span>MILESTONES</span>
           </button>
@@ -856,7 +844,7 @@ export function CharacterProfile({
         isOpen={isNoticeOpen}
         onClose={() => {
            setIsNoticeOpen(false);
-           setActiveTab('identity');
+           handleTabChange('identity');
         }}
         title="Identity Required"
         message="Please select a character identity before choosing sounds for your mix."
