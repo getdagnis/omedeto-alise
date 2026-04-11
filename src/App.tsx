@@ -663,11 +663,21 @@ function App() {
     lvl2NextReq.soundsPlayed ? `Trigger ${lvl2NextReq.soundsPlayed} different sound clips.` : null,
   ].filter((line): line is string => Boolean(line));
 
-  const claimedIdentityIds = useMemo(() => {
-    return Object.values(characterCustomizations)
-      .map((c) => c.identityId)
+  const otherCharactersClaimedIdentities = useMemo(() => {
+    if (!profileCharacterId) return [];
+
+    return stageCharacterIds
+      .filter((id) => id !== profileCharacterId)
+      .map((id) => {
+        const custom = characterCustomizations[id];
+        // If customization exists and identityId is explicitly null, it's unlinked
+        if (custom && custom.identityId !== undefined) return custom.identityId;
+        // Otherwise fallback to default character identity
+        const charBase = CHARACTERS.find((c) => c.id === id);
+        return charBase?.identityId;
+      })
       .filter((id): id is string => !!id);
-  }, [characterCustomizations]);
+  }, [profileCharacterId, stageCharacterIds, characterCustomizations]);
 
   return (
     <div className={`${styles.page} ${isLowGraphics ? styles.pageLowGraphics : ''}`}>
@@ -717,7 +727,7 @@ function App() {
             onToggleFavoriteSound={toggleFavoriteSound}
             characterLevels={progressionState.characterLevels}
             onUpgradeCharacter={upgradeCharacter}
-            claimedIdentityIds={claimedIdentityIds}
+            claimedIdentityIds={otherCharactersClaimedIdentities}
             />        ) : (
           <>
             <section
