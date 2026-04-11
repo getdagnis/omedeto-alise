@@ -23,7 +23,7 @@ import { Heart as HeartRegular } from 'lucide-react';
 import { Button, Chip, Notice } from '../../components-ui';
 import { useFloatingText, FloatingTextContainer } from '../../components-ui/FloatingText';
 import type { CharacterOption, SoundOption } from '../../config';
-import { COMBOS, ACHIEVEMENTS, CHARACTER_IMAGE_OPTIONS } from '../../config';
+import { COMBOS, ACHIEVEMENTS, CHARACTER_IMAGE_OPTIONS, CHARACTER_IDENTITIES } from '../../config';
 import styles from './CharacterProfile.module.sass';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
@@ -44,7 +44,7 @@ export type CharacterProfileProps = {
   characterId: string;
   character: CharacterOption;
   characters: CharacterOption[];
-  characterCustomizations: Record<string, { name?: string; image?: string; soundIds?: string[]; cloudSoundIds?: string[]; colorModes?: string[] }>;
+  characterCustomizations: Record<string, { name?: string; image?: string; soundIds?: string[]; cloudSoundIds?: string[]; colorModes?: string[]; identityId?: string }>;
   activeSounds: string[];
   unlockedLevel: number;
   soundsPerCharacter: number;
@@ -53,6 +53,7 @@ export type CharacterProfileProps = {
   colorOptions: readonly CharacterColorOption[];
   imageOptions: readonly CharacterImageOption[];
   favoriteSoundIds: string[];
+  characterLevels: Record<string, number>;
   isMain?: boolean;
   onClose: () => void;
   onToggleSound: (soundId: string, path: string) => void;
@@ -61,6 +62,7 @@ export type CharacterProfileProps = {
   onNavigateShop: () => void;
   onRecordCombo?: (comboId: string) => void;
   onToggleFavoriteSound: (soundId: string) => void;
+  onUpgradeCharacter?: (characterId: string, level: number) => void;
 };
 
 type LibraryTab = 'favs' | 'cat' | 'mood' | 'chars';
@@ -81,6 +83,7 @@ export function CharacterProfile({
   colorOptions,
   imageOptions,
   favoriteSoundIds,
+  characterLevels,
   isMain = false,
   onClose,
   onToggleSound,
@@ -89,6 +92,7 @@ export function CharacterProfile({
   onNavigateShop,
   onRecordCombo,
   onToggleFavoriteSound,
+  onUpgradeCharacter,
 }: CharacterProfileProps) {
   const [activeTab, setActiveTab] = useState<'sounds' | 'identity' | 'milestones'>('sounds');
   const [libTab, setLibTab] = useState<LibraryTab>('chars');
@@ -597,44 +601,152 @@ export function CharacterProfile({
                      <img src={characterImage || CHARACTER_PLACEHOLDER_PATH} alt="" className={styles.identityImageLarge} />
                   </div>
                   <div className={styles.identityControls}>
+                     {/* 1. Name Selection */}
                      <div className={styles.field}>
-                        <span className={styles.fieldLabel}>NAME</span>
+                        <span className={styles.fieldLabel}>CHARACTER NAME</span>
                         <input 
                           type="text" 
                           className={styles.textInput} 
                           value={draftCustomization.name || ''} 
                           placeholder={character.name} 
-                          onChange={(e) => handleUpdateDraft({ name: e.target.value.slice(0, 12) })} 
-                          disabled={isPredefined}
+                          onChange={(e) => handleUpdateDraft({ name: e.target.value.slice(0, 16) })} 
                         />
                      </div>
 
+                     {/* 2. Character Type (Identity) Selection */}
                      <div className={styles.field}>
-                        <span className={styles.fieldLabel}>CHARACTER TYPES</span>
-                        <div className={styles.imageGrid}>
-                          {CHARACTER_IMAGE_OPTIONS.map((opt) => {
-                            const isSelected = draftCustomization.image === opt.src;
-                            const isLocked = isPredefined && draftCustomization.image !== opt.src;
+                        <div className={styles.fieldHeader}>
+                           <span className={styles.fieldLabel}>IDENTITY TYPE</span>
+                           <span className={styles.fieldStatus}>FREE TO SWITCH</span>
+                        </div>
+                        <div className={styles.identityGrid}>
+                          {CHARACTER_IDENTITIES.map((ident) => {
+                            const currentIdentId = draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
+                            const isSelected = currentIdentId === ident.id;
+                            const defaultImg = ident.images[0].src;
                             return (
                               <button 
-                                key={opt.id} 
-                                className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''} ${isLocked ? styles.imageOptionLocked : ''}`} 
-                                onClick={() => !isLocked && handleUpdateDraft({ image: opt.src })}
-                                disabled={isLocked}
+                                key={ident.id} 
+                                className={`${styles.identOption} ${isSelected ? styles.identOptionActive : ''}`} 
+                                onClick={() => handleUpdateDraft({ 
+                                  identityId: ident.id, 
+                                  image: ident.images[0].src,
+                                  name: ident.label
+                                })}
                               >
-                                <img src={opt.src} alt={opt.label} />
-                                {isLocked && <Lock size={12} className={styles.lockIcon} />}
+                                <div className={styles.identOptionImg}>
+                                   <img src={defaultImg} alt={ident.label} />
+                                </div>
+                                <span className={styles.identOptionLabel}>{ident.label.toUpperCase()}</span>
                               </button>
                             );
                           })}
                         </div>
                      </div>
-                     {characterId === 'alise' && (
-                        <div className={styles.identityActions}>
-                           <Button variant="secondary" size="sm" onPress={() => {}}>UNLINK FROM ALISE</Button>
-                           <Button variant="quiet" size="sm" onPress={() => {}}>RESET CHARACTER</Button>
+
+                     {/* 3. Appearance (Image) Selection */}
+                     <div className={styles.field}>
+                        <div className={styles.fieldHeader}>
+                           <span className={styles.fieldLabel}>APPEARANCE</span>
+                           {(() => {
+                              const identId = draftCustomization.identityId || character.identityId;
+                              if (!identId) return null; // Unlinked state shows no upgrade button
+                              
+                              const ident = CHARACTER_IDENTITIES.find(i => i.id === identId);
+                              const charLevel = characterLevels[identId] || 0;
+                              const nextUpgrade = ident?.images.find(img => img.unlockLevel > charLevel);
+                              
+                              if (!nextUpgrade) return <span className={styles.fieldStatus}>MAX LEVEL</span>;
+                              
+                              return (
+                                <Button 
+                                  variant="primary" 
+                                  size="sm" 
+                                  className={styles.upgradeBtn}
+                                  onPress={() => onUpgradeCharacter?.(identId, nextUpgrade.unlockLevel)}
+                                >
+                                  UPGRADE TO LEVEL {nextUpgrade.unlockLevel}
+                                </Button>
+                              );
+
+                           })()}
                         </div>
-                     )}
+                        <div className={styles.imageGrid}>
+                          {(() => {
+                            const identId = draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
+                            
+                            // If identId is null/undefined explicitly (unlinked), show all images
+                            if (!identId) {
+                               return CHARACTER_IDENTITIES.flatMap(ident => ident.images).map((img) => {
+                                 const isSelected = draftCustomization.image === img.src;
+                                 return (
+                                   <button 
+                                     key={`${img.id}-all`} 
+                                     className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`} 
+                                     onClick={() => handleUpdateDraft({ image: img.src })}
+                                   >
+                                     <img src={img.src} alt={img.label} />
+                                   </button>
+                                 );
+                               });
+                            }
+
+                            const ident = CHARACTER_IDENTITIES.find(i => i.id === identId);
+                            const charLevel = characterLevels[identId || ''] || 0;
+                            if (!ident) return null;
+
+                            return ident.images.map((img) => {
+                              const isSelected = draftCustomization.image === img.src;
+                              const isLocked = img.unlockLevel > charLevel;
+                              return (
+                                <button 
+                                  key={img.id} 
+                                  className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''} ${isLocked ? styles.imageOptionLocked : ''}`} 
+                                  onClick={() => !isLocked && handleUpdateDraft({ image: img.src })}
+                                  disabled={isLocked}
+                                >
+                                  <img src={img.src} alt={img.label} />
+                                  {isLocked && (
+                                    <div className={styles.lockOverlay}>
+                                       <Lock size={12} />
+                                       <span>LVL {img.unlockLevel}</span>
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            });
+                          })()}
+                        </div>
+                     </div>
+
+                     <div className={styles.identityActions}>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          onPress={() => {
+                            // Unlink: Clear identityId so all images show
+                            handleUpdateDraft({ identityId: null });
+                          }}
+                        >
+                          UNLINK FROM {character.name.toUpperCase()}
+                        </Button>
+                        <Button 
+                          variant="quiet" 
+                          size="sm" 
+                          onPress={() => {
+                            // Reset: Revert to character's factory defaults draft
+                            setDraftCustomization({
+                              image: character.img,
+                              name: character.name,
+                              identityId: character.identityId,
+                              cloudSoundIds: character.sounds.map(s => s.id).slice(0, 24),
+                              colorModes: []
+                            });
+                          }}
+                        >
+                          RESET CHARACTER
+                        </Button>
+                     </div>
                   </div>
                </div>
             </section>

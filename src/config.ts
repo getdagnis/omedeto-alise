@@ -110,6 +110,20 @@ export type CharacterColorScheme = {
   soundboardColor: string;
 };
 
+export type CharacterIdentityImage = {
+  id: string;
+  src: string;
+  label: string;
+  unlockLevel: number;
+};
+
+export type CharacterIdentityType = {
+  id: string;
+  label: string;
+  japaneseName: string;
+  images: CharacterIdentityImage[];
+};
+
 export type CharacterOption = {
   id: string;
   name: string;
@@ -122,7 +136,72 @@ export type CharacterOption = {
   soundboardColor: string;
   schemes: CharacterColorScheme[];
   sounds: SoundOption[];
+  identityId?: string; // Links to CharacterIdentityType
 };
+
+export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
+  {
+    id: 'alise',
+    label: 'Alise',
+    japaneseName: 'アリス',
+    images: [
+      { id: 'alise-1', src: '/chars/alise-1.png', label: 'Default', unlockLevel: 0 },
+      { id: 'alise-lvl2-1', src: '/chars/alise-lvl2-1.png', label: 'Neon Bloom', unlockLevel: 3 },
+      { id: 'alise-lvl2-2', src: '/chars/alise-lvl2-2.png', label: 'Midnight', unlockLevel: 3 },
+      { id: 'alise-lvl3-1', src: '/chars/alise-lvl3-1.png', label: 'Master', unlockLevel: 3 },
+    ],
+  },
+  {
+    id: 'foxy',
+    label: 'Foxy',
+    japaneseName: 'フォクシー',
+    images: [
+      { id: 'foxy-1', src: '/chars/foxy-1.png', label: 'Classic', unlockLevel: 0 },
+      { id: 'foxy-2', src: '/chars/foxy-2.png', label: 'Spirit', unlockLevel: 2 },
+      { id: 'foxy-3', src: '/chars/foxy-3.png', label: 'Ethereal', unlockLevel: 2 },
+    ],
+  },
+  {
+    id: 'gumi',
+    label: 'GUMI',
+    japaneseName: 'グミ',
+    images: [
+      { id: 'gumi-1', src: '/chars/gumi-1.png', label: 'Normal', unlockLevel: 0 },
+      { id: 'gumi-cyber-1', src: '/chars/gumi-cyber-1.png', label: 'Cyber', unlockLevel: 2 },
+    ],
+  },
+  {
+    id: 'hanako',
+    label: 'Hanako',
+    japaneseName: '花子',
+    images: [
+      { id: 'hanako-1', src: '/chars/hanako-1.png', label: 'Shrine', unlockLevel: 0 },
+      { id: 'hanako-kun-2', src: '/chars/hanako-kun-2.png', label: 'Uniform', unlockLevel: 2 },
+      { id: 'hanako-kun-3', src: '/chars/hanako-kun-3.png', label: 'Spirit', unlockLevel: 2 },
+      { id: 'hanako-kun-4', src: '/chars/hanako-kun-4.png', label: 'Legend', unlockLevel: 2 },
+    ],
+  },
+  {
+    id: 'kagamine',
+    label: 'Kagamine',
+    japaneseName: '鏡音リン',
+    images: [
+      { id: 'kagamine-rin-0', src: '/chars/kagamine-rin-0.png', label: 'Rin Zero', unlockLevel: 0 },
+      { id: 'kagamine-rin-1', src: '/chars/kagamine-rin-1.png', label: 'Vocaloid 1', unlockLevel: 0 },
+      { id: 'kagamine-rin-2', src: '/chars/kagamine-rin-2.png', label: 'Vocaloid 2', unlockLevel: 0 },
+      { id: 'kagamine-cyber-1', src: '/chars/kagamine-cyber-1.png', label: 'Cyber 1', unlockLevel: 2 },
+      { id: 'kagamine-cyber-2', src: '/chars/kagamine-cyber-2.png', label: 'Cyber 2', unlockLevel: 2 },
+    ],
+  },
+  {
+    id: 'honekoneko',
+    label: 'Honekoneko',
+    japaneseName: 'ホネコネコ',
+    images: [
+      { id: 'honekoneko-1', src: '/chars/honekoneko-1.png', label: 'Boney', unlockLevel: 0 },
+    ],
+  },
+];
 
 // export const BACKGROUND_IMAGE_KEYS = ['bg1', 'bg2', 'bg3', 'bg4', 'bg5'] as const;
 export const BACKGROUND_IMAGE_KEYS = ['bg2'] as const;
@@ -711,6 +790,7 @@ export const CHARACTERS: CharacterOption[] = [
     img: '/chars/alise-lvl2-2.png',
     mixLabel: "Alise's Mix!",
     japaneseName: 'アリス', // @keep
+    identityId: 'alise',
     titleColor: 'white',
     primaryColor: '#7c3aed',
     secondaryColor: '#ff0040',
@@ -757,7 +837,36 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#121426cc',
       },
     ],
-    sounds: ALL_SOUNDS,
+    sounds: mapSoundColors([
+      ...GUMI_BASE_SOUNDS.filter((s) => ['fly-me', 'energy', 'synth-rise', 'synth-garden', 'ok'].includes(s.id)),
+      ...HANAKO_BASE_SOUNDS.filter((s) => ['beat-1', 'beat-2', 'beat-3', 'monks', 'polyphon'].includes(s.id)),
+    ]),
+  },
+  {
+    id: 'foxy',
+    name: 'FOXY',
+    img: '/chars/foxy-1.png',
+    mixLabel: "Foxy's Mix!",
+    japaneseName: 'フォクシー', // @keep
+    identityId: 'foxy',
+    titleColor: 'white',
+    primaryColor: '#ff9f1c',
+    secondaryColor: '#e71d36',
+    soundboardColor: '#3a1c1a',
+    schemes: [
+      {
+        id: 'default',
+        name: 'Wild Fire',
+        titleColor: 'white',
+        primaryColor: '#ff9f1c',
+        secondaryColor: '#e71d36',
+        soundboardColor: '#3a1c1a',
+      },
+    ],
+    sounds: mapSoundColors([
+      ...GUMI_BASE_SOUNDS.filter((s) => ['kick-1', 'busy', 'anthenna'].includes(s.id)),
+      ...HANAKO_BASE_SOUNDS.filter((s) => ['cow', 'goat', 'drums-1', 'drums-2'].includes(s.id)),
+    ]),
   },
   {
     id: 'gumi',
@@ -765,6 +874,7 @@ export const CHARACTERS: CharacterOption[] = [
     img: '/chars/gumi-1.png',
     mixLabel: "Gumi's Mix!",
     japaneseName: 'グミ', // @keep
+    identityId: 'gumi',
     titleColor: 'white',
     primaryColor: '#6ede3e',
     secondaryColor: '#234315',
@@ -811,7 +921,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#3b2b10cc',
       },
     ],
-    sounds: ALL_SOUNDS,
+    sounds: mapSoundColors(GUMI_BASE_SOUNDS.filter((s) => ['sad', 'synth-night', 'tomorrow', 'grow', 'peace-1'].includes(s.id))),
   },
   {
     id: 'hanako',
@@ -819,6 +929,7 @@ export const CHARACTERS: CharacterOption[] = [
     img: '/chars/hanako-1.png',
     mixLabel: "Hanako's Mix!",
     japaneseName: '花子', // @keep
+    identityId: 'hanako',
     titleColor: 'white',
     primaryColor: '#ef4444',
     secondaryColor: '#990026',
@@ -865,7 +976,59 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#260009cc',
       },
     ],
-    sounds: ALL_SOUNDS,
+    sounds: mapSoundColors(HANAKO_BASE_SOUNDS.filter((s) => ['horror', 'polyphon', 'trombone', 'laugh-3', 'cry', 'violins'].includes(s.id))),
+  },
+  {
+    id: 'kagamine',
+    name: 'KAGAMINE RIN',
+    img: '/chars/kagamine-rin-1.png',
+    mixLabel: "Rin's Mix!",
+    japaneseName: '鏡音リン', // @keep
+    identityId: 'kagamine',
+    titleColor: 'white',
+    primaryColor: '#f9d423',
+    secondaryColor: '#fb8500',
+    soundboardColor: '#3b2b10',
+    schemes: [
+      {
+        id: 'default',
+        name: 'Solar Flare',
+        titleColor: 'white',
+        primaryColor: '#f9d423',
+        secondaryColor: '#fb8500',
+        soundboardColor: '#3b2b10',
+      },
+    ],
+    sounds: mapSoundColors([
+      ...GUMI_BASE_SOUNDS.filter((s) => ['synth-rise', 'energy', 'synth-space', 'candy-machine'].includes(s.id)),
+      ...HANAKO_BASE_SOUNDS.filter((s) => ['beat-4', 'drums-1', 'guitar'].includes(s.id)),
+    ]),
+  },
+  {
+    id: 'honekoneko',
+    name: 'HONEKONEKO',
+    img: '/chars/honekoneko-1.png',
+    mixLabel: "Boney Mix",
+    japaneseName: 'ホネコネコ', // @keep
+    identityId: 'honekoneko',
+    titleColor: 'white',
+    primaryColor: '#e5e5e5',
+    secondaryColor: '#403d39',
+    soundboardColor: '#252422',
+    schemes: [
+      {
+        id: 'default',
+        name: 'Bone White',
+        titleColor: 'white',
+        primaryColor: '#e5e5e5',
+        secondaryColor: '#403d39',
+        soundboardColor: '#252422',
+      },
+    ],
+    sounds: mapSoundColors([
+      ...GUMI_BASE_SOUNDS.filter((s) => ['machines', 'noise-1', 'alert'].includes(s.id)),
+      ...HANAKO_BASE_SOUNDS.filter((s) => ['horror', 'drums-2'].includes(s.id)),
+    ]),
   },
   {
     id: 'placeholder-1',
@@ -903,6 +1066,19 @@ export const CHARACTERS: CharacterOption[] = [
     primaryColor: PLACEHOLDER_SCHEMES[2].primaryColor,
     secondaryColor: PLACEHOLDER_SCHEMES[2].secondaryColor,
     soundboardColor: PLACEHOLDER_SCHEMES[2].soundboardColor,
+    schemes: PLACEHOLDER_SCHEMES,
+    sounds: ALL_SOUNDS,
+  },
+  {
+    id: 'placeholder-4',
+    name: 'Ghost',
+    img: '/alise-1.svg',
+    mixLabel: 'Ghost Mix',
+    japaneseName: '幽霊', // @keep
+    titleColor: PLACEHOLDER_SCHEMES[3].titleColor,
+    primaryColor: PLACEHOLDER_SCHEMES[3].primaryColor,
+    secondaryColor: PLACEHOLDER_SCHEMES[3].secondaryColor,
+    soundboardColor: PLACEHOLDER_SCHEMES[3].soundboardColor,
     schemes: PLACEHOLDER_SCHEMES,
     sounds: ALL_SOUNDS,
   },

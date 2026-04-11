@@ -890,6 +890,65 @@
   color: var(--character-secondary)
   opacity: 0.8
 
+.fieldHeader
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 1rem
+
+.fieldStatus
+  font-size: 0.5rem
+  font-weight: 800
+  opacity: 0.4
+  letter-spacing: 0.05em
+
+.upgradeBtn
+  height: 1.25rem !important
+  font-size: 0.5rem !important
+  padding: 0 0.5rem !important
+
+.identityGrid
+  display: grid
+  grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr))
+  gap: 0.75rem
+
+.identOption
+  display: flex
+  flex-direction: column
+  align-items: center
+  gap: 0.5rem
+  background: rgba(255, 255, 255, 0.03)
+  border: 2px solid transparent
+  border-radius: 0.75rem
+  padding: 0.5rem
+  cursor: pointer
+  transition: all 0.2s ease
+  &:hover
+    background: rgba(255, 255, 255, 0.06)
+
+.identOptionActive
+  border-color: var(--character-primary)
+  background: rgba(255, 255, 255, 0.08)
+
+.identOptionImg
+  width: 100%
+  aspect-ratio: 1 / 1
+  border-radius: 0.5rem
+  background: rgba(0, 0, 0, 0.2)
+  overflow: hidden
+  img
+    width: 100%
+    height: 100%
+    object-fit: contain
+
+.identOptionLabel
+  font-size: 0.55rem
+  font-weight: 800
+  color: rgba(255, 255, 255, 0.6)
+  letter-spacing: 0.05em
+  .identOptionActive &
+    color: var(--character-primary)
+
 .textInput
   background: rgba(255, 255, 255, 0.05)
   border: 1px solid rgba(255, 255, 255, 0.1)
@@ -939,11 +998,22 @@
   &:hover
     background: rgba(255, 255, 255, 0.05)
 
-.lockIcon
+.lockOverlay
   position: absolute
-  top: 0.25rem
-  right: 0.25rem
+  inset: 0
+  background: rgba(0, 0, 0, 0.4)
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  gap: 0.25rem
   color: white
+  font-size: 0.5rem
+  font-weight: 800
+  letter-spacing: 0.05em
+  border-radius: 0.75rem
+
+.lockIcon
   opacity: 0.8
 
 .identityActions

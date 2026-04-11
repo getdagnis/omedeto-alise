@@ -79,6 +79,7 @@ export type ProgressionState = {
   minutesPlayed: number;
   unlockedLevel: number;
   walletBalance: number;
+  characterLevels: Record<string, number>; // characterId -> level
 };
 
 export const DEFAULT_PROGRESSION_STATE: ProgressionState = {
@@ -91,4 +92,12 @@ export const DEFAULT_PROGRESSION_STATE: ProgressionState = {
   minutesPlayed: 0,
   unlockedLevel: 2, // Starts at Level 2 - @keep
   walletBalance: 1000,
+  characterLevels: {
+    alise: 0,
+    foxy: 0,
+    gumi: 0,
+    hanako: 0,
+    kagamine: 0,
+    honekoneko: 0,
+  },
 };

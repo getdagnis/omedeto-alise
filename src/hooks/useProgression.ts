@@ -113,17 +113,28 @@ export function useProgression() {
       };
     });
   }, []);
+const grantOwnedSound = useCallback((soundId: string) => {
+  setState((prev) => {
+    if (prev.ownedSoundIds.includes(soundId)) return prev;
 
-  const grantOwnedSound = useCallback((soundId: string) => {
-    setState((prev) => {
-      if (prev.ownedSoundIds.includes(soundId)) return prev;
+    return {
+      ...prev,
+      ownedSoundIds: [...prev.ownedSoundIds, soundId],
+    };
+  });
+}, []);
 
-      return {
-        ...prev,
-        ownedSoundIds: [...prev.ownedSoundIds, soundId],
-      };
-    });
-  }, []);
+const upgradeCharacter = useCallback((characterId: string, level: number) => {
+  setState((prev) => ({
+    ...prev,
+    characterLevels: {
+      ...prev.characterLevels,
+      [characterId]: Math.max(prev.characterLevels[characterId] || 0, level),
+    },
+  }));
+}, []);
+
+// Calculate current level
 
   const toggleFavoriteSound = useCallback((soundId: string) => {
     setState((prev) => {
@@ -195,5 +206,6 @@ export function useProgression() {
     buySound,
     grantOwnedSound,
     toggleFavoriteSound,
+    upgradeCharacter,
   };
 }

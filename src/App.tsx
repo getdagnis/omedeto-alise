@@ -78,6 +78,7 @@ type CharacterCustomization = {
   image?: string;
   soundIds?: string[]; // Active Selection (max 6)
   cloudSoundIds?: string[]; // Constellation Pool (max 24)
+  identityId?: string | null;
 };
 
 type CharacterCustomizationMap = Record<string, CharacterCustomization>;
@@ -213,7 +214,7 @@ function App() {
 
   const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
   const mainCharacterId = 'alise';
-  const stageCharacterIds = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'gumi'];
+  const stageCharacterIds = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'placeholder-4'];
 
   const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({
     alise: [], // Starts empty - @keep
@@ -270,6 +271,7 @@ function App() {
     recordComboDiscovered,
     buySound,
     toggleFavoriteSound,
+    upgradeCharacter,
   } = useProgression();
 
   const [isLvl2AchievementOpen, setIsLvl2AchievementOpen] = useState(false);
@@ -707,6 +709,8 @@ function App() {
             isMain={profileCharacterId === favoriteCharacterId}
             favoriteSoundIds={progressionState.favoriteSoundIds}
             onToggleFavoriteSound={toggleFavoriteSound}
+            characterLevels={progressionState.characterLevels}
+            onUpgradeCharacter={upgradeCharacter}
           />        ) : (
           <>
             <section
