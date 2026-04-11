@@ -54,6 +54,7 @@ export type CharacterProfileProps = {
   imageOptions: readonly CharacterImageOption[];
   favoriteSoundIds: string[];
   characterLevels: Record<string, number>;
+  claimedIdentityIds: string[];
   isMain?: boolean;
   onClose: () => void;
   onToggleSound: (soundId: string, path: string) => void;
@@ -84,6 +85,7 @@ export function CharacterProfile({
   imageOptions,
   favoriteSoundIds,
   characterLevels,
+  claimedIdentityIds,
   isMain = false,
   onClose,
   onToggleSound,
@@ -623,19 +625,27 @@ export function CharacterProfile({
                           {CHARACTER_IDENTITIES.map((ident) => {
                             const currentIdentId = draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
                             const isSelected = currentIdentId === ident.id;
+                            const isTakenByOther = claimedIdentityIds.includes(ident.id) && !isSelected;
                             const defaultImg = ident.images[0].src;
                             return (
                               <button 
                                 key={ident.id} 
-                                className={`${styles.identOption} ${isSelected ? styles.identOptionActive : ''}`} 
-                                onClick={() => handleUpdateDraft({ 
+                                className={`${styles.identOption} ${isSelected ? styles.identOptionActive : ''} ${isTakenByOther ? styles.identOptionLocked : ''}`} 
+                                onClick={() => !isTakenByOther && handleUpdateDraft({ 
                                   identityId: ident.id, 
                                   image: ident.images[0].src,
                                   name: ident.label
                                 })}
+                                disabled={isTakenByOther}
                               >
                                 <div className={styles.identOptionImg}>
                                    <img src={defaultImg} alt={ident.label} />
+                                   {isTakenByOther && (
+                                      <div className={styles.lockOverlay}>
+                                         <Lock size={12} />
+                                         <span>IN USE</span>
+                                      </div>
+                                   )}
                                 </div>
                                 <span className={styles.identOptionLabel}>{ident.label.toUpperCase()}</span>
                               </button>

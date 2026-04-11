@@ -663,6 +663,12 @@ function App() {
     lvl2NextReq.soundsPlayed ? `Trigger ${lvl2NextReq.soundsPlayed} different sound clips.` : null,
   ].filter((line): line is string => Boolean(line));
 
+  const claimedIdentityIds = useMemo(() => {
+    return Object.values(characterCustomizations)
+      .map((c) => c.identityId)
+      .filter((id): id is string => !!id);
+  }, [characterCustomizations]);
+
   return (
     <div className={`${styles.page} ${isLowGraphics ? styles.pageLowGraphics : ''}`}>
       <div className={styles.background} style={{ '--bg-image': `url(${activeBackgroundImage})` } as CSSProperties} />
@@ -711,7 +717,8 @@ function App() {
             onToggleFavoriteSound={toggleFavoriteSound}
             characterLevels={progressionState.characterLevels}
             onUpgradeCharacter={upgradeCharacter}
-          />        ) : (
+            claimedIdentityIds={claimedIdentityIds}
+            />        ) : (
           <>
             <section
               className={styles.panel}
