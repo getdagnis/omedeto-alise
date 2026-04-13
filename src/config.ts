@@ -117,11 +117,12 @@ export type CharacterIdentityImage = {
   unlockLevel: number;
 };
 
-export type CharacterIdentityType = {
+export type CharacterPerformer = {
   id: string;
   label: string;
   japaneseName: string;
   images: CharacterIdentityImage[];
+  defaultSounds: string[];
 };
 
 export type CharacterCustomization = {
@@ -145,10 +146,10 @@ export type CharacterOption = {
   soundboardColor: string;
   schemes: CharacterColorScheme[];
   sounds: SoundOption[];
-  identityId?: string; // Links to CharacterIdentityType
+  identityId?: string; // Links to CharacterPerformer
 };
 
-export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
+export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
   {
     id: 'alise',
     label: 'Alise',
@@ -158,6 +159,12 @@ export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
       { id: 'alise-lvl2-1', src: '/chars/alise-lvl2-1.png', label: 'Neon Bloom', unlockLevel: 3 },
       { id: 'alise-lvl2-2', src: '/chars/alise-lvl2-2.png', label: 'Midnight', unlockLevel: 3 },
       { id: 'alise-lvl3-1', src: '/chars/alise-lvl3-1.png', label: 'Master', unlockLevel: 3 },
+    ],
+    defaultSounds: [
+      'energy', 'kick-1', 'beat-1', 'beat-2', 'machines', 'ok', 'fly-me', 'tomorrow', 
+      'drums-1', 'drums-2', 'beat-3', 'beat-4', 'grow', 'candy-machine', 'alert', 
+      'noise-1', 'yokune', 'synth-grow', 'synth-rise', 'synth-space', 'synth-garden', 
+      'synth-forest', 'synth-night', 'oh-boy'
     ],
   },
   {
@@ -169,6 +176,12 @@ export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
       { id: 'foxy-2', src: '/chars/foxy-2.png', label: 'Spirit', unlockLevel: 2 },
       { id: 'foxy-3', src: '/chars/foxy-3.png', label: 'Ethereal', unlockLevel: 2 },
     ],
+    defaultSounds: [
+      'cartoon', 'beat-3', 'cow', 'goat', 'giggle', 'oh-boy', 'ok', 'applause',
+      'kick-1', 'drums-1', 'drums-2', 'beat-1', 'beat-2', 'beat-4', 'synth-garden',
+      'synth-forest', 'peace-1', 'yokune', 'fly-me', 'energy', 'tomorrow', 'candy-machine',
+      'noise-1', 'alert'
+    ],
   },
   {
     id: 'gumi',
@@ -177,6 +190,12 @@ export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
     images: [
       { id: 'gumi-1', src: '/chars/gumi-1.png', label: 'Normal', unlockLevel: 0 },
       { id: 'gumi-cyber-1', src: '/chars/gumi-cyber-1.png', label: 'Cyber', unlockLevel: 2 },
+    ],
+    defaultSounds: [
+      'sad', 'synth-night', 'tomorrow', 'grow', 'peace-1', 'fly-me', 'yokune', 'cry',
+      'monks', 'polyphon', 'calm-creepy-01', 'calm-creepy-02', 'calm-creepy-03', 'calm-creepy-04',
+      'synth-forest', 'synth-garden', 'noise-1', 'machines', 'busy', 'anthenna', 'beat-1',
+      'beat-2', 'drums-1', 'drums-2'
     ],
   },
   {
@@ -188,6 +207,12 @@ export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
       { id: 'hanako-kun-2', src: '/chars/hanako-kun-2.png', label: 'Uniform', unlockLevel: 2 },
       { id: 'hanako-kun-3', src: '/chars/hanako-kun-3.png', label: 'Spirit', unlockLevel: 2 },
       { id: 'hanako-kun-4', src: '/chars/hanako-kun-4.png', label: 'Legend', unlockLevel: 2 },
+    ],
+    defaultSounds: [
+      'horror', 'polyphon', 'trombone', 'laugh-3', 'cry', 'violins', 'monks', 'choir',
+      'scary-creepy-01', 'scary-creepy-02', 'scary-creepy-03', 'scary-creepy-04', 'drums-2',
+      'beat-4', 'machines', 'noise-1', 'alert', 'alien', 'sad', 'synth-night', 'synth-grow',
+      'drums-1', 'beat-1', 'beat-2'
     ],
   },
   {
@@ -201,6 +226,11 @@ export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
       { id: 'kagamine-cyber-1', src: '/chars/kagamine-cyber-1.png', label: 'Cyber 1', unlockLevel: 2 },
       { id: 'kagamine-cyber-2', src: '/chars/kagamine-cyber-2.png', label: 'Cyber 2', unlockLevel: 2 },
     ],
+    defaultSounds: [
+      'synth-rise', 'energy', 'synth-space', 'candy-machine', 'beat-4', 'drums-1', 'guitar', 'beat-2', 'ok',
+      'yokune', 'oh-boy', 'fly-me', 'tomorrow', 'beat-1', 'beat-3', 'kick-1', 'drums-2', 'anthenna',
+      'busy', 'machines', 'noise-1', 'alert', 'synth-garden', 'synth-forest'
+    ],
   },
   {
     id: 'honekoneko',
@@ -209,8 +239,16 @@ export const CHARACTER_IDENTITIES: CharacterIdentityType[] = [
     images: [
       { id: 'honekoneko-1', src: '/chars/honekoneko-1.png', label: 'Boney', unlockLevel: 0 },
     ],
+    defaultSounds: [
+      'machines', 'noise-1', 'alert', 'horror', 'drums-2', 'beat-1', 'kick-1', 'busy',
+      'anthenna', 'alien', 'sad', 'scary-creepy-01', 'scary-creepy-02', 'scary-creepy-03',
+      'scary-creepy-04', 'drums-1', 'beat-2', 'beat-3', 'beat-4', 'synth-grow', 'synth-rise',
+      'synth-space', 'synth-night', 'polyphon'
+    ],
   },
 ];
+
+
 
 // export const BACKGROUND_IMAGE_KEYS = ['bg1', 'bg2', 'bg3', 'bg4', 'bg5'] as const;
 export const BACKGROUND_IMAGE_KEYS = ['bg2'] as const;
@@ -846,10 +884,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#121426cc',
       },
     ],
-    sounds: mapSoundColors([
-      ...GUMI_BASE_SOUNDS.filter((s) => ['fly-me', 'energy', 'synth-rise', 'synth-garden', 'ok'].includes(s.id)),
-      ...HANAKO_BASE_SOUNDS.filter((s) => ['beat-1', 'beat-2', 'beat-3', 'monks', 'polyphon'].includes(s.id)),
-    ]),
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'foxy',
@@ -872,10 +907,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#3a1c1a',
       },
     ],
-    sounds: mapSoundColors([
-      ...GUMI_BASE_SOUNDS.filter((s) => ['kick-1', 'busy', 'anthenna'].includes(s.id)),
-      ...HANAKO_BASE_SOUNDS.filter((s) => ['cow', 'goat', 'drums-1', 'drums-2'].includes(s.id)),
-    ]),
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'gumi',
@@ -930,7 +962,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#3b2b10cc',
       },
     ],
-    sounds: mapSoundColors(GUMI_BASE_SOUNDS.filter((s) => ['sad', 'synth-night', 'tomorrow', 'grow', 'peace-1'].includes(s.id))),
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'hanako',
@@ -985,7 +1017,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#260009cc',
       },
     ],
-    sounds: mapSoundColors(HANAKO_BASE_SOUNDS.filter((s) => ['horror', 'polyphon', 'trombone', 'laugh-3', 'cry', 'violins'].includes(s.id))),
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'kagamine',
@@ -1008,10 +1040,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#3b2b10',
       },
     ],
-    sounds: mapSoundColors([
-      ...GUMI_BASE_SOUNDS.filter((s) => ['synth-rise', 'energy', 'synth-space', 'candy-machine'].includes(s.id)),
-      ...HANAKO_BASE_SOUNDS.filter((s) => ['beat-4', 'drums-1', 'guitar'].includes(s.id)),
-    ]),
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'honekoneko',
@@ -1034,10 +1063,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#252422',
       },
     ],
-    sounds: mapSoundColors([
-      ...GUMI_BASE_SOUNDS.filter((s) => ['machines', 'noise-1', 'alert'].includes(s.id)),
-      ...HANAKO_BASE_SOUNDS.filter((s) => ['horror', 'drums-2'].includes(s.id)),
-    ]),
+    sounds: ALL_SOUNDS,
   },
   {
     id: 'placeholder-1',

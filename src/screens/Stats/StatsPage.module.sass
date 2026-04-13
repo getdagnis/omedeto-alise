@@ -1,0 +1,152 @@
+.statsPage
+  min-height: 100vh
+  background: #08061a
+  color: #e0e0ff
+  padding: 2rem
+  font-family: var(--font-body, sans-serif)
+
+.header
+  display: flex
+  justify-content: space-between
+  align-items: center
+  margin-bottom: 2rem
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1)
+  padding-bottom: 1rem
+
+.title
+  font-family: var(--font-title)
+  font-size: 2rem
+  color: var(--neon-cyan)
+  margin: 0
+
+.dashboardGrid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))
+  gap: 1.5rem
+  margin-bottom: 3rem
+
+.card
+  background: rgba(255, 255, 255, 0.03)
+  border: 1px solid rgba(255, 255, 255, 0.05)
+  border-radius: 12px
+  padding: 1.5rem
+
+.cardTitle
+  font-size: 0.9rem
+  font-weight: 800
+  text-transform: uppercase
+  letter-spacing: 0.1em
+  color: rgba(255, 255, 255, 0.4)
+  margin-bottom: 1.5rem
+  display: flex
+  align-items: center
+  gap: 0.5rem
+
+.statList
+  display: flex
+  flex-direction: column
+  gap: 0.75rem
+
+.statItem
+  display: flex
+  align-items: center
+  gap: 1rem
+
+.statLabel
+  flex: 1
+  font-size: 0.85rem
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
+.statBarContainer
+  flex: 2
+  height: 8px
+  background: rgba(255, 255, 255, 0.05)
+  border-radius: 4px
+  overflow: hidden
+
+.statBar
+  height: 100%
+  background: var(--neon-cyan)
+  border-radius: 4px
+
+.statValue
+  min-width: 2rem
+  text-align: right
+  font-size: 0.85rem
+  font-weight: 700
+  opacity: 0.8
+
+// Sessions Table
+.sessionsSection
+  margin-top: 2rem
+
+.sessionRow
+  background: rgba(255, 255, 255, 0.02)
+  border: 1px solid rgba(255, 255, 255, 0.05)
+  border-radius: 8px
+  margin-bottom: 0.5rem
+  overflow: hidden
+
+.sessionHeader
+  padding: 1rem
+  display: grid
+  grid-template-columns: 120px 1fr 150px 100px 40px
+  align-items: center
+  cursor: pointer
+  transition: background 0.2s ease
+  &:hover
+    background: rgba(255, 255, 255, 0.05)
+
+.sessionUser
+  font-weight: 700
+  font-size: 0.8rem
+  padding: 2px 6px
+  border-radius: 4px
+  background: rgba(0, 245, 255, 0.1)
+  color: var(--neon-cyan)
+  width: fit-content
+
+.sessionTime
+  font-size: 0.8rem
+  opacity: 0.6
+
+.sessionDetails
+  padding: 1rem
+  background: rgba(0, 0, 0, 0.2)
+  border-top: 1px solid rgba(255, 255, 255, 0.05)
+
+.eventTimeline
+  display: flex
+  flex-direction: column
+  gap: 0.5rem
+
+.eventItem
+  display: flex
+  gap: 1rem
+  font-size: 0.75rem
+  padding: 4px 0
+  border-left: 2px solid rgba(255, 255, 255, 0.1)
+  padding-left: 1rem
+
+.eventTime
+  opacity: 0.4
+  min-width: 60px
+
+.eventName
+  font-weight: 700
+  color: var(--neon-pink)
+
+.eventMeta
+  opacity: 0.6
+
+.loading
+  display: flex
+  justify-content: center
+  align-items: center
+  height: 50vh
+  font-size: 1.5rem
+  letter-spacing: 0.2em
+  color: var(--neon-cyan)
+  animation: pulse 1.5s infinite
