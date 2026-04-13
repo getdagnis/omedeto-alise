@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { ProgressionState } from '../progression';
 import { DEFAULT_PROGRESSION_STATE, PROGRESSION_LEVELS } from '../progression';
 
-const PROGRESSION_STORAGE_KEY = 'alise-in-tokyo-progression-v1';
+export const PROGRESSION_STORAGE_KEY = 'alise-in-tokyo-progression-v2';
 
 export function useProgression() {
   const [state, setState] = useState<ProgressionState>(() => {
@@ -113,28 +113,28 @@ export function useProgression() {
       };
     });
   }, []);
-const grantOwnedSound = useCallback((soundId: string) => {
-  setState((prev) => {
-    if (prev.ownedSoundIds.includes(soundId)) return prev;
+  const grantOwnedSound = useCallback((soundId: string) => {
+    setState((prev) => {
+      if (prev.ownedSoundIds.includes(soundId)) return prev;
 
-    return {
+      return {
+        ...prev,
+        ownedSoundIds: [...prev.ownedSoundIds, soundId],
+      };
+    });
+  }, []);
+
+  const upgradeCharacter = useCallback((characterId: string, level: number) => {
+    setState((prev) => ({
       ...prev,
-      ownedSoundIds: [...prev.ownedSoundIds, soundId],
-    };
-  });
-}, []);
+      characterLevels: {
+        ...prev.characterLevels,
+        [characterId]: Math.max(prev.characterLevels[characterId] || 0, level),
+      },
+    }));
+  }, []);
 
-const upgradeCharacter = useCallback((characterId: string, level: number) => {
-  setState((prev) => ({
-    ...prev,
-    characterLevels: {
-      ...prev.characterLevels,
-      [characterId]: Math.max(prev.characterLevels[characterId] || 0, level),
-    },
-  }));
-}, []);
-
-// Calculate current level
+  // Calculate current level
 
   const toggleFavoriteSound = useCallback((soundId: string) => {
     setState((prev) => {

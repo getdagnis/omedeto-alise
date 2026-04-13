@@ -45,6 +45,7 @@ export type CharacterProfileProps = {
   characters: CharacterOption[];
   characterCustomizations: Record<string, CharacterCustomization>;
   activeSounds: string[];
+  previewingSoundId: string | null;
   unlockedLevel: number;
   soundCatalogById: Map<string, SoundOption>;
   discoveredComboIds: string[];
@@ -74,6 +75,7 @@ export function CharacterProfile({
   character,
   characterCustomizations,
   activeSounds,
+  previewingSoundId,
   unlockedLevel,
   soundCatalogById,
   discoveredComboIds,
@@ -648,7 +650,7 @@ export function CharacterProfile({
                     const soundCombos = soundToComboMap[sound.id] || [];
                     const isPartOfCompletedCombo = soundCombos.length > 0;
                     const isDimmed = focusedSoundIds && !focusedSoundIds.has(sound.id);
-                    const isPulsing = isActive && stageActiveSet.has(sound.id);
+                    const isPulsing = sound.id === previewingSoundId;
 
                     return (
                       <div 
@@ -662,8 +664,18 @@ export function CharacterProfile({
                           size="md" 
                           className={`${styles.constellationChip} ${isActive ? styles.isActive : ''} ${isPulsing ? styles.isPulsing : ''}`} 
                           onClick={() => {
-                             if (!isActive && activeSounds.length >= 6) return;
-                             onToggleSound(sound.id, sound.path);
+                             if (isPulsing) {
+                               // If it's already glowing/playing, deselect it from mix
+                               onToggleSound(sound.id, sound.path);
+                             } else if (isActive) {
+                               // If it's selected but NOT glowing, just start previewing it
+                               onPreviewSound(sound.id, sound.path);
+                             } else {
+                               // If it's not selected at all, add to mix + start previewing
+                               if (activeSounds.length < 6) {
+                                 onToggleSound(sound.id, sound.path);
+                               }
+                             }
                           }}
                           style={isActive ? ({ '--sound-color': `var(${sound.colorToken})`, background: `var(${sound.colorToken})`, color: '#000', borderColor: 'transparent' } as CSSProperties) : {}}
                         >
@@ -733,14 +745,21 @@ export function CharacterProfile({
                               <button 
                                 key={ident.id} 
                                 className={`${styles.identOption} ${isSelected ? styles.identOptionActive : ''}`} 
-                                onClick={() =>
+                                onClick={() => {
+                                  const nextSounds = ident.defaultSounds.slice(0, 6);
+                                  // If current mix is empty, seed it with the identity's signature sounds
+                                  if (activeSounds.length === 0 && onSetSounds) {
+                                    onSetSounds(nextSounds);
+                                  }
                                   handleUpdateDraft({
                                     identityId: ident.id,
                                     image: ident.images[0].src,
                                     name: ident.label,
                                     cloudSoundIds: ident.defaultSounds,
-                                  })
-                                }
+                                    soundIds: nextSounds, // Ensure they are part of the draft too
+                                  });
+                                }}
+
                               >
                                 <div className={styles.identOptionImg}>
                                    <img src={defaultImg} alt={ident.label} />

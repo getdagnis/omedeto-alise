@@ -689,15 +689,8 @@
   &.isActive
     box-shadow: 0 0 0.9375rem var(--sound-color)
     transform: scale(1.1)
-
-.isPulsing
-  animation: constellationPulse 1.5s infinite alternate
-
-@keyframes constellationPulse
-  0%
-    box-shadow: 0 0 0.9375rem var(--sound-color)
-  100%
-    box-shadow: 0 0 1.875rem var(--sound-color), 0 0 0.625rem white
+  &.isPulsing
+    animation: neon-pulse 1.5s infinite alternate
 
 .comboSparkle
   position: absolute

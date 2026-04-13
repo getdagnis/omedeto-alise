@@ -178,13 +178,20 @@ function App() {
   const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
   const mainCharacterId = 'alise';
 
-  const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({
-    alise: [], // Starts empty - @keep
-  });
-  const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
   const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
     parseCharacterCustomStorage(),
   );
+  const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>(() => {
+    const initialActive: Record<string, string[]> = {};
+    const customs = parseCharacterCustomStorage(); // Re-parse to avoid circular init
+    Object.entries(customs).forEach(([id, custom]) => {
+      if (custom.soundIds) {
+        initialActive[id] = custom.soundIds;
+      }
+    });
+    return initialActive;
+  });
+  const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
   const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
   const [pickerSelectedSoundIds, setPickerSelectedSoundIds] = useState<string[]>([]);
 
@@ -519,6 +526,7 @@ function App() {
   const closeProfile = useCallback(() => {
     clearPreviewAudio();
     setPreviewingSoundId(null);
+    setPickerSelectedSoundIds([]); // Clear the mixer buffer
     navigate('/');
   }, [clearPreviewAudio, navigate]);
 
@@ -664,6 +672,7 @@ function App() {
             characters={CHARACTERS}
             characterCustomizations={characterCustomizations}
             activeSounds={pickerSelectedSoundIds}
+            previewingSoundId={previewingSoundId}
             unlockedLevel={progressionState.unlockedLevel}
             soundCatalogById={soundCatalogById}
             onClose={closeProfile}
