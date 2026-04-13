@@ -5,6 +5,7 @@ import styles from './Shop.module.sass';
 import { ALL_SOUNDS } from '../../config';
 import type { SoundType, SoundMood } from '../../config';
 import { Button, Chip, CloseButton, ToggleButton } from '../../components-ui';
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 type ShopProps = {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export default function Shop({
 }: ShopProps) {
   const [activeType, setActiveType] = useState<SoundType | 'all'>('all');
   const [activeMood, setActiveMood] = useState<SoundMood | 'all'>('all');
+  const { trackEvent } = useAnalytics();
 
   const filteredSounds = useMemo(() => {
     return ALL_SOUNDS.filter((s) => {
@@ -128,7 +130,10 @@ export default function Shop({
                   variant="secondary"
                   size="md"
                   shape="square"
-                  onPress={() => onPreviewSound(sound.id, sound.path)}
+                  onPress={() => {
+                    trackEvent('sound_preview', { sound_id: sound.id });
+                    onPreviewSound(sound.id, sound.path);
+                  }}
                   aria-label={isPreviewing ? 'Stop preview' : `Preview ${sound.name}`}
                 >
                   <FontAwesomeIcon icon={faVolumeHigh} />
@@ -152,7 +157,10 @@ export default function Shop({
                   size="sm"
                   shape="pill"
                   isDisabled={isOwned || !canAfford}
-                  onPress={() => onBuySound(sound.id, sound.price)}
+                  onPress={() => {
+                    trackEvent('sound_purchased', { sound_id: sound.id, category: sound.price.toString() });
+                    onBuySound(sound.id, sound.price);
+                  }}
                 >
                   {isOwned ? (
                     <>

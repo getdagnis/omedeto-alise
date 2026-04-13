@@ -11,6 +11,7 @@ import {
 import styles from './CharacterCard.module.sass';
 import type { CharacterOption, SoundOption } from '../config';
 import { Button, Chip, Tooltip, TooltipTrigger } from '../components-ui';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const FAV_BUTTON = false;
@@ -122,6 +123,7 @@ function CharacterCard({
   const [hintingIds, setHintingIds] = useState<Set<string>>(new Set());
   const [showHintTooltip, setShowHintTooltip] = useState(false);
   const prevSoundIdsLengthRef = useRef(customization.soundIds?.length ?? 0);
+  const { trackEvent } = useAnalytics();
   
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
@@ -187,9 +189,10 @@ function CharacterCard({
     }
     
     if (onToggleMute) {
+      trackEvent(soundsPlayingAndNotMuted ? 'mix_pause' : 'mix_play', { character_id: character.id });
       onToggleMute();
     }
-  }, [customization.soundIds, soundIds.length, onToggleMute, triggerSoundHint]);
+  }, [customization.soundIds, soundIds.length, onToggleMute, triggerSoundHint, trackEvent, soundsPlayingAndNotMuted, character.id]);
 
   const handleCharacterClick = () => {
     if (customization.soundIds && customization.soundIds.length > 0) {
@@ -361,7 +364,7 @@ function CharacterCard({
                     aria-label="View Profile"
                   >
                     <UserRoundPen size={14} />
-                    {noSoundsInLibrary && <span className={styles.actionLabel}>{character.name.toUpperCase()}</span>}
+                    {noSoundsInLibrary && <span className={styles.actionLabel}>{displayName.toUpperCase()}</span>}
                   </Button>
                   <Tooltip>{noSoundsInLibrary ? "add sounds!" : "PROFILE"}</Tooltip>
                 </TooltipTrigger>
@@ -423,7 +426,7 @@ function CharacterCard({
                     aria-label="Add sounds!"
                   >
                     <Music size={14} />
-                    {noSoundsInLibrary && <span className={styles.actionLabel}>{character.name.toUpperCase()}</span>}
+                    {noSoundsInLibrary && <span className={styles.actionLabel}>{displayName.toUpperCase()}</span>}
                   </Button>
                   <Tooltip>{noSoundsInLibrary ? "add sounds!" : "SOUNDS"}</Tooltip>
                 </TooltipTrigger>

@@ -16,6 +16,8 @@ import { PROGRESSION_LEVELS } from './progression';
 import { Button } from './components-ui';
 import AchievementUnlockedModal from './components/AchievementUnlockedModal';
 import { CharacterProfile } from './components/CharacterProfile/CharacterProfile';
+import StatsPage from './screens/Stats/StatsPage';
+import { useAnalytics } from './hooks/useAnalytics';
 import {
   ALL_SOUNDS,
   BACKGROUND_IMAGE_KEYS,
@@ -23,6 +25,7 @@ import {
   CHARACTER_IMAGE_OPTIONS,
   CHARACTERS,
   COMBOS,
+  AVAILABLE_PERFORMERS,
   LOCALIZATIONS,
   type CharacterOption,
   type CharacterCustomization,
@@ -72,40 +75,15 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
   try {
     const stored = window.localStorage.getItem(CHARACTER_CUSTOM_STORAGE_KEY);
     if (!stored) {
-      // INITIAL STATE FOR NEW USER - @keep start
+      // INITIAL STATE FOR NEW USER (Random Performer Start) - @keep start
+      const randomPerformer = AVAILABLE_PERFORMERS[Math.floor(Math.random() * AVAILABLE_PERFORMERS.length)];
       return {
         alise: {
-          image: '/chars/alise-1.png',
-          name: 'Alise',
-          // 6 selected sounds from 2 initial combos
-          soundIds: ['fly-me', 'synth-rise', 'synth-garden', 'energy', 'candy-machine', 'alert'],
-          // Constellation Pool
-          cloudSoundIds: [
-            'fly-me',
-            'synth-rise',
-            'synth-garden',
-            'energy',
-            'candy-machine',
-            'alert',
-            'kick1',
-            'noise1',
-            'peace1',
-            'tomorrow',
-            'alien',
-            'busy',
-            'anthenna',
-            'cartoon',
-            'drama',
-            'machines',
-            'synth-garden',
-            'synth-grow',
-            'synth-space',
-            'kick1',
-            'beat1',
-            'beat2',
-            'beat3',
-            'monks',
-          ].slice(0, INITIAL_CLOUDS_COUNT),
+          identityId: randomPerformer.id,
+          image: randomPerformer.images[0].src,
+          name: randomPerformer.label,
+          soundIds: randomPerformer.defaultSounds.slice(0, 6),
+          cloudSoundIds: ALL_SOUNDS.map(s => s.id).slice(0, INITIAL_CLOUDS_COUNT),
         },
       };
       // @keep end
@@ -175,6 +153,7 @@ const STAGE_CHARACTER_IDS = ['placeholder-1', 'placeholder-2', 'alise', 'placeho
 
 function App() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     const handlePopState = () => setCurrentPath(window.location.pathname);
@@ -185,7 +164,12 @@ function App() {
   const navigate = useCallback((path: string) => {
     window.history.pushState({}, '', path);
     setCurrentPath(path);
-  }, []);
+    
+    // Tracking basic route changes
+    if (path === '/shop') trackEvent('nav_open_shop');
+    if (path === '/stats') trackEvent('nav_open_stats');
+    if (path === '/admin') trackEvent('nav_open_admin');
+  }, [trackEvent]);
 
   const [backgroundIndex] = useState(0);
   const [isMobileVerticalDevice] = useState(() => getIsMobileVerticalDevice());
@@ -218,11 +202,12 @@ function App() {
 
   const isShopOpen = currentPath === '/shop';
   const isAdminOpen = currentPath === '/admin';
+  const isStatsOpen = currentPath === '/stats';
   const isSandboxUIOpen = currentPath === '/sandbox';
   const isPlatformTest1 = currentPath === '/platform-test-1';
   const isPlatformTest2 = currentPath === '/platform-test-2';
   const isPlatformTest3 = currentPath === '/platform-test-3';
-  const isInternalRoute = isAdminOpen || isSandboxUIOpen || isPlatformTest1 || isPlatformTest2 || isPlatformTest3;
+  const isInternalRoute = isAdminOpen || isStatsOpen || isSandboxUIOpen || isPlatformTest1 || isPlatformTest2 || isPlatformTest3;
 
   const [isGlowBurst, setIsGlowBurst] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
@@ -264,14 +249,14 @@ function App() {
   }, [progressionState.unlockedLevel, isLvl2AchievementOpen]);
 
   useEffect(() => {
-    if (editingCharacterId) {
+    if (editingCharacterId || profileCharacterId) {
       savedScrollPositionRef.current = window.scrollY;
       window.scrollTo(0, 0);
     } else if (savedScrollPositionRef.current !== 0) {
       window.scrollTo(0, savedScrollPositionRef.current);
       savedScrollPositionRef.current = 0;
     }
-  }, [editingCharacterId]);
+  }, [editingCharacterId, profileCharacterId]);
 
   const stopAllAudio = useCallback(() => {
     Object.values(audioRefs.current).forEach((audio) => {
@@ -340,7 +325,7 @@ function App() {
         if (isAlreadySelected) {
           return previous.filter((id) => id !== soundId);
         }
-        if (previous.length >= currentLevelInfo.soundsPerCharacter) {
+        if (previous.length >= 6) {
           return [...previous.slice(1), soundId];
         }
         return [...previous, soundId];
@@ -354,13 +339,7 @@ function App() {
         startPickerPreview(soundId, path);
       }
     },
-    [
-      currentLevelInfo.soundsPerCharacter,
-      pickerSelectedSoundIds,
-      previewingSoundId,
-      startPickerPreview,
-      stopPickerPreview,
-    ],
+    [pickerSelectedSoundIds, previewingSoundId, startPickerPreview, stopPickerPreview],
   );
 
   const unmuteCharacter = useCallback((characterId: string) => {
@@ -417,7 +396,7 @@ function App() {
         );
       } else {
         const currentActive = activeSoundsByCharacter[characterId] ?? [];
-        const maxSounds = currentLevelInfo.soundsPerCharacter;
+        const maxSounds = 6;
         if (currentActive.length >= maxSounds) {
           const oldestSoundId = currentActive[0];
           if (oldestSoundId) {
@@ -444,7 +423,7 @@ function App() {
         let nextList: string[];
         if (isRemoving) nextList = current.filter((id) => id !== soundId);
         else {
-          const maxSounds = currentLevelInfo.soundsPerCharacter;
+          const maxSounds = 6;
           nextList = current.length >= maxSounds ? [...current.slice(1), soundId] : [...current, soundId];
         }
         return { ...previous, [characterId]: nextList };
@@ -455,7 +434,6 @@ function App() {
       soundCatalogById,
       unmuteCharacter,
       recordSoundPlayed,
-      currentLevelInfo.soundsPerCharacter,
       activeSoundsByCharacter,
     ],
   );
@@ -508,8 +486,9 @@ function App() {
       const currentSelected = activeSoundsByCharacter[characterId] ?? [];
       setPickerSelectedSoundIds(currentSelected);
       navigate(`/${characterId}/profile`);
+      trackEvent('character_selected', { character_id: characterId });
     },
-    [activeSoundsByCharacter, navigate],
+    [activeSoundsByCharacter, navigate, trackEvent],
   );
 
   const handleToggleFavorite = useCallback((characterId: string) => {
@@ -599,9 +578,10 @@ function App() {
     if (!matchedCombo || activeComboIdRef.current === matchedCombo.id) return;
     activeComboIdRef.current = matchedCombo.id;
     recordComboDiscovered(matchedCombo.id);
+    trackEvent('combo_triggered', { category: matchedCombo.id });
     setTimeout(() => setComboWord(matchedCombo.name), 0);
     window.setTimeout(() => setComboWord(null), 2200);
-  }, [activeSoundsByCharacter, recordComboDiscovered]);
+  }, [activeSoundsByCharacter, recordComboDiscovered, trackEvent]);
 
   const toggleMuteMix = useCallback(
     (characterId: string) => {
@@ -640,15 +620,11 @@ function App() {
     lvl2NextReq.soundsPlayed ? `Trigger ${lvl2NextReq.soundsPlayed} different sound clips.` : null,
   ].filter((line): line is string => Boolean(line));
 
-  const otherCharactersClaimedIdentities = useMemo(() => {
-    if (!profileCharacterId) return [];
-
+  const claimedIdentityIds = useMemo(() => {
     return STAGE_CHARACTER_IDS.filter((id) => id !== profileCharacterId)
       .map((id) => {
         const custom = characterCustomizations[id];
-        // If customization exists and identityId is explicitly null, it's unlinked
         if (custom && custom.identityId !== undefined) return custom.identityId;
-        // Otherwise fallback to default character identity
         const charBase = CHARACTERS.find((c) => c.id === id);
         return charBase?.identityId;
       })
@@ -662,7 +638,7 @@ function App() {
       <main className={styles.content}>
         {isInternalRoute ? (
           <>
-            {(isAdminOpen || isSandboxUIOpen) && (
+            {(isAdminOpen || isStatsOpen || isSandboxUIOpen) && (
               <section className={styles.internalPage}>
                 <header className={styles.internalPageHeader}>
                   <Button variant="secondary" size="sm" onPress={() => navigate('/')}>
@@ -671,8 +647,10 @@ function App() {
                 </header>
                 <div className={styles.internalPageBody}>
                   {isAdminOpen && <Admin onPreviewSound={togglePreviewSound} previewingSoundId={previewingSoundId} />}
+                  {isStatsOpen && <StatsPage />}
                   {isSandboxUIOpen && <SandboxUI />}
                 </div>
+
               </section>
             )}
             {isPlatformTest1 && <PlatformTest1 onClose={() => navigate('/')} />}
@@ -690,6 +668,7 @@ function App() {
             soundCatalogById={soundCatalogById}
             onClose={closeProfile}
             onToggleSound={(soundId, path) => toggleProfileSound(soundId, path)}
+            onSetSounds={setPickerSelectedSoundIds}
             onPreviewSound={(soundId, path) => togglePreviewSound(soundId, path)}
             onApply={(patch) => applyProfileSelection(profileCharacterId, patch)}
             onNavigateShop={() => navigate('/shop')}
@@ -701,7 +680,7 @@ function App() {
             onToggleFavoriteSound={toggleFavoriteSound}
             characterLevels={progressionState.characterLevels}
             onUpgradeCharacter={upgradeCharacter}
-            claimedIdentityIds={otherCharactersClaimedIdentities}
+            claimedIdentityIds={claimedIdentityIds}
             />        ) : (
           <>
             <section

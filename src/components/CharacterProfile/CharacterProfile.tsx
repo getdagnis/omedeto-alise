@@ -19,8 +19,10 @@ import {
 import { Button, Chip, Notice } from '../../components-ui';
 import { FloatingTextContainer } from '../../components-ui/FloatingText';
 import { useFloatingText } from '../../hooks/useFloatingText';
+import { useAnalytics } from '../../hooks/useAnalytics';
 import type { CharacterOption, SoundOption, CharacterCustomization } from '../../config';
-import { COMBOS, ACHIEVEMENTS, CHARACTER_IDENTITIES } from '../../config';
+import { COMBOS, ACHIEVEMENTS, AVAILABLE_PERFORMERS } from '../../config';
+
 import styles from './CharacterProfile.module.sass';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
@@ -52,6 +54,7 @@ export type CharacterProfileProps = {
   isMain?: boolean;
   onClose: () => void;
   onToggleSound: (soundId: string, path: string) => void;
+  onSetSounds?: (soundIds: string[]) => void;
   onPreviewSound: (soundId: string, path: string) => void;
   onApply: (patch?: CharacterCustomization) => void;
   onNavigateShop: () => void;
@@ -80,6 +83,7 @@ export function CharacterProfile({
   isMain = false,
   onClose,
   onToggleSound,
+  onSetSounds,
   onPreviewSound,
   onApply,
   onNavigateShop,
@@ -88,9 +92,17 @@ export function CharacterProfile({
   onUpgradeCharacter,
 }: CharacterProfileProps) {
   const [activeTab, setActiveTab] = useState<'sounds' | 'identity' | 'milestones'>('sounds');
-  const [libTab, setLibTab] = useState<LibraryTab>('chars');
+  const { trackEvent } = useAnalytics();
+
+  useEffect(() => {
+    trackEvent('nav_open_profile', { character_id: characterId });
+  }, [characterId, trackEvent]);
+
+  const [libTab, setLibTab] = useState<LibraryTab>('cat');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [isLibraryOpen, setIsLibraryOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth > 820 : true);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth > 820 : true,
+  );
   const [isComboSidebarOpen, setIsComboSidebarOpen] = useState(false);
   const [sessionAddedSounds, setSessionAddedSounds] = useState<string[]>([]);
   const { items: floatingItems, addText: addFloatingText } = useFloatingText();
@@ -100,25 +112,52 @@ export function CharacterProfile({
   const [hoveredComboId, setHoveredComboId] = useState<string | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [isBottomReached, setIsBottomReached] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set(['voice', 'beats', 'drums', 'animals', 'melody', 'creepy', 'calm', 'other', 'alise', 'gumi', 'hanako']));
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(['voice', 'beats', 'drums', 'animals', 'melody', 'creepy', 'calm', 'other', 'alise', 'gumi', 'hanako']),
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const characterName = draftCustomization?.name?.trim() || character.name;
   const characterImage = draftCustomization?.image || character.img;
-  
-  const PREDEFINED_IDS = ['alise', 'gumi', 'hanako'];
-  const isPredefined = PREDEFINED_IDS.includes(characterId);
-  
-  const isCharacterSelected = useMemo(() => {
-    return isPredefined || !!draftCustomization.image;
-  }, [isPredefined, draftCustomization.image]);
 
-  const handleTabChange = useCallback((tab: 'sounds' | 'identity' | 'milestones') => {
-    if (tab === 'sounds' && !isCharacterSelected) {
-      setIsNoticeOpen(true);
+  const PREDEFINED_IDS = ['alise', 'gumi', 'hanako', 'foxy', 'kagamine', 'honekoneko'];
+  const isPredefined = PREDEFINED_IDS.includes(characterId);
+
+  const isCharacterSelected = useMemo(() => {
+    const currentIdentId =
+      draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
+    const hasIdentity = !!currentIdentId;
+    const hasCustomName = !!draftCustomization.name?.trim();
+    const hasCustomImage = !!draftCustomization.image;
+
+    return hasIdentity || (hasCustomName && hasCustomImage);
+  }, [character.identityId, draftCustomization.identityId, draftCustomization.name, draftCustomization.image]);
+
+  useEffect(() => {
+    if (activeTab === 'identity' && !isPredefined && !draftCustomization.name) {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
     }
-    setActiveTab(tab);
-  }, [isCharacterSelected]);
+  }, [activeTab, isPredefined, draftCustomization.name]);
+
+  useEffect(() => {
+    if (activeTab === 'sounds' && !isCharacterSelected) {
+      const timer = setTimeout(() => setIsNoticeOpen(true), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, isCharacterSelected]);
+
+  const handleTabChange = useCallback(
+    (tab: 'sounds' | 'identity' | 'milestones') => {
+      if (tab === 'sounds' && !isCharacterSelected) {
+        setIsNoticeOpen(true);
+      }
+      trackEvent('section_switch', { category: tab, character_id: characterId });
+      setActiveTab(tab);
+    },
+    [isCharacterSelected, trackEvent, characterId],
+  );
 
   const constellationSounds = useMemo(() => {
     const ids = draftCustomization?.cloudSoundIds || character.sounds.map(s => s.id).slice(0, 24);
@@ -217,10 +256,34 @@ export function CharacterProfile({
   };
 
   const handleUpdateDraft = (patch: CharacterCustomization) => {
+    trackEvent('character_customized', { character_id: characterId, metadata: patch });
     setDraftCustomization(prev => ({ ...prev, ...patch }));
   };
 
+  const handleRandomizePool = () => {
+    const all = [...soundCatalogById.values()];
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    const randomIds = all.slice(0, 24).map(s => s.id);
+    handleUpdateDraft({ cloudSoundIds: randomIds });
+    trackEvent('constellation_randomized', { character_id: characterId });
+  };
+
+  const handleRevertPool = () => {
+    const identId = draftCustomization.identityId || character.identityId;
+    const ident = AVAILABLE_PERFORMERS.find(i => i.id === identId);
+    if (ident) {
+      handleUpdateDraft({ cloudSoundIds: ident.defaultSounds });
+    } else {
+      handleUpdateDraft({ cloudSoundIds: character.sounds.map(s => s.id).slice(0, 24) });
+    }
+    trackEvent('constellation_reverted', { character_id: characterId });
+  };
+
   const handleApply = () => {
+    trackEvent('character_applied', { character_id: characterId });
     const finalSounds = activeSounds.slice(0, 6);
     onApply({ ...draftCustomization, soundIds: finalSounds, cloudSoundIds: constellationSounds.map(s => s.id) });
   };
@@ -348,10 +411,10 @@ export function CharacterProfile({
           className={`${styles.selectBtn} ${isSelectedInCloud ? styles.selectBtnActive : ''}`}
           disabled={!isCharacterSelected}
           onClick={(e) => {
+             trackEvent('sound_click', { sound_id: sound.id, character_id: characterId, category: isSelectedInCloud ? 'remove' : 'add' });
              const currentIds = constellationSounds.map(s => s.id);
              if (isSelectedInCloud) {
                handleUpdateDraft({ cloudSoundIds: currentIds.filter(id => id !== sound.id) });
-               // Also remove from mix if it's there
                if (isActiveInMix) {
                  onToggleSound(sound.id, sound.path);
                }
@@ -412,29 +475,72 @@ export function CharacterProfile({
   return (
     <div className={styles.profilePage} style={cssVars}>
       <FloatingTextContainer items={floatingItems} />
-      {(isLibraryOpen || isComboSidebarOpen) && <div className={styles.sidebarBackdrop} onClick={() => { setIsLibraryOpen(false); setIsComboSidebarOpen(false); }} />}
+      {(isLibraryOpen || isComboSidebarOpen) && activeTab === 'sounds' && (
+        <div
+          className={styles.sidebarBackdrop}
+          onClick={() => {
+            setIsLibraryOpen(false);
+            setIsComboSidebarOpen(false);
+          }}
+        />
+      )}
       {/* Sidebar Library */}
+      {activeTab === 'sounds' && (
       <aside className={`${styles.librarySidebar} ${isLibraryOpen ? styles.libraryOpen : ''}`}>
         <div className={styles.libraryHandle} onClick={() => setIsLibraryOpen(!isLibraryOpen)}>
-           <span className={styles.handleLabel}>{isLibraryOpen ? 'CLOSE' : 'SOUNDS'}</span>
+          <span className={styles.handleLabel}>{isLibraryOpen ? 'CLOSE' : 'SOUNDS'}</span>
         </div>
 
         <header className={styles.libraryHeader}>
           <div className={styles.onboardingSteps}>
-            <span>1. Identity</span> <ChevronRight size={8} /> <span className={styles.onboardingActive}>2. Library</span> <ChevronRight size={8} /> <span>3. Mix</span> <ChevronRight size={8} /> <span>4. Stage</span> <ChevronRight size={8} /> <span>5. Combos</span>
+            <span>1. Identity</span> <ChevronRight size={8} />{' '}
+            <span className={styles.onboardingActive}>2. Library</span> <ChevronRight size={8} /> <span>3. Mix</span>{' '}
+            <ChevronRight size={8} /> <span>4. Stage</span> <ChevronRight size={8} /> <span>5. Combos</span>
           </div>
           <h6 className={styles.libraryTitle}>SOUND LIBRARY</h6>
           <div className={styles.libTabs}>
-            <button className={`${styles.libTab} ${libTab === 'favs' ? styles.libTabActive : ''}`} disabled={favoriteSoundIds.length === 0} onClick={() => { setLibTab('favs'); setActiveFilter(null); }}>FAVS</button>
-            <button className={`${styles.libTab} ${libTab === 'cat' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('cat'); setActiveFilter(null); }}>CAT</button>
-            <button className={`${styles.libTab} ${libTab === 'mood' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('mood'); }}>MOOD</button>
-            <button className={`${styles.libTab} ${libTab === 'chars' ? styles.libTabActive : ''}`} onClick={() => { setLibTab('chars'); setActiveFilter(null); }}>CHARS</button>
+            <button
+              className={`${styles.libTab} ${libTab === 'favs' ? styles.libTabActive : ''}`}
+              disabled={favoriteSoundIds.length === 0}
+              onClick={() => {
+                setLibTab('favs');
+                setActiveFilter(null);
+              }}
+            >
+              FAVS
+            </button>
+            <button
+              className={`${styles.libTab} ${libTab === 'cat' ? styles.libTabActive : ''}`}
+              onClick={() => {
+                setLibTab('cat');
+                setActiveFilter(null);
+              }}
+            >
+              CAT
+            </button>
+            <button
+              className={`${styles.libTab} ${libTab === 'mood' ? styles.libTabActive : ''}`}
+              onClick={() => {
+                setLibTab('mood');
+              }}
+            >
+              MOOD
+            </button>
+            <button
+              className={`${styles.libTab} ${libTab === 'chars' ? styles.libTabActive : ''}`}
+              onClick={() => {
+                setLibTab('chars');
+                setActiveFilter(null);
+              }}
+            >
+              CHARS
+            </button>
           </div>
         </header>
 
         <div className={styles.libraryScrollWrap}>
-          <button 
-            className={styles.scrollArrow} 
+          <button
+            className={styles.scrollArrow}
             disabled={scrollTop === 0}
             onClick={() => handleScroll('up')}
             onDoubleClick={() => handleScrollJump('top')}
@@ -443,17 +549,15 @@ export function CharacterProfile({
           </button>
           <div className={styles.libraryList} ref={scrollRef} onScroll={onListScroll}>
             {!isCharacterSelected ? (
-               <div className={styles.libraryEmpty}>PLEASE SELECT IDENTITY FIRST</div>
+              <div className={styles.libraryEmpty}>PLEASE SELECT IDENTITY FIRST</div>
             ) : Array.isArray(groupedLibrary) ? (
-               groupedLibrary.map(renderLibraryItem)
+              groupedLibrary.map(renderLibraryItem)
             ) : (
-              Object.entries(groupedLibrary).map(([key, sounds]) => (
-                renderGroup(key, key, sounds)
-              ))
+              Object.entries(groupedLibrary).map(([key, sounds]) => renderGroup(key, key, sounds))
             )}
           </div>
-          <button 
-            className={styles.scrollArrow} 
+          <button
+            className={styles.scrollArrow}
             disabled={isBottomReached}
             onClick={() => handleScroll('down')}
             onDoubleClick={() => handleScrollJump('bottom')}
@@ -464,8 +568,12 @@ export function CharacterProfile({
 
         {isCharacterSelected && (libTab === 'cat' || libTab === 'mood') && (
           <div className={styles.filterBar}>
-            {filterOptions.map(opt => (
-              <button key={opt} className={`${styles.filterChip} ${activeFilter === opt ? styles.filterChipActive : ''}`} onClick={() => setActiveFilter(activeFilter === opt ? null : opt)}>
+            {filterOptions.map((opt) => (
+              <button
+                key={opt}
+                className={`${styles.filterChip} ${activeFilter === opt ? styles.filterChipActive : ''}`}
+                onClick={() => setActiveFilter(activeFilter === opt ? null : opt)}
+              >
                 {opt?.toUpperCase()}
               </button>
             ))}
@@ -473,23 +581,24 @@ export function CharacterProfile({
         )}
 
         <div className={styles.libraryFooter}>
-           <Button 
-             variant={sessionAddedSounds.length > 0 ? "primary" : "secondary"} 
-             size="sm" 
-             className={styles.applySelectedBtn} 
-             onPress={() => {
-               setIsLibraryOpen(false);
-               setSessionAddedSounds([]);
-             }}
-           >
-             APPLY SELECTED SOUNDS
-           </Button>
-           <Button variant="secondary" size="sm" className={styles.getMoreBtn} onPress={onNavigateShop}>
-             <Music size={12} />
-             <span>GET MORE</span>
-           </Button>
+          <Button
+            variant={sessionAddedSounds.length > 0 ? 'primary' : 'secondary'}
+            size="sm"
+            className={styles.applySelectedBtn}
+            onPress={() => {
+              setIsLibraryOpen(false);
+              setSessionAddedSounds([]);
+            }}
+          >
+            APPLY SELECTED SOUNDS
+          </Button>
+          <Button variant="secondary" size="sm" className={styles.getMoreBtn} onPress={onNavigateShop}>
+            <Music size={12} />
+            <span>GET MORE</span>
+          </Button>
         </div>
       </aside>
+      )}
 
       <main className={styles.mainContent}>
         <header className={styles.header}>
@@ -574,7 +683,7 @@ export function CharacterProfile({
                          const isFull = !!soundId;
                          return (
                            <div key={`${i}-${soundId || 'empty'}`} className={`${styles.slot} ${isFull ? styles.slotFull : ''}`}>
-                              {isFull ? 'X' : ''}
+                              {isFull ? '' : ''}
                            </div>
                          );
                       })}
@@ -595,45 +704,46 @@ export function CharacterProfile({
                      <div className={styles.field}>
                         <span className={styles.fieldLabel}>CHARACTER NAME</span>
                         <input 
+                          ref={nameInputRef}
                           type="text" 
                           className={styles.textInput} 
                           value={draftCustomization.name || ''} 
                           placeholder={character.name} 
-                          onChange={(e) => handleUpdateDraft({ name: e.target.value.slice(0, 16) })} 
+                          onChange={(e) => handleUpdateDraft({ name: e.target.value.slice(0, 12) })} 
                         />
                      </div>
 
-                     {/* 2. Character Type (Identity) Selection */}
+                     {/* 2. Available Chars Selection */}
                      <div className={styles.field}>
                         <div className={styles.fieldHeader}>
-                           <span className={styles.fieldLabel}>IDENTITY TYPE</span>
-                           <span className={styles.fieldStatus}>FREE TO SWITCH</span>
+                           <span className={styles.fieldLabel}>AVAILABLE CHARS</span>
+                           <span className={styles.fieldStatus}>ONE SPOT AT A TIME</span>
                         </div>
                         <div className={styles.identityGrid}>
-                          {CHARACTER_IDENTITIES.map((ident) => {
+                          {AVAILABLE_PERFORMERS.map((ident) => {
                             const currentIdentId = draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
                             const isSelected = currentIdentId === ident.id;
+                            
+                            // RULE: Hide if taken by OTHER spots on stage
                             const isTakenByOther = claimedIdentityIds.includes(ident.id) && !isSelected;
+                            if (isTakenByOther) return null;
+
                             const defaultImg = ident.images[0].src;
                             return (
                               <button 
                                 key={ident.id} 
-                                className={`${styles.identOption} ${isSelected ? styles.identOptionActive : ''} ${isTakenByOther ? styles.identOptionLocked : ''}`} 
-                                onClick={() => !isTakenByOther && handleUpdateDraft({ 
-                                  identityId: ident.id, 
-                                  image: ident.images[0].src,
-                                  name: ident.label
-                                })}
-                                disabled={isTakenByOther}
+                                className={`${styles.identOption} ${isSelected ? styles.identOptionActive : ''}`} 
+                                onClick={() =>
+                                  handleUpdateDraft({
+                                    identityId: ident.id,
+                                    image: ident.images[0].src,
+                                    name: ident.label,
+                                    cloudSoundIds: ident.defaultSounds,
+                                  })
+                                }
                               >
                                 <div className={styles.identOptionImg}>
                                    <img src={defaultImg} alt={ident.label} />
-                                   {isTakenByOther && (
-                                      <div className={styles.lockOverlay}>
-                                         <Lock size={12} />
-                                         <span>IN USE</span>
-                                      </div>
-                                   )}
                                 </div>
                                 <span className={styles.identOptionLabel}>{ident.label.toUpperCase()}</span>
                               </button>
@@ -648,9 +758,9 @@ export function CharacterProfile({
                            <span className={styles.fieldLabel}>APPEARANCE</span>
                            {(() => {
                               const identId = draftCustomization.identityId || character.identityId;
-                              if (!identId) return null; // Unlinked state shows no upgrade button
+                              if (!identId) return null; 
                               
-                              const ident = CHARACTER_IDENTITIES.find(i => i.id === identId);
+                              const ident = AVAILABLE_PERFORMERS.find(i => i.id === identId);
                               const charLevel = characterLevels[identId] || 0;
                               const nextUpgrade = ident?.images.find(img => img.unlockLevel > charLevel);
                               
@@ -666,16 +776,14 @@ export function CharacterProfile({
                                   UPGRADE TO LEVEL {nextUpgrade.unlockLevel}
                                 </Button>
                               );
-
                            })()}
                         </div>
                         <div className={styles.imageGrid}>
                           {(() => {
                             const identId = draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
                             
-                            // If identId is null/undefined explicitly (unlinked), show all images
                             if (!identId) {
-                               return CHARACTER_IDENTITIES.flatMap(ident => ident.images).map((img) => {
+                               return AVAILABLE_PERFORMERS.flatMap(ident => ident.images).map((img) => {
                                  const isSelected = draftCustomization.image === img.src;
                                  return (
                                    <button 
@@ -689,7 +797,7 @@ export function CharacterProfile({
                                });
                             }
 
-                            const ident = CHARACTER_IDENTITIES.find(i => i.id === identId);
+                            const ident = AVAILABLE_PERFORMERS.find(i => i.id === identId);
                             const charLevel = characterLevels[identId || ''] || 0;
                             if (!ident) return null;
 
@@ -722,27 +830,20 @@ export function CharacterProfile({
                           variant="secondary" 
                           size="sm" 
                           onPress={() => {
-                            // Unlink: Clear identityId so all images show
+                            trackEvent('character_unlinked', { character_id: characterId });
                             handleUpdateDraft({ identityId: null });
                           }}
                         >
-                          UNLINK FROM {character.name.toUpperCase()}
+                          UNLINK {characterName.toUpperCase()} FROM REALITY
                         </Button>
                         <Button 
                           variant="quiet" 
                           size="sm" 
                           onPress={() => {
-                            // Reset: Revert to character's factory defaults draft
-                            setDraftCustomization({
-                              image: character.img,
-                              name: character.name,
-                              identityId: character.identityId,
-                              cloudSoundIds: character.sounds.map(s => s.id).slice(0, 24),
-                              colorModes: []
-                            });
+                            setDraftCustomization({});
                           }}
                         >
-                          RESET CHARACTER
+                          RESET SPOT
                         </Button>
                      </div>
                   </div>
@@ -798,17 +899,27 @@ export function CharacterProfile({
         </div>
 
         <footer className={styles.footerActions}>
+          {activeTab === 'sounds' && (
+             <div className={styles.footerLeft}>
+               <Button variant="quiet" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
+               <Button variant="quiet" size="sm" onPress={handleRandomizePool}>RANDOM</Button>
+               <Button variant="quiet" size="sm" onPress={handleRevertPool}>REVERT</Button>
+             </div>
+          )}
           <div className={styles.footerRight}>
-            <Button variant="quiet" size="sm" onPress={() => setDraftCustomization(characterCustomizations[characterId] || {})}>REVERT</Button>
+            {activeTab !== 'sounds' && (
+               <Button variant="quiet" size="sm" onPress={handleRevertPool}>REVERT</Button>
+            )}
             <Button variant="primary" size="lg" className={styles.applyButton} onPress={handleApply}>APPLY TO STAGE</Button>
           </div>
         </footer>
       </main>
 
       {/* Combo Sidebar (Right Side) */}
+      {activeTab === 'sounds' && (
       <aside className={`${styles.comboSidebar} ${isComboSidebarOpen ? styles.comboSidebarOpen : ''}`}>
         <div className={styles.comboHandle} onClick={() => setIsComboSidebarOpen(!isComboSidebarOpen)}>
-           <span className={styles.handleLabel}>{isComboSidebarOpen ? 'CLOSE' : 'COMBOS'}</span>
+          <span className={styles.handleLabel}>{isComboSidebarOpen ? 'CLOSE' : 'COMBOS'}</span>
         </div>
         <header className={styles.libraryHeader}>
           <h6 className={styles.libraryTitle}>COMBO DECK</h6>
@@ -817,12 +928,12 @@ export function CharacterProfile({
           {cloudCompletedComboIds.length === 0 ? (
             <div className={styles.libraryEmpty}>DISCOVER COMBOS TO UNLOCK CARDS</div>
           ) : (
-            cloudCompletedComboIds.map(comboId => {
-              const combo = COMBOS.find(c => c.id === comboId)!;
-              const isAllSelected = combo.soundIds.every(id => activeSounds.includes(id));
+            cloudCompletedComboIds.map((comboId) => {
+              const combo = COMBOS.find((c) => c.id === comboId)!;
+              const isAllSelected = combo.soundIds.every((id) => activeSounds.includes(id));
               return (
-                <div 
-                  key={comboId} 
+                <div
+                  key={comboId}
                   className={`${styles.sidebarComboCard} ${isAllSelected ? styles.sidebarComboCardSelected : ''}`}
                   onClick={() => handleComboQuickSelect(comboId)}
                   onMouseEnter={() => setHoveredComboId(comboId)}
@@ -839,12 +950,13 @@ export function CharacterProfile({
           )}
         </div>
       </aside>
+      )}
 
-      <Notice 
+      <Notice
         isOpen={isNoticeOpen}
         onClose={() => {
-           setIsNoticeOpen(false);
-           handleTabChange('identity');
+          setIsNoticeOpen(false);
+          handleTabChange('identity');
         }}
         title="Identity Required"
         message="Please select a character identity before choosing sounds for your mix."
