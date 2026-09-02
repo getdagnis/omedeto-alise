@@ -51,7 +51,6 @@ export type CharacterProfileProps = {
   discoveredComboIds: string[];
   favoriteSoundIds: string[];
   characterLevels: Record<string, number>;
-  claimedIdentityIds: string[];
   isMain?: boolean;
   onClose: () => void;
   onToggleSound: (soundId: string, path: string) => void;
@@ -81,7 +80,6 @@ export function CharacterProfile({
   discoveredComboIds,
   favoriteSoundIds,
   characterLevels,
-  claimedIdentityIds,
   isMain = false,
   onClose,
   onToggleSound,
@@ -488,7 +486,6 @@ export function CharacterProfile({
           className={styles.sidebarBackdrop}
           onClick={() => {
             setIsLibraryOpen(false);
-            setIsComboSidebarOpen(false);
           }}
         />
       )}
@@ -704,12 +701,12 @@ export function CharacterProfile({
                       })}
                    </div>
                 </div>
+              </div>
                 <div className={styles.inlineSoundActions}>
                   <Button variant="secondary" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
                   <Button variant="primary" size="md" className={styles.shuffleButton} onPress={handleRandomizePool}>SHUFFLE</Button>
                   <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
                 </div>
-              </div>
             </section>
           )}
 
@@ -737,17 +734,13 @@ export function CharacterProfile({
                      <div className={styles.field}>
                         <div className={styles.fieldHeader}>
                            <span className={styles.fieldLabel}>AVAILABLE CHARS</span>
-                           <span className={styles.fieldStatus}>ONE SPOT AT A TIME</span>
+                           <span className={styles.fieldStatus}>CHOOSE YOUR CHARACTER</span>
                         </div>
                         <div className={styles.identityGrid}>
                           {AVAILABLE_PERFORMERS.map((ident) => {
                             const currentIdentId = draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
                             const isSelected = currentIdentId === ident.id;
                             
-                            // RULE: Hide if taken by OTHER spots on stage
-                            const isTakenByOther = claimedIdentityIds.includes(ident.id) && !isSelected;
-                            if (isTakenByOther) return null;
-
                             const defaultImg = ident.images[0].src;
                             return (
                               <button 

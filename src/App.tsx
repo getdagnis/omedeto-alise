@@ -685,17 +685,6 @@ function App() {
     lvl2NextReq.soundsPlayed ? `Trigger ${lvl2NextReq.soundsPlayed} different sound clips.` : null,
   ].filter((line): line is string => Boolean(line));
 
-  const claimedIdentityIds = useMemo(() => {
-    return STAGE_CHARACTER_IDS.filter((id) => id !== profileCharacterId)
-      .map((id) => {
-        const custom = characterCustomizations[id];
-        if (custom && custom.identityId !== undefined) return custom.identityId;
-        const charBase = CHARACTERS.find((c) => c.id === id);
-        return charBase?.identityId;
-      })
-      .filter((id): id is string => !!id);
-  }, [profileCharacterId, characterCustomizations]);
-
   return (
     <div className={`${styles.page} ${isLowGraphics ? styles.pageLowGraphics : ''}`}>
       <div className={styles.background} style={{ '--bg-image': `url(${activeBackgroundImage})` } as CSSProperties} />
@@ -746,7 +735,6 @@ function App() {
             onToggleFavoriteSound={toggleFavoriteSound}
             characterLevels={progressionState.characterLevels}
             onUpgradeCharacter={upgradeCharacter}
-            claimedIdentityIds={claimedIdentityIds}
             />        ) : (
           <>
             <section
