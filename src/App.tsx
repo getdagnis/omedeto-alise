@@ -514,12 +514,15 @@ function App() {
 
   const handleCharacterClick = useCallback(
     (characterId: string) => {
-      const currentSelected = activeSoundsByCharacter[characterId] ?? [];
+      const activeSelection = activeSoundsByCharacter[characterId] ?? [];
+      const currentSelected = activeSelection.length > 0
+        ? activeSelection
+        : (characterCustomizations[characterId]?.soundIds ?? []);
       setPickerSelectedSoundIds(currentSelected);
       navigate(`/${characterId}/profile`);
       trackEvent('character_selected', { character_id: characterId });
     },
-    [activeSoundsByCharacter, navigate, trackEvent],
+    [activeSoundsByCharacter, characterCustomizations, navigate, trackEvent],
   );
 
   const handleToggleFavorite = useCallback((characterId: string) => {
@@ -786,7 +789,7 @@ function App() {
                 onToggleSound={setSingleSound}
                 onRemoveSound={removeSoundFromCharacter}
                 onToggleMute={toggleMuteMix}
-                onOpenProfile={(id) => navigate(`/${id}/profile`)}
+                onOpenProfile={handleCharacterClick}
               />
             </section>
             <EditCharacterModal
@@ -834,6 +837,9 @@ function App() {
                     <span className={styles.hamburgerInner}></span>
                   </span>
                 </div>
+              </div>
+            )}
+            {!isBlockingOverlayOpen && (
                 <button
                   type="button"
                   className={styles.resetDataButton}
@@ -846,7 +852,6 @@ function App() {
                 >
                   <RefreshCcw size={18} aria-hidden="true" />
                 </button>
-              </div>
             )}
             {!isBlockingOverlayOpen && (
               <Menu

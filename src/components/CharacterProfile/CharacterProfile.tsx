@@ -1,7 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, type CSSProperties, useCallback } from 'react';
 import { 
-  Trophy,
-  Star,
   X,
   Lock,
   UserRoundPen,
@@ -21,7 +19,7 @@ import { FloatingTextContainer } from '../../components-ui/FloatingText';
 import { useFloatingText } from '../../hooks/useFloatingText';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import type { CharacterOption, SoundOption, CharacterCustomization } from '../../config';
-import { COMBOS, ACHIEVEMENTS, AVAILABLE_PERFORMERS } from '../../config';
+import { COMBOS, AVAILABLE_PERFORMERS } from '../../config';
 
 import styles from './CharacterProfile.module.sass';
 
@@ -95,11 +93,11 @@ export function CharacterProfile({
   onToggleFavoriteSound,
   onUpgradeCharacter,
 }: CharacterProfileProps) {
-  const initialIdentityId = characterCustomizations[characterId]?.identityId !== undefined
-    ? characterCustomizations[characterId]?.identityId
-    : character.identityId;
-  const [activeTab, setActiveTab] = useState<'sounds' | 'identity' | 'milestones'>(
-    initialIdentityId ? 'sounds' : 'identity',
+  const initialCustomization = characterCustomizations[characterId];
+  const initialImage = initialCustomization?.image
+    || (initialCustomization?.identityId !== null && character.img !== CHARACTER_PLACEHOLDER_PATH ? character.img : undefined);
+  const [activeTab, setActiveTab] = useState<'sounds' | 'identity'>(
+    initialImage ? 'sounds' : 'identity',
   );
   const { trackEvent } = useAnalytics();
 
@@ -109,14 +107,15 @@ export function CharacterProfile({
 
   const [libTab, setLibTab] = useState<LibraryTab>('cat');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [isLibraryOpen, setIsLibraryOpen] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth > 820 : true,
-  );
-  const [isComboSidebarOpen, setIsComboSidebarOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [sessionAddedSounds, setSessionAddedSounds] = useState<string[]>([]);
   const { items: floatingItems, addText: addFloatingText } = useFloatingText();
   const floatingTextIndexRef = useRef(0);
   const [draftCustomization, setDraftCustomization] = useState(characterCustomizations[characterId] || {});
+  const [customImageUrl, setCustomImageUrl] = useState(() => {
+    const image = characterCustomizations[characterId]?.image || '';
+    return image.startsWith('https://') ? image : 'https://';
+  });
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [hasCompletedIdentitySounds, setHasCompletedIdentitySounds] = useState(() => {
     try {
@@ -141,14 +140,9 @@ export function CharacterProfile({
   const isPredefined = PREDEFINED_IDS.includes(characterId);
 
   const isCharacterSelected = useMemo(() => {
-    const currentIdentId =
-      draftCustomization.identityId !== undefined ? draftCustomization.identityId : character.identityId;
-    const hasIdentity = !!currentIdentId;
-    const hasCustomName = !!draftCustomization.name?.trim();
-    const hasCustomImage = !!draftCustomization.image;
-
-    return hasIdentity || (hasCustomName && hasCustomImage);
-  }, [character.identityId, draftCustomization.identityId, draftCustomization.name, draftCustomization.image]);
+    if (draftCustomization.identityId === null) return false;
+    return !!draftCustomization.image || character.img !== CHARACTER_PLACEHOLDER_PATH;
+  }, [character.img, draftCustomization.identityId, draftCustomization.image]);
 
   const hasAppliedSounds = (characterCustomizations[characterId]?.soundIds?.length ?? 0) > 0;
   const needsSoundSetup = !isCharacterSelected || !hasAppliedSounds;
@@ -158,12 +152,13 @@ export function CharacterProfile({
     setIsNoticeOpen(true);
   }, [hasCompletedIdentitySounds]);
 
+
   useEffect(() => {
-    if (activeTab === 'identity' && !isPredefined && !draftCustomization.name) {
+    if (activeTab === 'identity' && !draftCustomization.name?.trim()) {
       nameInputRef.current?.focus();
       nameInputRef.current?.select();
     }
-  }, [activeTab, isPredefined, draftCustomization.name]);
+  }, [activeTab, draftCustomization.name]);
 
   useEffect(() => {
     if (activeTab === 'identity' && !isCharacterSelected) {
@@ -172,7 +167,7 @@ export function CharacterProfile({
   }, [activeTab, isCharacterSelected, showIdentityNotice]);
 
   const handleTabChange = useCallback(
-    (tab: 'sounds' | 'identity' | 'milestones') => {
+    (tab: 'sounds' | 'identity') => {
       if (tab === 'sounds' && needsSoundSetup) {
         showIdentityNotice();
       }
@@ -223,12 +218,11 @@ export function CharacterProfile({
     });
   }, [stageActiveSet, discoveredComboIds, onRecordCombo]);
 
-  const scheme = character.schemes[0];
   const cssVars = {
-    '--character-title': scheme.titleColor,
-    '--character-primary': scheme.primaryColor,
-    '--character-secondary': scheme.secondaryColor,
-    '--character-soundboard': scheme.soundboardColor,
+    '--character-title': '#ffffff',
+    '--character-primary': '#8f8fff',
+    '--character-secondary': '#c7c7ff',
+    '--character-soundboard': '#2d2d52',
   } as CSSProperties;
 
   const floatingPositions = useMemo(() => {
@@ -317,23 +311,6 @@ export function CharacterProfile({
       }
     }
     onApply({ ...draftCustomization, soundIds: finalSounds, cloudSoundIds: constellationSounds.map(s => s.id) });
-  };
-
-  const handleComboQuickSelect = (comboId: string) => {
-    const combo = COMBOS.find(c => c.id === comboId);
-    if (!combo) return;
-
-    // Deselect all current active sounds
-    activeSounds.forEach(id => {
-      const s = soundCatalogById.get(id);
-      if (s) onToggleSound(id, s.path);
-    });
-
-    // Select combo sounds
-    combo.soundIds.forEach(id => {
-      const s = soundCatalogById.get(id);
-      if (s) onToggleSound(id, s.path);
-    });
   };
 
   const handleComboClick = (comboId: string) => {
@@ -506,7 +483,7 @@ export function CharacterProfile({
   return (
     <div className={styles.profilePage} style={cssVars}>
       <FloatingTextContainer items={floatingItems} />
-      {(isLibraryOpen || isComboSidebarOpen) && activeTab === 'sounds' && (
+      {isLibraryOpen && activeTab === 'sounds' && (
         <div
           className={styles.sidebarBackdrop}
           onClick={() => {
@@ -519,7 +496,7 @@ export function CharacterProfile({
       {activeTab === 'sounds' && (
       <aside className={`${styles.librarySidebar} ${isLibraryOpen ? styles.libraryOpen : ''}`}>
         <div className={styles.libraryHandle} onClick={() => setIsLibraryOpen(!isLibraryOpen)}>
-          <span className={styles.handleLabel}>{isLibraryOpen ? 'CLOSE' : 'SOUNDS'}</span>
+          <span className={styles.handleLabel}>{isLibraryOpen ? 'CLOSE' : 'SOUND LIBRARY'}</span>
         </div>
 
         <header className={styles.libraryHeader}>
@@ -640,6 +617,7 @@ export function CharacterProfile({
             </button>
             <h1 className={styles.characterName}>{characterName}</h1>
             <span className={styles.characterLevel}>{isMain ? 'YOUR IDENTITY' : "FRIEND'S PROFILE"} • LEVEL {unlockedLevel + 1}</span>
+            <p className={styles.profileIntro}>Identity defines the character; appearances only change how it looks.</p>
           </div>
           <button className={styles.closeButton} onClick={onClose} aria-label="Close">
             <X size={24} />
@@ -654,10 +632,6 @@ export function CharacterProfile({
           <button className={`${styles.tabLink} ${activeTab === 'identity' ? styles.tabLinkActive : ''}`} onClick={() => handleTabChange('identity')}>
             <UserRoundPen size={18} />
             <span>IDENTITY</span>
-          </button>
-          <button className={`${styles.tabLink} ${activeTab === 'milestones' ? styles.tabLinkActive : ''}`} onClick={() => handleTabChange('milestones')}>
-            <Star size={18} />
-            <span>MILESTONES</span>
           </button>
         </div>
 
@@ -730,6 +704,11 @@ export function CharacterProfile({
                       })}
                    </div>
                 </div>
+                <div className={styles.inlineSoundActions}>
+                  <Button variant="secondary" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
+                  <Button variant="primary" size="md" className={styles.shuffleButton} onPress={handleRandomizePool}>SHUFFLE</Button>
+                  <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
+                </div>
               </div>
             </section>
           )}
@@ -749,7 +728,7 @@ export function CharacterProfile({
                           type="text" 
                           className={styles.textInput} 
                           value={draftCustomization.name || ''} 
-                          placeholder={character.name} 
+                          placeholder="Choose a name..."
                           onChange={(e) => handleUpdateDraft({ name: e.target.value.slice(0, 12) })} 
                         />
                      </div>
@@ -837,7 +816,9 @@ export function CharacterProfile({
                                    <button 
                                      key={`${img.id}-all`} 
                                      className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''}`} 
-                                     onClick={() => handleUpdateDraft({ image: img.src })}
+                                     onClick={() => {
+                                       handleUpdateDraft({ image: img.src });
+                                     }}
                                    >
                                      <img src={img.src} alt={img.label} />
                                    </button>
@@ -856,7 +837,10 @@ export function CharacterProfile({
                                 <button 
                                   key={img.id} 
                                   className={`${styles.imageOption} ${isSelected ? styles.imageOptionActive : ''} ${isLocked ? styles.imageOptionLocked : ''}`} 
-                                  onClick={() => !isLocked && handleUpdateDraft({ image: img.src })}
+                                  onClick={() => {
+                                    if (isLocked) return;
+                                    handleUpdateDraft({ image: img.src });
+                                  }}
                                   disabled={isLocked}
                                 >
                                   <img src={img.src} alt={img.label} />
@@ -873,25 +857,32 @@ export function CharacterProfile({
                         </div>
                      </div>
 
-                     <div className={styles.identityActions}>
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
+                     <div className={styles.customImageField}>
+                        <label className={styles.fieldLabel} htmlFor={`custom-image-${characterId}`}>
+                          LINK YOUR OWN CHARACTER'S IMAGE
+                        </label>
+                        <input
+                          id={`custom-image-${characterId}`}
+                          type="url"
+                          className={styles.textInput}
+                          value={customImageUrl}
+                          placeholder="https://"
+                          onChange={(event) => {
+                            const value = event.target.value.replace(/^https?:\/\//i, '');
+                            setCustomImageUrl(`https://${value}`);
+                          }}
+                        />
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className={styles.useImageButton}
+                          isDisabled={customImageUrl.trim() === 'https://'}
                           onPress={() => {
-                            trackEvent('character_unlinked', { character_id: characterId });
-                            handleUpdateDraft({ identityId: null });
+                            const imageUrl = customImageUrl.trim();
+                            if (imageUrl) handleUpdateDraft({ image: imageUrl });
                           }}
                         >
-                          UNLINK {characterName.toUpperCase()} FROM REALITY
-                        </Button>
-                        <Button 
-                          variant="quiet" 
-                          size="sm" 
-                          onPress={() => {
-                            setDraftCustomization({});
-                          }}
-                        >
-                          RESET SPOT
+                          USE THIS IMAGE
                         </Button>
                      </div>
                   </div>
@@ -899,59 +890,14 @@ export function CharacterProfile({
             </section>
           )}
 
-          {activeTab === 'milestones' && (
-            <div className={styles.milestonesArea}>
-              <section className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}><Star size={16} style={{ marginRight: 8 }} /> Combo Discovery</h2>
-                  <span className={styles.sectionCount}>{discoveredComboIds.length} / {COMBOS.length}</span>
-                </div>
-                <div className={styles.comboGrid}>
-                  {COMBOS.map((combo) => {
-                    const isDiscovered = discoveredComboIds.includes(combo.id);
-                    const isCurrentlyActive = combo.soundIds.every(id => stageActiveSet.has(id));
-                    return (
-                      <div key={combo.id} className={`${styles.comboCard} ${!isDiscovered ? styles.isLocked : styles.isDiscovered} ${isCurrentlyActive ? styles.isCurrentlyActive : ''}`}>
-                        <span className={`${styles.comboRarity} ${styles[combo.rarity]}`}>{combo.rarity}</span>
-                        <h3 className={styles.comboName}>{isDiscovered ? combo.name : '???'} {!isDiscovered && <Lock size={12} style={{ marginLeft: 8, opacity: 0.5 }} />}</h3>
-                        <p className={styles.comboDescription}>{isDiscovered ? combo.description : 'Combine secret sounds to reveal.'}</p>
-                        {isCurrentlyActive && <div className={styles.activeIndicator}>ACTIVE IN MIX</div>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <section className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}><Trophy size={16} style={{ marginRight: 8 }} /> Milestones</h2>
-                </div>
-                <div className={styles.achievementList}>
-                  {ACHIEVEMENTS.map((achievement) => {
-                    const isUnlocked = [ACHIEVEMENTS[0].id].includes(achievement.id);
-                    return (
-                      <div key={achievement.id} className={`${styles.achievementItem} ${!isUnlocked ? styles.isLocked : ''}`}>
-                        <div className={styles.achievementIcon}><Trophy size={18} /></div>
-                        <div className={styles.achievementText}>
-                          <span className={styles.achievementTitle}>{achievement.title}</span>
-                          <span className={styles.achievementDesc}>{achievement.description}</span>
-                        </div>
-                        {isUnlocked && <div className={styles.unlockedBadge}>UNLOCKED</div>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            </div>
-          )}
         </div>
 
         <footer className={styles.footerActions}>
           {activeTab === 'sounds' && (
              <div className={styles.footerLeft}>
-               <Button variant="quiet" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
-               <Button variant="quiet" size="sm" onPress={handleRandomizePool}>RANDOM</Button>
-               <Button variant="quiet" size="sm" onPress={handleRevertPool}>REVERT</Button>
+               <Button variant="secondary" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
+               <Button variant="primary" size="md" className={styles.shuffleButton} onPress={handleRandomizePool}>SHUFFLE</Button>
+               <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
              </div>
           )}
           <div className={styles.footerRight}>
@@ -962,43 +908,6 @@ export function CharacterProfile({
           </div>
         </footer>
       </main>
-
-      {/* Combo Sidebar (Right Side) */}
-      {activeTab === 'sounds' && (
-      <aside className={`${styles.comboSidebar} ${isComboSidebarOpen ? styles.comboSidebarOpen : ''}`}>
-        <div className={styles.comboHandle} onClick={() => setIsComboSidebarOpen(!isComboSidebarOpen)}>
-          <span className={styles.handleLabel}>{isComboSidebarOpen ? 'CLOSE' : 'COMBOS'}</span>
-        </div>
-        <header className={styles.libraryHeader}>
-          <h6 className={styles.libraryTitle}>COMBO DECK</h6>
-        </header>
-        <div className={styles.libraryList}>
-          {cloudCompletedComboIds.length === 0 ? (
-            <div className={styles.libraryEmpty}>DISCOVER COMBOS TO UNLOCK CARDS</div>
-          ) : (
-            cloudCompletedComboIds.map((comboId) => {
-              const combo = COMBOS.find((c) => c.id === comboId)!;
-              const isAllSelected = combo.soundIds.every((id) => activeSounds.includes(id));
-              return (
-                <div
-                  key={comboId}
-                  className={`${styles.sidebarComboCard} ${isAllSelected ? styles.sidebarComboCardSelected : ''}`}
-                  onClick={() => handleComboQuickSelect(comboId)}
-                  onMouseEnter={() => setHoveredComboId(comboId)}
-                  onMouseLeave={() => setHoveredComboId(null)}
-                >
-                  {combo.image && <img src={combo.image} alt="" className={styles.sidebarComboImg} />}
-                  <div className={styles.sidebarComboInner}>
-                    <h4 className={styles.sidebarComboTitle}>{combo.name}</h4>
-                    <span className={styles.sidebarComboRarity}>{combo.rarity}</span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </aside>
-      )}
 
       <Notice
         isOpen={isNoticeOpen}

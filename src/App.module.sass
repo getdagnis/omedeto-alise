@@ -469,6 +469,7 @@
   position: fixed
   right: 1.5rem
   top: 1.3rem
+  z-index: 10001
   @media (max-width: 1400px)
     top: 2rem
     right: 4.5rem
@@ -495,12 +496,12 @@
   transition-duration: 0.15s
   transition-timing-function: linear
   overflow: visible
-  z-index: 9998
+  z-index: 9999999
 
 .resetDataButton
-  position: absolute
-  top: calc(100% + 0.7rem)
-  right: 0
+  position: fixed
+  top: calc(1.3rem + 28px + 0.7rem)
+  right: 1.5rem
   width: 34px
   height: 28px
   display: flex
@@ -514,6 +515,19 @@
   cursor: pointer
   z-index: 9996
   transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease
+
+  @media (max-width: 1400px)
+    top: calc(2rem + 28px + 0.7rem)
+    right: 4.5rem
+  @media (max-width: 1380px)
+    top: calc(2rem + 28px + 0.7rem)
+    right: 3.5rem
+  @media (max-width: 1330px)
+    top: calc(2.5rem + 28px + 0.7rem)
+    right: 2.75rem
+  @media (max-width: 600px) or (max-height: 480px)
+    top: calc(1.5rem + 28px + 0.7rem)
+    right: 1.6rem
 
   &:hover
     color: var(--neon-cyan)
