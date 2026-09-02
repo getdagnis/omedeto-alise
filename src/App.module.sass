@@ -497,6 +497,29 @@
   overflow: visible
   z-index: 9998
 
+.resetDataButton
+  position: absolute
+  top: calc(100% + 0.7rem)
+  right: 0
+  width: 34px
+  height: 28px
+  display: flex
+  align-items: center
+  justify-content: center
+  padding: 0
+  border: 1px solid rgba(255, 255, 255, 0.22)
+  border-radius: 999px
+  background: rgba(9, 14, 38, 0.9)
+  color: white
+  cursor: pointer
+  z-index: 9998
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease
+
+  &:hover
+    color: var(--neon-cyan)
+    border-color: var(--neon-cyan)
+    transform: scale(1.05)
+
 .hamburgerActive .hamburgerInner,
 .hamburgerActive .hamburgerInner::before,
 .hamburgerActive .hamburgerInner::after

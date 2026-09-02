@@ -129,7 +129,7 @@ export type CharacterCustomization = {
   name?: string;
   colorModes?: string[];
   image?: string;
-  soundIds?: string[]; // Active Selection (max 6)
+  soundIds?: string[]; // Active Selection (max 9)
   cloudSoundIds?: string[]; // Constellation Pool (max 24)
   identityId?: string | null;
 };

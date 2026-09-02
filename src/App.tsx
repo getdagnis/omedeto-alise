@@ -11,13 +11,14 @@ import SandboxUI from './screens/SandboxUI';
 import PlatformTest1 from './screens/PlatformTests/PlatformTest1';
 import PlatformTest2 from './screens/PlatformTests/PlatformTest2';
 import PlatformTest3 from './screens/PlatformTests/PlatformTest3';
-import { useProgression } from './hooks/useProgression';
+import { PROGRESSION_STORAGE_KEY, useProgression } from './hooks/useProgression';
 import { PROGRESSION_LEVELS } from './progression';
-import { Button } from './components-ui';
+import { Button, Notice } from './components-ui';
 import AchievementUnlockedModal from './components/AchievementUnlockedModal';
 import { CharacterProfile } from './components/CharacterProfile/CharacterProfile';
 import StatsPage from './screens/Stats/StatsPage';
 import { useAnalytics } from './hooks/useAnalytics';
+import { RefreshCcw } from 'lucide-react';
 import {
   ALL_SOUNDS,
   BACKGROUND_IMAGE_KEYS,
@@ -78,14 +79,25 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
     if (!stored) {
       // INITIAL STATE FOR NEW USER (Random Performer Start) - @keep start
       const defaultPerformer = AVAILABLE_PERFORMERS.find((performer) => performer.id === 'akito') ?? AVAILABLE_PERFORMERS[0];
+      const secondaryPerformer = AVAILABLE_PERFORMERS.find((performer) => performer.id === 'alise');
       return {
         akito: {
           identityId: defaultPerformer.id,
           image: defaultPerformer.images[0].src,
           name: defaultPerformer.label,
-          soundIds: defaultPerformer.defaultSounds.slice(0, 6),
+          soundIds: defaultPerformer.defaultSounds.slice(0, MAX_CHARACTER_SOUNDS),
           cloudSoundIds: ALL_SOUNDS.map(s => s.id).slice(0, INITIAL_CLOUDS_COUNT),
         },
+        ...(secondaryPerformer
+          ? {
+              alise: {
+                identityId: secondaryPerformer.id,
+                image: secondaryPerformer.images[0].src,
+                name: secondaryPerformer.label,
+                soundIds: secondaryPerformer.defaultSounds.slice(0, MAX_CHARACTER_SOUNDS),
+              },
+            }
+          : {}),
       };
       // @keep end
     }
@@ -150,7 +162,7 @@ const CHARACTER_COLOR_OPTIONS = [
   })),
 ] as const;
 
-const STAGE_CHARACTER_IDS = ['placeholder-1', 'placeholder-2', 'akito', 'placeholder-3', 'placeholder-4'];
+const STAGE_CHARACTER_IDS = ['placeholder-1', 'alise', 'akito', 'placeholder-3', 'placeholder-4'];
 
 function App() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
@@ -211,6 +223,7 @@ function App() {
   const [isGlowBurst, setIsGlowBurst] = useState(false);
   const [comboWord, setComboWord] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isResetNoticeOpen, setIsResetNoticeOpen] = useState(false);
 
   const savedScrollPositionRef = useRef<number>(0);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -470,12 +483,12 @@ function App() {
         : fallbackSoundIds;
       const uniqueSounds = Array.from(new Map(sourceSounds.map((sound) => [sound.id, sound])).values());
       const currentSounds = new Set(characterCustomizations[characterId]?.soundIds ?? []);
-      const soundsToShuffle = uniqueSounds.length > 6
+      const soundsToShuffle = uniqueSounds.length > MAX_CHARACTER_SOUNDS
         ? uniqueSounds.filter((sound) => !currentSounds.has(sound.id))
         : uniqueSounds;
-      const shuffled = [...(soundsToShuffle.length >= 6 ? soundsToShuffle : uniqueSounds)]
+      const shuffled = [...(soundsToShuffle.length >= MAX_CHARACTER_SOUNDS ? soundsToShuffle : uniqueSounds)]
         .sort(() => Math.random() - 0.5)
-        .slice(0, 6)
+        .slice(0, MAX_CHARACTER_SOUNDS)
         .map((sound) => sound.id);
 
       const currentActive = activeSoundsByCharacter[characterId] ?? [];
@@ -520,6 +533,36 @@ function App() {
     activeComboIdRef.current = null;
     setComboWord(null);
   }, [stopAllAudio]);
+
+  const resetAllData = useCallback(() => {
+    let favorites: string[] = [];
+    try {
+      const progression = localStorage.getItem(PROGRESSION_STORAGE_KEY);
+      if (progression) {
+        const parsed = JSON.parse(progression);
+        favorites = parsed.favoriteSoundIds || [];
+      }
+    } catch (error) {
+      console.error('Failed to capture favorites before reset', error);
+    }
+
+    localStorage.clear();
+
+    if (favorites.length > 0) {
+      try {
+        localStorage.setItem(PROGRESSION_STORAGE_KEY, JSON.stringify({ favoriteSoundIds: favorites }));
+      } catch (error) {
+        console.error('Failed to restore favorites', error);
+      }
+    }
+
+    window.location.reload();
+  }, []);
+
+  const openResetConfirmation = useCallback(() => {
+    setIsMenuOpen(false);
+    setIsResetNoticeOpen(true);
+  }, []);
 
   const updateCharacterCustomization = useCallback(
     (characterId: string, patch: CharacterCustomization) => {
@@ -782,12 +825,27 @@ function App() {
               Reset Board
             </Button>
             {!isBlockingOverlayOpen && (
-              <div className={styles.hamburgerWrap} onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                <div className={`${styles.hamburger} ${isMenuVisible ? styles.hamburgerActive : ''}`}>
+              <div className={styles.hamburgerWrap}>
+                <div
+                  className={`${styles.hamburger} ${isMenuVisible ? styles.hamburgerActive : ''}`}
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
                   <span className={styles.hamburgerBox}>
                     <span className={styles.hamburgerInner}></span>
                   </span>
                 </div>
+                <button
+                  type="button"
+                  className={styles.resetDataButton}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    openResetConfirmation();
+                  }}
+                  aria-label="Reset all data"
+                  title="Reset all data"
+                >
+                  <RefreshCcw size={18} aria-hidden="true" />
+                </button>
               </div>
             )}
             {!isBlockingOverlayOpen && (
@@ -797,6 +855,7 @@ function App() {
                 onNavigate={navigate}
                 isLowGraphics={isLowGraphics}
                 onToggleLowGraphics={() => setIsLowGraphics(!isLowGraphics)}
+                onResetAllData={openResetConfirmation}
               />
             )}
             <ProgressionMeter
@@ -812,6 +871,16 @@ function App() {
               unlockNextTitle="To unlock Level 3:"
               unlockNextLines={lvl2UnlockNextLines}
               buttonLabel="Hurrah!"
+            />
+            <Notice
+              isOpen={isResetNoticeOpen}
+              onClose={() => {
+                setIsResetNoticeOpen(false);
+                resetAllData();
+              }}
+              title="Reset All Data"
+              message="Are you sure you want to clear all local data and reset the app? Your favorite sounds will be preserved."
+              okLabel="RESET ALL DATA"
             />
           </>
         )}

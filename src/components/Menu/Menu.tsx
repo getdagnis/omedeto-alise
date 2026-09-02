@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Separator } from '../../components-ui/Separator';
 import { useAnalytics } from '../../hooks/useAnalytics';
 
-import { PROGRESSION_STORAGE_KEY } from '../../hooks/useProgression';
 
 export interface MenuProps {
   isOpen: boolean;
@@ -11,9 +10,10 @@ export interface MenuProps {
   onNavigate: (path: string) => void;
   isLowGraphics: boolean;
   onToggleLowGraphics: () => void;
+  onResetAllData: () => void;
 }
 
-export function Menu({ isOpen, onClose, onNavigate, isLowGraphics, onToggleLowGraphics }: MenuProps) {
+export function Menu({ isOpen, onClose, onNavigate, isLowGraphics, onToggleLowGraphics, onResetAllData }: MenuProps) {
   const [isReady, setIsReady] = useState(false);
   const { trackEvent } = useAnalytics();
 
@@ -69,46 +69,7 @@ export function Menu({ isOpen, onClose, onNavigate, isLowGraphics, onToggleLowGr
           <div
             className={styles.liInner}
             style={{ color: 'var(--neon-pink)', opacity: 0.8 }}
-            onClick={() => {
-              if (
-                window.confirm(
-                  'Are you sure you want to clear all local data and reset the app? (Your favorite sounds will be preserved)',
-                )
-              ) {
-                // 1. Capture favorites
-                let favorites: string[] = [];
-                try {
-                  const progression = localStorage.getItem(PROGRESSION_STORAGE_KEY);
-                  if (progression) {
-                    const parsed = JSON.parse(progression);
-                    favorites = parsed.favoriteSoundIds || [];
-                  }
-                } catch (e) {
-                  console.error('Failed to capture favorites before reset', e);
-                }
-
-                // 2. Wipe everything
-                localStorage.clear();
-
-                // 3. Restore favorites into a fresh state
-                if (favorites.length > 0) {
-                  try {
-                    // We use a minimal version of the default state or just the key
-                    // useProgression will merge it with DEFAULT_PROGRESSION_STATE on reload
-                    localStorage.setItem(
-                      PROGRESSION_STORAGE_KEY,
-                      JSON.stringify({
-                        favoriteSoundIds: favorites,
-                      }),
-                    );
-                  } catch (e) {
-                    console.error('Failed to restore favorites', e);
-                  }
-                }
-
-                window.location.reload();
-              }
-            }}
+            onClick={onResetAllData}
           >
             RESET ALL DATA
           </div>

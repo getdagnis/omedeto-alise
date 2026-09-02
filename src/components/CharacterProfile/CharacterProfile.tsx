@@ -26,6 +26,8 @@ import { COMBOS, ACHIEVEMENTS, AVAILABLE_PERFORMERS } from '../../config';
 import styles from './CharacterProfile.module.sass';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
+const IDENTITY_NOTICE_STORAGE_KEY = 'alise-in-tokyo-identity-sounds-applied';
+const MAX_CHARACTER_SOUNDS = 9;
 
 export type CharacterColorOption = {
   readonly id: string;
@@ -93,7 +95,12 @@ export function CharacterProfile({
   onToggleFavoriteSound,
   onUpgradeCharacter,
 }: CharacterProfileProps) {
-  const [activeTab, setActiveTab] = useState<'sounds' | 'identity' | 'milestones'>('sounds');
+  const initialIdentityId = characterCustomizations[characterId]?.identityId !== undefined
+    ? characterCustomizations[characterId]?.identityId
+    : character.identityId;
+  const [activeTab, setActiveTab] = useState<'sounds' | 'identity' | 'milestones'>(
+    initialIdentityId ? 'sounds' : 'identity',
+  );
   const { trackEvent } = useAnalytics();
 
   useEffect(() => {
@@ -111,6 +118,13 @@ export function CharacterProfile({
   const floatingTextIndexRef = useRef(0);
   const [draftCustomization, setDraftCustomization] = useState(characterCustomizations[characterId] || {});
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+  const [hasCompletedIdentitySounds, setHasCompletedIdentitySounds] = useState(() => {
+    try {
+      return window.localStorage.getItem(IDENTITY_NOTICE_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [hoveredComboId, setHoveredComboId] = useState<string | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [isBottomReached, setIsBottomReached] = useState(false);
@@ -136,6 +150,14 @@ export function CharacterProfile({
     return hasIdentity || (hasCustomName && hasCustomImage);
   }, [character.identityId, draftCustomization.identityId, draftCustomization.name, draftCustomization.image]);
 
+  const hasAppliedSounds = (characterCustomizations[characterId]?.soundIds?.length ?? 0) > 0;
+  const needsSoundSetup = !isCharacterSelected || !hasAppliedSounds;
+
+  const showIdentityNotice = useCallback(() => {
+    if (hasCompletedIdentitySounds) return;
+    setIsNoticeOpen(true);
+  }, [hasCompletedIdentitySounds]);
+
   useEffect(() => {
     if (activeTab === 'identity' && !isPredefined && !draftCustomization.name) {
       nameInputRef.current?.focus();
@@ -144,21 +166,20 @@ export function CharacterProfile({
   }, [activeTab, isPredefined, draftCustomization.name]);
 
   useEffect(() => {
-    if (activeTab === 'sounds' && !isCharacterSelected) {
-      const timer = setTimeout(() => setIsNoticeOpen(true), 0);
-      return () => clearTimeout(timer);
+    if (activeTab === 'identity' && !isCharacterSelected) {
+      showIdentityNotice();
     }
-  }, [activeTab, isCharacterSelected]);
+  }, [activeTab, isCharacterSelected, showIdentityNotice]);
 
   const handleTabChange = useCallback(
     (tab: 'sounds' | 'identity' | 'milestones') => {
-      if (tab === 'sounds' && !isCharacterSelected) {
-        setIsNoticeOpen(true);
+      if (tab === 'sounds' && needsSoundSetup) {
+        showIdentityNotice();
       }
       trackEvent('section_switch', { category: tab, character_id: characterId });
       setActiveTab(tab);
     },
-    [isCharacterSelected, trackEvent, characterId],
+    [needsSoundSetup, showIdentityNotice, trackEvent, characterId],
   );
 
   const constellationSounds = useMemo(() => {
@@ -286,7 +307,15 @@ export function CharacterProfile({
 
   const handleApply = () => {
     trackEvent('character_applied', { character_id: characterId });
-    const finalSounds = activeSounds.slice(0, 6);
+    const finalSounds = activeSounds.slice(0, MAX_CHARACTER_SOUNDS);
+    if (isCharacterSelected && finalSounds.length > 0) {
+      setHasCompletedIdentitySounds(true);
+      try {
+        window.localStorage.setItem(IDENTITY_NOTICE_STORAGE_KEY, 'true');
+      } catch {
+        // Session state still prevents repeated notices when storage is unavailable.
+      }
+    }
     onApply({ ...draftCustomization, soundIds: finalSounds, cloudSoundIds: constellationSounds.map(s => s.id) });
   };
 
@@ -320,7 +349,7 @@ export function CharacterProfile({
     } else {
       const nextSounds = [...activeSounds];
       combo.soundIds.forEach(id => {
-        if (!nextSounds.includes(id) && nextSounds.length < 6) {
+        if (!nextSounds.includes(id) && nextSounds.length < MAX_CHARACTER_SOUNDS) {
           const s = soundCatalogById.get(id);
           if (s) {
             onToggleSound(id, s.path);
@@ -620,7 +649,7 @@ export function CharacterProfile({
         <div className={styles.profileTabs}>
           <button className={`${styles.tabLink} ${activeTab === 'sounds' ? styles.tabLinkActive : ''}`} onClick={() => handleTabChange('sounds')}>
             <Music size={18} />
-            <span>CONSTELLATION</span>
+            <span>SOUNDS</span>
           </button>
           <button className={`${styles.tabLink} ${activeTab === 'identity' ? styles.tabLinkActive : ''}`} onClick={() => handleTabChange('identity')}>
             <UserRoundPen size={18} />
@@ -636,8 +665,8 @@ export function CharacterProfile({
           {activeTab === 'sounds' && (
             <section className={styles.constellationSection}>
               <div className={styles.constellationHeader}>
-                <h2 className={styles.constellationTitle}>THE CONSTELLATION</h2>
-                <p className={styles.constellationSubtitle}>Highlight up to 6 sounds for your mix.</p>
+                <h2 className={styles.constellationTitle}>CHOOSE SOUNDS</h2>
+                <p className={styles.constellationSubtitle}>Choose up to nine new sounds</p>
               </div>
               
               <div className={styles.constellationStage}>
@@ -672,7 +701,7 @@ export function CharacterProfile({
                                onPreviewSound(sound.id, sound.path);
                              } else {
                                // If it's not selected at all, add to mix + start previewing
-                               if (activeSounds.length < 6) {
+                               if (activeSounds.length < MAX_CHARACTER_SOUNDS) {
                                  onToggleSound(sound.id, sound.path);
                                }
                              }
@@ -688,9 +717,9 @@ export function CharacterProfile({
                 </div>
 
                 <div className={styles.slotSystem}>
-                   <span className={styles.slotLabel}>{activeSounds.length} / 6 slots:</span>
+                   <span className={styles.slotLabel}>{activeSounds.length} / {MAX_CHARACTER_SOUNDS} slots:</span>
                    <div className={styles.slotsWrap}>
-                      {[...Array(6)].map((_, i) => {
+                      {[...Array(MAX_CHARACTER_SOUNDS)].map((_, i) => {
                          const soundId = activeSounds[i];
                          const isFull = !!soundId;
                          return (
@@ -746,7 +775,7 @@ export function CharacterProfile({
                                 key={ident.id} 
                                 className={`${styles.identOption} ${isSelected ? styles.identOptionActive : ''}`} 
                                 onClick={() => {
-                                  const nextSounds = ident.defaultSounds.slice(0, 6);
+                                  const nextSounds = ident.defaultSounds.slice(0, MAX_CHARACTER_SOUNDS);
                                   // If current mix is empty, seed it with the identity's signature sounds
                                   if (activeSounds.length === 0 && onSetSounds) {
                                     onSetSounds(nextSounds);
@@ -978,8 +1007,8 @@ export function CharacterProfile({
           handleTabChange('identity');
         }}
         title="Identity Required"
-        message="Please select a character identity before choosing sounds for your mix."
-        okLabel="GO TO IDENTITY"
+        message="Add a new character and then choose sounds from the cloud!"
+        okLabel="GO TO CHARACTER"
       />
     </div>
   );

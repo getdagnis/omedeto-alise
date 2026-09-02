@@ -1,7 +1,6 @@
 import type { CSSProperties, DragEvent } from 'react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { 
-  Music, 
   UserRoundPen, 
   Play, 
   Pause, 
@@ -317,11 +316,11 @@ function CharacterCard({
               return (
                 <Chip
                   key={`${character.id}-slot-${index}`}
-                  className={`${styles.characterSoundTag} ${isActive ? '' : styles.soundTagPaused} ${isHinting ? styles.soundTagHinting : ''}`}
+                  className={`${styles.characterSoundTag} ${isPlaying ? '' : styles.soundTagPaused} ${isHinting ? styles.soundTagHinting : ''}`}
                   tone="neutral"
                   size="sm"
                   style={
-                    isActive && colorToken
+                    isPlaying && colorToken
                       ? {
                           background: `var(${colorToken})`,
                           color: '#fff',
@@ -422,12 +421,12 @@ function CharacterCard({
                     onPress={() => {
                       if (onOpenProfile) onOpenProfile();
                     }}
-                    aria-label="Add sounds!"
+                    aria-label="View Profile"
                   >
-                    <Music size={14} />
+                    <UserRoundPen size={14} />
                     {noSoundsInLibrary && <span className={styles.actionLabel}>{displayName.toUpperCase()}</span>}
                   </Button>
-                  <Tooltip>{noSoundsInLibrary ? "add sounds!" : "SOUNDS"}</Tooltip>
+                  <Tooltip>{noSoundsInLibrary ? "add sounds!" : "PROFILE"}</Tooltip>
                 </TooltipTrigger>
               </div>
               {customization.soundIds && customization.soundIds.length > 0 && (
