@@ -871,7 +871,7 @@ const AKITO_BASE_SOUNDS: BaseSoundOption[] = [
     path: '/akito/akito-drums.mp3',
     animation: 'fast',
     category: 'beats',
-    type: 'drums',
+    type: 'beat',
     mood: 'energetic',
     price: 50,
   },
