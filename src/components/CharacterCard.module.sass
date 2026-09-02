@@ -30,14 +30,10 @@
   flex-direction: column
   align-items: center
   gap: 2px
-  z-index: 10
+  z-index: 30
   position: relative
   margin-top: 0.5rem
   margin-bottom: 0.25rem
-  @media (max-width: 640px)
-    transform: scale(0.8)
-    margin-top: 0.25rem
-    margin-bottom: 0
 
 .characterName
   margin: 0 !important
@@ -84,8 +80,8 @@
     height: min(12.5rem, 18vw)
 
 .dropTargetLarge
-  width: min(17.5rem, 60vw)
-  height: min(17.5rem, 60vw)
+  width: min(22rem, 82vw)
+  height: min(22rem, 82vw)
   @media (min-width: 1024px)
     width: min(15.5rem, 22vw)
     height: min(15.5rem, 22vw)
@@ -258,12 +254,23 @@
     transform: scale(1.05)
     filter: brightness(1.2)
 
+@media (max-width: 859px)
+  .mainCharacter .characterSoundList
+    display: grid
+    grid-template-columns: repeat(2, max-content)
+
+  .mainCharacter .characterSoundTag
+    font-size: 0.72rem
+    min-height: 1.44rem
+    padding: 0.12rem 0.6rem
+
 .soundTagPaused
-  opacity: 0.4
-  filter: grayscale(1)
-  background: rgba(255, 255, 255, 0.05) !important
-  border-color: rgba(255, 255, 255, 0.1) !important
-  color: rgba(255, 255, 255, 0.4) !important
+  opacity: 0.86
+  background: #062c3a !important
+  border: 1px solid var(--character-primary, rgba(255, 255, 255, 0.6)) !important
+  color: var(--character-primary, rgba(255, 255, 255, 0.82)) !important
+  box-shadow: none !important
+  text-shadow: none
 
 .soundTagHinting
   animation: soundHint 0.5s ease-in-out
@@ -299,11 +306,7 @@
   transform-origin: center top
   @media (min-width: 1024px)
     .mainCharacter &
-       transform: scale(0.8)
-
-  @media (max-width: 640px)
-    transform: scale(0.85)
-    gap: 0.15rem
+      transform: scale(0.8)
 
 .characterActionWrap
   position: relative
@@ -312,17 +315,13 @@
   justify-content: center
 
 .characterActionButton
-  width: 2.4rem
-  height: 1.6rem
+  width: 2.6rem !important
+  height: 1.9rem
   font-size: 0.75rem
   display: flex
   align-items: center
   justify-content: center
   gap: 0.3rem
-  @media (max-width: 640px)
-    width: 2rem
-    height: 1.4rem
-    font-size: 0.65rem
 
 .actionWithLabel
   width: auto
@@ -392,7 +391,7 @@
   transform-origin: center
   pointer-events: none
   filter: grayscale(1) brightness(0)
-  z-index: 5
+  z-index: 0
   animation: characterPlaceholderPulse 2.6s ease-in-out infinite
 
 @keyframes comboWordPop

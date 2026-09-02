@@ -93,6 +93,7 @@ export const DEFAULT_PROGRESSION_STATE: ProgressionState = {
   unlockedLevel: 2, // Starts at Level 2 - @keep
   walletBalance: 1000,
   characterLevels: {
+    akito: 0,
     alise: 0,
     foxy: 0,
     gumi: 0,

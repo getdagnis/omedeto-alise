@@ -26,6 +26,7 @@ import {
   CHARACTERS,
   COMBOS,
   AVAILABLE_PERFORMERS,
+  SOUNDS,
   LOCALIZATIONS,
   type CharacterOption,
   type CharacterCustomization,
@@ -76,13 +77,13 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
     const stored = window.localStorage.getItem(CHARACTER_CUSTOM_STORAGE_KEY);
     if (!stored) {
       // INITIAL STATE FOR NEW USER (Random Performer Start) - @keep start
-      const randomPerformer = AVAILABLE_PERFORMERS[Math.floor(Math.random() * AVAILABLE_PERFORMERS.length)];
+      const defaultPerformer = AVAILABLE_PERFORMERS.find((performer) => performer.id === 'akito') ?? AVAILABLE_PERFORMERS[0];
       return {
-        alise: {
-          identityId: randomPerformer.id,
-          image: randomPerformer.images[0].src,
-          name: randomPerformer.label,
-          soundIds: randomPerformer.defaultSounds.slice(0, 6),
+        akito: {
+          identityId: defaultPerformer.id,
+          image: defaultPerformer.images[0].src,
+          name: defaultPerformer.label,
+          soundIds: defaultPerformer.defaultSounds.slice(0, 6),
           cloudSoundIds: ALL_SOUNDS.map(s => s.id).slice(0, INITIAL_CLOUDS_COUNT),
         },
       };
@@ -149,7 +150,7 @@ const CHARACTER_COLOR_OPTIONS = [
   })),
 ] as const;
 
-const STAGE_CHARACTER_IDS = ['placeholder-1', 'placeholder-2', 'alise', 'placeholder-3', 'placeholder-4'];
+const STAGE_CHARACTER_IDS = ['placeholder-1', 'placeholder-2', 'akito', 'placeholder-3', 'placeholder-4'];
 
 function App() {
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
@@ -176,21 +177,12 @@ function App() {
   const [isLowGraphics, setIsLowGraphics] = useState(() => getStoredLowGraphicsMode());
 
   const [favoriteCharacterId, setFavoriteCharacterId] = useState<string>(() => '');
-  const mainCharacterId = 'alise';
+  const mainCharacterId = 'akito';
 
   const [characterCustomizations, setCharacterCustomizations] = useState<CharacterCustomizationMap>(() =>
     parseCharacterCustomStorage(),
   );
-  const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>(() => {
-    const initialActive: Record<string, string[]> = {};
-    const customs = parseCharacterCustomStorage(); // Re-parse to avoid circular init
-    Object.entries(customs).forEach(([id, custom]) => {
-      if (custom.soundIds) {
-        initialActive[id] = custom.soundIds;
-      }
-    });
-    return initialActive;
-  });
+  const [activeSoundsByCharacter, setActiveSoundsByCharacter] = useState<Record<string, string[]>>({});
   const [loadedCharacterMap, setLoadedCharacterMap] = useState<Record<string, boolean>>({});
   const [mutedCharacterIds, setMutedCharacterIds] = useState<Set<string>>(new Set());
   const [pickerSelectedSoundIds, setPickerSelectedSoundIds] = useState<string[]>([]);
@@ -469,9 +461,23 @@ function App() {
     [buildAudioKey],
   );
 
-  const resetCharacter = useCallback(
+  const shuffleCharacterSounds = useCallback(
     (characterId: string) => {
-      unmuteCharacter(characterId);
+      const dedicatedSoundIds = SOUNDS[characterId as keyof typeof SOUNDS];
+      const fallbackSoundIds = [...SOUNDS.akito, ...SOUNDS.gumi, ...SOUNDS.hanako];
+      const sourceSounds = Array.isArray(dedicatedSoundIds) && characterId !== 'library' && characterId !== 'all'
+        ? dedicatedSoundIds
+        : fallbackSoundIds;
+      const uniqueSounds = Array.from(new Map(sourceSounds.map((sound) => [sound.id, sound])).values());
+      const currentSounds = new Set(characterCustomizations[characterId]?.soundIds ?? []);
+      const soundsToShuffle = uniqueSounds.length > 6
+        ? uniqueSounds.filter((sound) => !currentSounds.has(sound.id))
+        : uniqueSounds;
+      const shuffled = [...(soundsToShuffle.length >= 6 ? soundsToShuffle : uniqueSounds)]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 6)
+        .map((sound) => sound.id);
+
       const currentActive = activeSoundsByCharacter[characterId] ?? [];
       currentActive.forEach((soundId) => {
         const audioKey = buildAudioKey(characterId, soundId);
@@ -482,10 +488,15 @@ function App() {
           delete audioRefs.current[audioKey];
         }
       });
-      activeSoundOrderRef.current = activeSoundOrderRef.current.filter((e) => e.characterId !== characterId);
+      activeSoundOrderRef.current = activeSoundOrderRef.current.filter((entry) => entry.characterId !== characterId);
       setActiveSoundsByCharacter((previous) => ({ ...previous, [characterId]: [] }));
+      setCharacterCustomizations((previous) => {
+        const next = { ...previous, [characterId]: { ...(previous[characterId] ?? {}), soundIds: shuffled } };
+        persistCharacterCustomStorage(next);
+        return next;
+      });
     },
-    [buildAudioKey, unmuteCharacter, activeSoundsByCharacter],
+    [activeSoundsByCharacter, buildAudioKey, characterCustomizations],
   );
 
   const handleCharacterClick = useCallback(
@@ -728,7 +739,7 @@ function App() {
                   if (s) setSingleSound(id, s);
                 }}
                 onImageLoad={(id) => setLoadedCharacterMap((p) => ({ ...p, [id]: true }))}
-                onResetCharacter={resetCharacter}
+                onShuffleCharacter={shuffleCharacterSounds}
                 onToggleSound={setSingleSound}
                 onRemoveSound={removeSoundFromCharacter}
                 onToggleMute={toggleMuteMix}

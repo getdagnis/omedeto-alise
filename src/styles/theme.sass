@@ -196,12 +196,10 @@
         --button-background: oklch(from var(--button-color) 50% c h)
 
     &:where([data-disabled])
-      box-shadow: none
-      --button-background: var(--border-color-disabled)
-      --button-text: var(--text-color-disabled)
-
-      &:where([data-variant=quiet])
-        --button-background: none
+      --button-background: rgb(from var(--character-soundboard, var(--bg-surface)) r g b / 0.86)
+      --button-border: rgb(from var(--character-primary, var(--border-color-disabled)) r g b / 0.82)
+      --button-text: rgb(from var(--character-primary, var(--text-color-disabled)) r g b / 0.82)
+      box-shadow: inset 0 0 0 1px var(--button-border)
 
   .indicator
     --indicator-color: var(--gray)

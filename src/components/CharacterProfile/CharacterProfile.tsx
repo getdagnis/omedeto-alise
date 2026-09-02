@@ -115,7 +115,7 @@ export function CharacterProfile({
   const [scrollTop, setScrollTop] = useState(0);
   const [isBottomReached, setIsBottomReached] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
-    new Set(['voice', 'beats', 'drums', 'animals', 'melody', 'creepy', 'calm', 'other', 'alise', 'gumi', 'hanako']),
+    new Set(['voice', 'beats', 'drums', 'animals', 'melody', 'creepy', 'calm', 'other', 'akito', 'alise', 'gumi', 'hanako']),
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -123,7 +123,7 @@ export function CharacterProfile({
   const characterName = draftCustomization?.name?.trim() || character.name;
   const characterImage = draftCustomization?.image || character.img;
 
-  const PREDEFINED_IDS = ['alise', 'gumi', 'hanako', 'foxy', 'kagamine', 'honekoneko'];
+  const PREDEFINED_IDS = ['akito', 'alise', 'gumi', 'hanako', 'foxy', 'kagamine', 'honekoneko'];
   const isPredefined = PREDEFINED_IDS.includes(characterId);
 
   const isCharacterSelected = useMemo(() => {

@@ -151,6 +151,22 @@ export type CharacterOption = {
 
 export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
   {
+    id: 'akito',
+    label: 'Akito',
+    japaneseName: 'アキト',
+    images: [
+      { id: 'akito-1', src: '/chars/akito-1.png', label: 'Default', unlockLevel: 0 },
+    ],
+    defaultSounds: [
+      'akito-beat',
+      'akito-spring',
+      'akito-hard',
+      'akito-loop',
+      'akito-ritmo',
+      'akito-synth',
+    ],
+  },
+  {
     id: 'alise',
     label: 'Alise',
     japaneseName: 'アリス',
@@ -778,11 +794,80 @@ const HANAKO_BASE_SOUNDS: BaseSoundOption[] = [
   },
 ];
 
-export const ALL_SOUNDS = mapSoundColors([...GUMI_BASE_SOUNDS, ...HANAKO_BASE_SOUNDS, ...LIBRARY_BASE_SOUNDS]);
+const AKITO_BASE_SOUNDS: BaseSoundOption[] = [
+  {
+    id: 'akito-beat',
+    name: 'Akito Beat',
+    path: '/akito/akito-beat.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'tokyo',
+    price: 50,
+  },
+  {
+    id: 'akito-spring',
+    name: 'Akito Spring',
+    path: '/akito/akito-spring.mp3',
+    animation: 'slow',
+    category: 'melody',
+    type: 'music',
+    mood: 'tokyo',
+    price: 50,
+  },
+  {
+    id: 'akito-hard',
+    name: 'Akito Hard',
+    path: '/akito/akito-hard.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'powerful',
+    price: 60,
+  },
+  {
+    id: 'akito-loop',
+    name: 'Akito Loop',
+    path: '/akito/akito-loop.mp3',
+    animation: 'slow',
+    category: 'beats',
+    type: 'beat',
+    mood: 'cyberpunk',
+    price: 50,
+  },
+  {
+    id: 'akito-ritmo',
+    name: 'Akito Ritmo',
+    path: '/akito/akito-ritmo.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'tokyo',
+    price: 50,
+  },
+  {
+    id: 'akito-synth',
+    name: 'Akito Synth',
+    path: '/akito/akito-synth.mp3',
+    animation: 'slow',
+    category: 'melody',
+    type: 'music',
+    mood: 'cyberpunk',
+    price: 60,
+  },
+];
+
+export const ALL_SOUNDS = mapSoundColors([
+  ...GUMI_BASE_SOUNDS,
+  ...HANAKO_BASE_SOUNDS,
+  ...AKITO_BASE_SOUNDS,
+  ...LIBRARY_BASE_SOUNDS,
+]);
 
 export const SOUNDS = {
   gumi: mapSoundColors(GUMI_BASE_SOUNDS),
   hanako: mapSoundColors(HANAKO_BASE_SOUNDS),
+  akito: mapSoundColors(AKITO_BASE_SOUNDS),
   library: mapSoundColors(LIBRARY_BASE_SOUNDS),
   all: ALL_SOUNDS,
 } as const;
@@ -831,6 +916,29 @@ const PLACEHOLDER_SCHEMES: CharacterColorScheme[] = [
 ];
 
 export const CHARACTERS: CharacterOption[] = [
+  {
+    id: 'akito',
+    name: 'AKITO',
+    img: '/chars/akito-1.png',
+    mixLabel: "Akito's Mix!",
+    japaneseName: 'アキト', // @keep
+    identityId: 'akito',
+    titleColor: 'white',
+    primaryColor: '#00b8d9',
+    secondaryColor: '#ffb703',
+    soundboardColor: '#062c3a',
+    schemes: [
+      {
+        id: 'default',
+        name: 'Signal Blue',
+        titleColor: 'white',
+        primaryColor: '#00b8d9',
+        secondaryColor: '#ffb703',
+        soundboardColor: '#062c3a',
+      },
+    ],
+    sounds: ALL_SOUNDS,
+  },
   {
     id: 'alise',
     name: 'ALISE',
@@ -1121,6 +1229,7 @@ export const CHARACTERS: CharacterOption[] = [
 
 export const CHARACTER_IMAGE_OPTIONS = [
   { id: 'placeholder', label: 'Custom', src: '/alise-1.svg' },
+  { id: 'akito', label: 'Akito', src: '/chars/akito-1.png' },
   { id: 'alise', label: 'Alise', src: '/chars/alise-1.png' },
   { id: 'foxy', label: 'Foxy', src: '/chars/foxy-1.png' },
   { id: 'gumi', label: 'GUMI (グミ)', src: '/chars/gumi-1.png' },

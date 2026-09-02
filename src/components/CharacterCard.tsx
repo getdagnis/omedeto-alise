@@ -5,7 +5,7 @@ import {
   UserRoundPen, 
   Play, 
   Pause, 
-  RotateCcw, 
+  Shuffle, 
   Heart
 } from 'lucide-react';
 import styles from './CharacterCard.module.sass';
@@ -49,7 +49,7 @@ type CharacterCardProps = {
   onDragLeave?: () => void;
   onDrop?: (event: DragEvent<HTMLDivElement>) => void;
   onImageLoad?: () => void;
-  onReset?: () => void;
+  onShuffle?: () => void;
   onToggleSound?: (soundId: string) => void;
   onRemoveSound?: (soundId: string) => void;
   onToggleMute?: () => void;
@@ -107,7 +107,7 @@ function CharacterCard({
   onDragLeave,
   onDrop,
   onImageLoad,
-  onReset,
+  onShuffle,
   onToggleSound,
   onRemoveSound,
   onToggleMute,
@@ -127,9 +127,8 @@ function CharacterCard({
   
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
-  const isLooping = (soundIds.length > 0 || forceLoop) && colors.length > 1;
-
   const soundsPlayingAndNotMuted = soundIds.length > 0 && !isMuted;
+  const isLooping = soundsPlayingAndNotMuted;
   const pulseClass = soundsPlayingAndNotMuted ? getDropTargetPulseClass(soundIds, soundCatalogById) : '';
 
   const isGreyedOut = !(soundsPlayingAndNotMuted || isFavorite || forceLoop || isMain);
@@ -247,8 +246,8 @@ function CharacterCard({
 
       <div
         className={`${styles.dropTarget} ${pulseClass} ${isDropActive ? styles.dropTargetActive : ''} ${
-          isGlowBurst && isFavorite ? styles.dropTargetGlow : ''
-        } ${isLooping ? styles.dropTargetHasLoop : ''} ${forceLoop && isLooping ? styles.dropTargetHasLoopFast : ''} ${
+          isGlowBurst && soundsPlayingAndNotMuted && isFavorite ? styles.dropTargetGlow : ''
+        } ${isLooping ? styles.dropTargetHasLoop : ''} ${
           size === 'large' ? styles.dropTargetLarge : styles.dropTargetNormal
         }`}
         data-character-id={character.id}
@@ -257,11 +256,7 @@ function CharacterCard({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-        <div
-          className={`${styles.backgroundLoop} ${isLooping ? styles.backgroundLoopActive : ''} ${
-            forceLoop ? styles.backgroundLoopFast : ''
-          }`}
-        />
+        <div className={`${styles.backgroundLoop} ${isLooping ? styles.backgroundLoopActive : ''}`} />
         {comboWord && isFavorite && (
           <div className={styles.comboWord} role="status" aria-live="polite">
             {comboWord}
@@ -316,17 +311,23 @@ function CharacterCard({
               const soundName = sound?.name ?? soundId;
               const colorToken = sound?.colorToken;
               const isActive = soundIds.includes(soundId);
-              const isHinting = hintingIds.has(soundId);
+              const isPlaying = isActive && soundsPlayingAndNotMuted;
+              const isHinting = isPlaying && hintingIds.has(soundId);
 
               return (
                 <Chip
                   key={`${character.id}-slot-${index}`}
-                  className={`${styles.characterSoundTag} ${isActive || isHinting ? '' : styles.soundTagPaused} ${isHinting ? styles.soundTagHinting : ''}`}
+                  className={`${styles.characterSoundTag} ${isPlaying ? '' : styles.soundTagPaused} ${isHinting ? styles.soundTagHinting : ''}`}
                   tone="neutral"
                   size="sm"
                   style={
-                    (isActive || isHinting) && colorToken
-                      ? { background: `var(${colorToken})`, color: '#000', borderColor: 'transparent' }
+                    isPlaying && colorToken
+                      ? {
+                          background: `var(${colorToken})`,
+                          color: '#fff',
+                          borderColor: 'transparent',
+                          boxShadow: `0 0 0.65rem var(${colorToken}), 0 0.1rem 0.5rem rgba(0, 0, 0, 0.4)`,
+                        }
                       : {}
                   }
                   onClick={(e) => {
@@ -387,28 +388,24 @@ function CharacterCard({
                       <Tooltip>{soundsPlayingAndNotMuted ? 'PAUSE' : 'PLAY'}</Tooltip>
                     </TooltipTrigger>
                   </div>
-                  {soundIds.length > 0 && (
-                    <div className={styles.characterActionWrap}>
-                      <TooltipTrigger>
-                        <Button
-                          type="button"
-                          variant="action"
-                          size="sm"
-                          shape="pill"
-                          className={styles.characterActionButton}
-                          onPress={() => {
-                            if (onReset) onReset();
-                          }}
-                          aria-label="Reset character"
-                        >
-                          <RotateCcw size={14} />
-                        </Button>
-                        <Tooltip>RESET</Tooltip>
-                      </TooltipTrigger>
-                    </div>
-                  )}
                 </>
               )}
+              <div className={styles.characterActionWrap}>
+                <TooltipTrigger>
+                  <Button
+                    type="button"
+                    variant="action"
+                    size="sm"
+                    shape="pill"
+                    className={styles.characterActionButton}
+                    onPress={() => onShuffle?.()}
+                    aria-label="Shuffle sounds"
+                  >
+                    <Shuffle size={14} />
+                  </Button>
+                  <Tooltip>SHUFFLE</Tooltip>
+                </TooltipTrigger>
+              </div>
             </>
           ) : (
             <>
@@ -449,28 +446,24 @@ function CharacterCard({
                       <Tooltip>{soundsPlayingAndNotMuted ? 'PAUSE' : 'PLAY'}</Tooltip>
                     </TooltipTrigger>
                   </div>
-                  {soundIds.length > 0 && (
-                    <div className={styles.characterActionWrap}>
-                      <TooltipTrigger>
-                        <Button
-                          type="button"
-                          variant="action"
-                          size="sm"
-                          shape="pill"
-                          className={styles.characterActionButton}
-                          onPress={() => {
-                            if (onReset) onReset();
-                          }}
-                          aria-label="Reset character"
-                        >
-                          <RotateCcw size={14} />
-                        </Button>
-                        <Tooltip>RESET</Tooltip>
-                      </TooltipTrigger>
-                    </div>
-                  )}
                 </>
               )}
+              <div className={styles.characterActionWrap}>
+                <TooltipTrigger>
+                  <Button
+                    type="button"
+                    variant="action"
+                    size="sm"
+                    shape="pill"
+                    className={styles.characterActionButton}
+                    onPress={() => onShuffle?.()}
+                    aria-label="Shuffle sounds"
+                  >
+                    <Shuffle size={14} />
+                  </Button>
+                  <Tooltip>SHUFFLE</Tooltip>
+                </TooltipTrigger>
+              </div>
             </>
           )}
         </div>
