@@ -317,11 +317,11 @@ function CharacterCard({
               return (
                 <Chip
                   key={`${character.id}-slot-${index}`}
-                  className={`${styles.characterSoundTag} ${isPlaying ? '' : styles.soundTagPaused} ${isHinting ? styles.soundTagHinting : ''}`}
+                  className={`${styles.characterSoundTag} ${isActive ? '' : styles.soundTagPaused} ${isHinting ? styles.soundTagHinting : ''}`}
                   tone="neutral"
                   size="sm"
                   style={
-                    isPlaying && colorToken
+                    isActive && colorToken
                       ? {
                           background: `var(${colorToken})`,
                           color: '#fff',
