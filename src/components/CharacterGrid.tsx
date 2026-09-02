@@ -104,7 +104,7 @@ function CharacterGrid({
                 isImageLoaded={isImageLoaded}
                 isMuted={isMuted}
                 isMain={isMain}
-                size={isMain ? 'large' : 'normal'}
+                size="large"
                 onSelect={() => onSelectCharacter(character.id)}
                 onToggleFavorite={() => onToggleFavorite(character.id)}
                 onDragOver={(event) => event.preventDefault()}

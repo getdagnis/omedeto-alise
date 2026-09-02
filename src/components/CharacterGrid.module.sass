@@ -28,7 +28,7 @@
 .mainItem
   padding: 0 1rem // Extra physical space in all viewports
 
-// Mobile: Main on top (large), 4 companions in 2x2
+// Mobile: Main on top (large), companions in one full-width row each
 .mainItem
   grid-column: 1 / span 2
   order: -1
@@ -41,6 +41,10 @@
 
 .companionItem
   order: 1
+
+@media (max-width: 859px)
+  .companionItem
+    grid-column: 1 / span 2
 
 @media (min-width: 860px) and (max-width: 1023px)
   .characterGrid

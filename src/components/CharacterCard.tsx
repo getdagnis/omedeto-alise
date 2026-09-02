@@ -390,22 +390,24 @@ function CharacterCard({
                   </div>
                 </>
               )}
-              <div className={styles.characterActionWrap}>
-                <TooltipTrigger>
-                  <Button
-                    type="button"
-                    variant="action"
-                    size="sm"
-                    shape="pill"
-                    className={styles.characterActionButton}
-                    onPress={() => onShuffle?.()}
-                    aria-label="Shuffle sounds"
-                  >
-                    <Shuffle size={14} />
-                  </Button>
-                  <Tooltip>SHUFFLE</Tooltip>
-                </TooltipTrigger>
-              </div>
+              {customization.soundIds && customization.soundIds.length > 0 && (
+                <div className={styles.characterActionWrap}>
+                  <TooltipTrigger>
+                    <Button
+                      type="button"
+                      variant="action"
+                      size="sm"
+                      shape="pill"
+                      className={styles.characterActionButton}
+                      onPress={() => onShuffle?.()}
+                      aria-label="Shuffle sounds"
+                    >
+                      <Shuffle size={14} />
+                    </Button>
+                    <Tooltip>SHUFFLE</Tooltip>
+                  </TooltipTrigger>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -448,22 +450,24 @@ function CharacterCard({
                   </div>
                 </>
               )}
-              <div className={styles.characterActionWrap}>
-                <TooltipTrigger>
-                  <Button
-                    type="button"
-                    variant="action"
-                    size="sm"
-                    shape="pill"
-                    className={styles.characterActionButton}
-                    onPress={() => onShuffle?.()}
-                    aria-label="Shuffle sounds"
-                  >
-                    <Shuffle size={14} />
-                  </Button>
-                  <Tooltip>SHUFFLE</Tooltip>
-                </TooltipTrigger>
-              </div>
+              {customization.soundIds && customization.soundIds.length > 0 && (
+                <div className={styles.characterActionWrap}>
+                  <TooltipTrigger>
+                    <Button
+                      type="button"
+                      variant="action"
+                      size="sm"
+                      shape="pill"
+                      className={styles.characterActionButton}
+                      onPress={() => onShuffle?.()}
+                      aria-label="Shuffle sounds"
+                    >
+                      <Shuffle size={14} />
+                    </Button>
+                    <Tooltip>SHUFFLE</Tooltip>
+                  </TooltipTrigger>
+                </div>
+              )}
             </>
           )}
         </div>
