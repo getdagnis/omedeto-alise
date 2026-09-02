@@ -8,7 +8,9 @@ export interface NoticeProps {
   isOpen: boolean;
   onClose: () => void;
   onExplain?: () => void;
+  onCancel?: () => void;
   okLabel?: string;
+  cancelLabel?: string;
   explainLabel?: string;
 }
 
@@ -18,8 +20,10 @@ export function Notice({
   isOpen,
   onClose,
   onExplain,
+  onCancel,
   okLabel = 'OK',
   explainLabel = 'LEARN MORE',
+  cancelLabel = 'CANCEL',
 }: NoticeProps) {
   if (!isOpen) return null;
 
@@ -32,6 +36,11 @@ export function Notice({
           <Button variant="primary" size="sm" onPress={onClose}>
             {okLabel}
           </Button>
+          {onCancel && (
+            <Button variant="secondary" size="sm" onPress={onCancel}>
+              {cancelLabel}
+            </Button>
+          )}
           {onExplain && (
             <Button variant="secondary" size="sm" onPress={onExplain}>
               {explainLabel}

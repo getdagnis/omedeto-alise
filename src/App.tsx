@@ -878,8 +878,9 @@ function App() {
                 setIsResetNoticeOpen(false);
                 resetAllData();
               }}
+              onCancel={() => setIsResetNoticeOpen(false)}
               title="Reset All Data"
-              message="Are you sure you want to clear all local data and reset the app? Your favorite sounds will be preserved."
+              message="This will reset all your characters!"
               okLabel="RESET ALL DATA"
             />
           </>

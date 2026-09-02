@@ -469,7 +469,6 @@
   position: fixed
   right: 1.5rem
   top: 1.3rem
-  z-index: 9998
   @media (max-width: 1400px)
     top: 2rem
     right: 4.5rem
@@ -484,6 +483,7 @@
     right: 1.6rem
 
 .hamburger
+  position: relative
   display: flex
   align-items: center
   justify-content: center
@@ -512,7 +512,7 @@
   background: rgba(9, 14, 38, 0.9)
   color: white
   cursor: pointer
-  z-index: 9998
+  z-index: 9996
   transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease
 
   &:hover

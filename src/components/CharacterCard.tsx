@@ -299,7 +299,9 @@ function CharacterCard({
         )}
 
         {!hideSounds && customization.soundIds && customization.soundIds.length > 0 && (
-          <div className={styles.characterSoundList}>
+          <div
+            className={`${styles.characterSoundList} ${customization.soundIds.length > 6 ? styles.characterSoundListThreeCols : ''}`}
+          >
             {showHintTooltip && (
               <div className={styles.hintTooltip}>
                 ACTIVATE!

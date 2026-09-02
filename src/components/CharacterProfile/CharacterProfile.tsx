@@ -1007,8 +1007,8 @@ export function CharacterProfile({
           handleTabChange('identity');
         }}
         title="Identity Required"
-        message="Add a new character and then choose sounds from the cloud!"
-        okLabel="GO TO CHARACTER"
+        message="Choose a character first! Then add sounds!"
+        okLabel="OK"
       />
     </div>
   );
