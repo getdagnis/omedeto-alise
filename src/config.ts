@@ -122,7 +122,6 @@ export type CharacterPerformer = {
   label: string;
   japaneseName: string;
   images: CharacterIdentityImage[];
-  defaultSounds: string[];
 };
 
 export type CharacterCustomization = {
@@ -157,14 +156,6 @@ export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
     images: [
       { id: 'akito-1', src: '/chars/akito-1.png', label: 'Default', unlockLevel: 0 },
     ],
-    defaultSounds: [
-      'akito-beat',
-      'akito-spring',
-      'akito-hard',
-      'akito-loop',
-      'akito-ritmo',
-      'akito-synth',
-    ],
   },
   {
     id: 'alise',
@@ -176,12 +167,6 @@ export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
       { id: 'alise-lvl2-2', src: '/chars/alise-lvl2-2.png', label: 'Midnight', unlockLevel: 3 },
       { id: 'alise-lvl3-1', src: '/chars/alise-lvl3-1.png', label: 'Master', unlockLevel: 3 },
     ],
-    defaultSounds: [
-      'energy', 'kick-1', 'beat-1', 'beat-2', 'machines', 'ok', 'fly-me', 'tomorrow', 
-      'drums-1', 'drums-2', 'beat-3', 'beat-4', 'grow', 'candy-machine', 'alert', 
-      'noise-1', 'yokune', 'synth-grow', 'synth-rise', 'synth-space', 'synth-garden', 
-      'synth-forest', 'synth-night', 'oh-boy'
-    ],
   },
   {
     id: 'foxy',
@@ -192,12 +177,6 @@ export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
       { id: 'foxy-2', src: '/chars/foxy-2.png', label: 'Spirit', unlockLevel: 2 },
       { id: 'foxy-3', src: '/chars/foxy-3.png', label: 'Ethereal', unlockLevel: 2 },
     ],
-    defaultSounds: [
-      'cartoon', 'beat-3', 'cow', 'goat', 'giggle', 'oh-boy', 'ok', 'applause',
-      'kick-1', 'drums-1', 'drums-2', 'beat-1', 'beat-2', 'beat-4', 'synth-garden',
-      'synth-forest', 'peace-1', 'yokune', 'fly-me', 'energy', 'tomorrow', 'candy-machine',
-      'noise-1', 'alert'
-    ],
   },
   {
     id: 'gumi',
@@ -206,12 +185,6 @@ export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
     images: [
       { id: 'gumi-1', src: '/chars/gumi-1.png', label: 'Normal', unlockLevel: 0 },
       { id: 'gumi-cyber-1', src: '/chars/gumi-cyber-1.png', label: 'Cyber', unlockLevel: 2 },
-    ],
-    defaultSounds: [
-      'sad', 'synth-night', 'tomorrow', 'grow', 'peace-1', 'fly-me', 'yokune', 'cry',
-      'monks', 'polyphon', 'calm-creepy-01', 'calm-creepy-02', 'calm-creepy-03', 'calm-creepy-04',
-      'synth-forest', 'synth-garden', 'noise-1', 'machines', 'busy', 'anthenna', 'beat-1',
-      'beat-2', 'drums-1', 'drums-2'
     ],
   },
   {
@@ -223,12 +196,6 @@ export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
       { id: 'hanako-kun-2', src: '/chars/hanako-kun-2.png', label: 'Uniform', unlockLevel: 2 },
       { id: 'hanako-kun-3', src: '/chars/hanako-kun-3.png', label: 'Spirit', unlockLevel: 2 },
       { id: 'hanako-kun-4', src: '/chars/hanako-kun-4.png', label: 'Legend', unlockLevel: 2 },
-    ],
-    defaultSounds: [
-      'horror', 'polyphon', 'trombone', 'laugh-3', 'cry', 'violins', 'monks', 'choir',
-      'scary-creepy-01', 'scary-creepy-02', 'scary-creepy-03', 'scary-creepy-04', 'drums-2',
-      'beat-4', 'machines', 'noise-1', 'alert', 'alien', 'sad', 'synth-night', 'synth-grow',
-      'drums-1', 'beat-1', 'beat-2'
     ],
   },
   {
@@ -242,11 +209,6 @@ export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
       { id: 'kagamine-cyber-1', src: '/chars/kagamine-cyber-1.png', label: 'Cyber 1', unlockLevel: 2 },
       { id: 'kagamine-cyber-2', src: '/chars/kagamine-cyber-2.png', label: 'Cyber 2', unlockLevel: 2 },
     ],
-    defaultSounds: [
-      'synth-rise', 'energy', 'synth-space', 'candy-machine', 'beat-4', 'drums-1', 'guitar', 'beat-2', 'ok',
-      'yokune', 'oh-boy', 'fly-me', 'tomorrow', 'beat-1', 'beat-3', 'kick-1', 'drums-2', 'anthenna',
-      'busy', 'machines', 'noise-1', 'alert', 'synth-garden', 'synth-forest'
-    ],
   },
   {
     id: 'honekoneko',
@@ -254,12 +216,6 @@ export const AVAILABLE_PERFORMERS: CharacterPerformer[] = [
     japaneseName: 'ホネコネコ',
     images: [
       { id: 'honekoneko-1', src: '/chars/honekoneko-1.png', label: 'Boney', unlockLevel: 0 },
-    ],
-    defaultSounds: [
-      'machines', 'noise-1', 'alert', 'horror', 'drums-2', 'beat-1', 'kick-1', 'busy',
-      'anthenna', 'alien', 'sad', 'scary-creepy-01', 'scary-creepy-02', 'scary-creepy-03',
-      'scary-creepy-04', 'drums-1', 'beat-2', 'beat-3', 'beat-4', 'synth-grow', 'synth-rise',
-      'synth-space', 'synth-night', 'polyphon'
     ],
   },
 ];
@@ -317,6 +273,199 @@ const mapSoundColors = (baseSounds: BaseSoundOption[]): SoundOption[] =>
     ...sound,
     colorToken: SOUND_COLOR_TOKENS[index % SOUND_COLOR_TOKENS.length],
   }));
+
+const ALISE_BASE_SOUNDS: BaseSoundOption[] = [
+  {
+    id: 'alise-w',
+    name: '-W-',
+    path: '/alise/-w-.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'alise-flute-melody',
+    name: 'Flute Melody',
+    path: '/alise/adinkra_audio-flute-melody-280554.mp3',
+    animation: 'slow',
+    category: 'melody',
+    type: 'music',
+    mood: 'calm',
+    price: 50,
+  },
+  {
+    id: 'alise-squarewave',
+    name: 'Squarewave',
+    path: '/alise/alien_i_trust-squarewave.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'cyberpunk',
+    price: 50,
+  },
+  {
+    id: 'alise-bass-loop',
+    name: 'Bass Loop',
+    path: '/alise/bass-loop-154191.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'powerful',
+    price: 60,
+  },
+  {
+    id: 'alise-future-trap',
+    name: 'Future Trap',
+    path: '/alise/delon_boomkin-future-trap-music-intro-new-raid-422477.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'cyberpunk',
+    price: 60,
+  },
+  {
+    id: 'alise-trap-tone',
+    name: 'Trap Tone',
+    path: '/alise/freesound_community-trap-tone-30688.mp3',
+    animation: 'slow',
+    category: 'melody',
+    type: 'music',
+    mood: 'energetic',
+    price: 50,
+  },
+  {
+    id: 'alise-trap-loop',
+    name: 'Trap Loop',
+    path: '/alise/kamhunt-typical-trap-loop-2b-130751.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'energetic',
+    price: 60,
+  },
+  {
+    id: 'alise-nani-kore',
+    name: 'Nani Kore',
+    path: '/alise/nanikore.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'alise-qaqa',
+    name: 'Qaqa',
+    path: '/alise/qaqa.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'happy',
+    price: 40,
+  },
+  {
+    id: 'alise-sers',
+    name: 'Sers',
+    path: '/alise/sers.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'alise-synth-pad',
+    name: 'Synth Pad',
+    path: '/alise/synth-pad-loop-88710.mp3',
+    animation: 'slow',
+    category: 'calm',
+    type: 'music',
+    mood: 'calm',
+    price: 60,
+  },
+  {
+    id: 'alise-synthwave',
+    name: 'Synthwave',
+    path: '/alise/synthwave-loop-v1-254569.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'cyberpunk',
+    price: 60,
+  },
+  {
+    id: 'alise-techno-melody',
+    name: 'Techno Melody',
+    path: '/alise/techno-melody.mp3',
+    animation: 'fast',
+    category: 'melody',
+    type: 'music',
+    mood: 'energetic',
+    price: 70,
+  },
+  {
+    id: 'alise-trance-beat',
+    name: 'Trance Beat',
+    path: '/alise/trance-beat-loop-m-janneman.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'energetic',
+    price: 70,
+  },
+  {
+    id: 'alise-trance-loop',
+    name: 'Trance Loop',
+    path: '/alise/trance-loop-81094.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'cyberpunk',
+    price: 70,
+  },
+  {
+    id: 'alise-trance-marie-louise',
+    name: 'Trance Marie Louise',
+    path: '/alise/trance-loop-marie-louise.mp3',
+    animation: 'fast',
+    category: 'beats',
+    type: 'beat',
+    mood: 'cyberpunk',
+    price: 70,
+  },
+  {
+    id: 'alise-violin-loop',
+    name: 'Violin Loop',
+    path: '/alise/violin-loop.mp3',
+    animation: 'slow',
+    category: 'melody',
+    type: 'music',
+    mood: 'calm',
+    price: 70,
+  },
+  {
+    id: 'alise-shamu-theme',
+    name: 'シャム Theme',
+    path: '/alise/シャム%20~パイズリのテーマ~.mp3',
+    animation: 'fast',
+    category: 'other',
+    type: 'music',
+    mood: 'tokyo',
+    price: 80,
+  },
+  {
+    id: 'alise-suumo',
+    name: 'スーモが過労死',
+    path: '/alise/スーモが過労死.mp3',
+    animation: 'fast',
+    category: 'other',
+    type: 'music',
+    mood: 'happy',
+    price: 80,
+  },
+];
 
 const GUMI_BASE_SOUNDS: BaseSoundOption[] = [
   {
@@ -866,24 +1015,74 @@ const AKITO_BASE_SOUNDS: BaseSoundOption[] = [
     price: 40,
   },
   {
-    id: 'akito-drums',
-    name: 'Akito Drums',
-    path: '/akito/akito-drums.mp3',
-    animation: 'fast',
-    category: 'beats',
-    type: 'beat',
-    mood: 'energetic',
-    price: 50,
+    id: 'akito-speaks-1',
+    name: 'Akito Speaks 1',
+    path: '/akito/akito-speaks1.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
   },
   {
-    id: 'akito-energy',
-    name: 'Akito Energy',
-    path: '/akito/akito-energy.wav',
-    animation: 'fast',
-    category: 'melody',
-    type: 'music',
-    mood: 'energetic',
-    price: 60,
+    id: 'akito-speaks-2',
+    name: 'Akito Speaks 2',
+    path: '/akito/akito-speaks2.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'akito-speaks-3',
+    name: 'Akito Speaks 3',
+    path: '/akito/akito-speaks3.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'akito-speaks-4',
+    name: 'Akito Speaks 4',
+    path: '/akito/akito-speaks4.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'akito-speaks-5',
+    name: 'Akito Speaks 5',
+    path: '/akito/akito-speaks5.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'akito-speaks-6',
+    name: 'Akito Speaks 6',
+    path: '/akito/akito-speaks6.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
+  },
+  {
+    id: 'akito-alise-speaks-7',
+    name: 'Alise Speaks 7',
+    path: '/akito/alise-speaks7.mp3',
+    animation: 'slow',
+    category: 'voice',
+    type: 'voice',
+    mood: 'tokyo',
+    price: 40,
   },
   {
     id: 'akito-trap',
@@ -931,6 +1130,7 @@ export const ALL_SOUNDS = mapSoundColors([
   ...GUMI_BASE_SOUNDS,
   ...HANAKO_BASE_SOUNDS,
   ...AKITO_BASE_SOUNDS,
+  ...ALISE_BASE_SOUNDS,
   ...LIBRARY_BASE_SOUNDS,
 ]);
 
@@ -938,9 +1138,40 @@ export const SOUNDS = {
   gumi: mapSoundColors(GUMI_BASE_SOUNDS),
   hanako: mapSoundColors(HANAKO_BASE_SOUNDS),
   akito: mapSoundColors(AKITO_BASE_SOUNDS),
+  alise: mapSoundColors(ALISE_BASE_SOUNDS),
   library: mapSoundColors(LIBRARY_BASE_SOUNDS),
   all: ALL_SOUNDS,
 } as const;
+
+export const CHARACTER_SOUND_FOLDER_IDS = ['akito', 'alise', 'gumi', 'hanako'] as const;
+const CHARACTER_SOUND_FOLDER_ID_SET = new Set<string>(CHARACTER_SOUND_FOLDER_IDS);
+
+export const getCharacterSoundPool = (characterId: string): SoundOption[] => {
+  if (!CHARACTER_SOUND_FOLDER_ID_SET.has(characterId)) {
+    return SOUNDS.library;
+  }
+
+  return SOUNDS[characterId as keyof Pick<typeof SOUNDS, 'akito' | 'alise' | 'gumi' | 'hanako'>];
+};
+
+export const getRandomCharacterSoundIds = (
+  characterId: string,
+  count = 7,
+  excludedSoundIds: readonly string[] = [],
+): string[] => {
+  const pool = getCharacterSoundPool(characterId);
+  const excluded = new Set(excludedSoundIds);
+  const unselected = pool.filter((sound) => !excluded.has(sound.id));
+  const source = unselected.length >= count ? unselected : pool;
+  const shuffled = [...source];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled.slice(0, count).map((sound) => sound.id);
+};
 
 const PLACEHOLDER_SCHEMES: CharacterColorScheme[] = [
   {
@@ -1007,7 +1238,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#062c3a',
       },
     ],
-    sounds: ALL_SOUNDS,
+    sounds: SOUNDS.akito,
   },
   {
     id: 'alise',
@@ -1062,7 +1293,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#121426cc',
       },
     ],
-    sounds: ALL_SOUNDS,
+    sounds: SOUNDS.alise,
   },
   {
     id: 'foxy',
@@ -1140,7 +1371,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#3b2b10cc',
       },
     ],
-    sounds: ALL_SOUNDS,
+    sounds: SOUNDS.gumi,
   },
   {
     id: 'hanako',
@@ -1195,7 +1426,7 @@ export const CHARACTERS: CharacterOption[] = [
         soundboardColor: '#260009cc',
       },
     ],
-    sounds: ALL_SOUNDS,
+    sounds: SOUNDS.hanako,
   },
   {
     id: 'kagamine',

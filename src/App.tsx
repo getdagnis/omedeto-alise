@@ -27,7 +27,8 @@ import {
   CHARACTERS,
   COMBOS,
   AVAILABLE_PERFORMERS,
-  SOUNDS,
+  getCharacterSoundPool,
+  getRandomCharacterSoundIds,
   LOCALIZATIONS,
   type CharacterOption,
   type CharacterCustomization,
@@ -68,6 +69,19 @@ type CharacterCustomizationMap = Record<string, CharacterCustomization>;
 
 const INITIAL_CLOUDS_COUNT = 24; // @keep
 const CHARACTER_CUSTOM_STORAGE_KEY = 'alise-in-tokyo-character-custom-v5';
+const LEGACY_AUTOMATIC_SOUND_SETS: Record<string, string[]> = {
+  akito: ['akito-beat', 'akito-spring', 'akito-hard', 'akito-loop', 'akito-ritmo', 'akito-synth'],
+  alise: ['energy', 'kick-1', 'beat-1', 'beat-2', 'machines', 'ok', 'fly-me'],
+};
+
+const isLegacyAutomaticSoundSet = (characterId: string, soundIds: string[]) => {
+  const legacySoundIds = LEGACY_AUTOMATIC_SOUND_SETS[characterId];
+  return Boolean(
+    legacySoundIds
+      && legacySoundIds.length === soundIds.length
+      && legacySoundIds.every((soundId, index) => soundId === soundIds[index]),
+  );
+};
 
 const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
   if (typeof window === 'undefined') {
@@ -85,8 +99,8 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
           identityId: defaultPerformer.id,
           image: defaultPerformer.images[0].src,
           name: defaultPerformer.label,
-          soundIds: defaultPerformer.defaultSounds.slice(0, MAX_CHARACTER_SOUNDS),
-          cloudSoundIds: ALL_SOUNDS.map(s => s.id).slice(0, INITIAL_CLOUDS_COUNT),
+          soundIds: getRandomCharacterSoundIds(defaultPerformer.id, MAX_CHARACTER_SOUNDS),
+          cloudSoundIds: getCharacterSoundPool(defaultPerformer.id).map((sound) => sound.id),
         },
         ...(secondaryPerformer
           ? {
@@ -94,7 +108,8 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
                 identityId: secondaryPerformer.id,
                 image: secondaryPerformer.images[0].src,
                 name: secondaryPerformer.label,
-                soundIds: secondaryPerformer.defaultSounds.slice(0, MAX_CHARACTER_SOUNDS),
+                soundIds: getRandomCharacterSoundIds(secondaryPerformer.id, MAX_CHARACTER_SOUNDS),
+                cloudSoundIds: getCharacterSoundPool(secondaryPerformer.id).map((sound) => sound.id),
               },
             }
           : {}),
@@ -125,11 +140,20 @@ const parseCharacterCustomStorage = (): CharacterCustomizationMap => {
       if (typeof typed.image === 'string') {
         next.image = typed.image;
       }
+      if (typeof typed.identityId === 'string' || typed.identityId === null) {
+        next.identityId = typed.identityId;
+      }
       if (Array.isArray(typed.soundIds)) {
-        next.soundIds = typed.soundIds.filter((s) => typeof s === 'string').slice(0, MAX_CHARACTER_SOUNDS);
+        const soundIds = typed.soundIds.filter((s) => typeof s === 'string').slice(0, MAX_CHARACTER_SOUNDS);
+        next.soundIds = isLegacyAutomaticSoundSet(key, soundIds)
+          ? getRandomCharacterSoundIds(key, MAX_CHARACTER_SOUNDS)
+          : soundIds;
       }
       if (Array.isArray(typed.cloudSoundIds)) {
         next.cloudSoundIds = typed.cloudSoundIds.filter((s) => typeof s === 'string').slice(0, INITIAL_CLOUDS_COUNT);
+      }
+      if (next.soundIds && isLegacyAutomaticSoundSet(key, typed.soundIds ?? [])) {
+        next.cloudSoundIds = getCharacterSoundPool(key).map((sound) => sound.id).slice(0, INITIAL_CLOUDS_COUNT);
       }
 
       sanitized[key] = next;
@@ -504,20 +528,8 @@ function App() {
 
   const shuffleCharacterSounds = useCallback(
     (characterId: string) => {
-      const dedicatedSoundIds = SOUNDS[characterId as keyof typeof SOUNDS];
-      const fallbackSoundIds = [...SOUNDS.akito, ...SOUNDS.gumi, ...SOUNDS.hanako];
-      const sourceSounds = Array.isArray(dedicatedSoundIds) && characterId !== 'library' && characterId !== 'all'
-        ? dedicatedSoundIds
-        : fallbackSoundIds;
-      const uniqueSounds = Array.from(new Map(sourceSounds.map((sound) => [sound.id, sound])).values());
-      const currentSounds = new Set(characterCustomizations[characterId]?.soundIds ?? []);
-      const soundsToShuffle = uniqueSounds.length > MAX_CHARACTER_SOUNDS
-        ? uniqueSounds.filter((sound) => !currentSounds.has(sound.id))
-        : uniqueSounds;
-      const shuffled = [...(soundsToShuffle.length >= MAX_CHARACTER_SOUNDS ? soundsToShuffle : uniqueSounds)]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, MAX_CHARACTER_SOUNDS)
-        .map((sound) => sound.id);
+      const currentSounds = characterCustomizations[characterId]?.soundIds ?? [];
+      const shuffled = getRandomCharacterSoundIds(characterId, MAX_CHARACTER_SOUNDS, currentSounds);
 
       const currentActive = activeSoundsByCharacter[characterId] ?? [];
       currentActive.forEach((soundId) => {
@@ -543,9 +555,37 @@ function App() {
   const handleCharacterClick = useCallback(
     (characterId: string) => {
       const activeSelection = activeSoundsByCharacter[characterId] ?? [];
+      const savedCustomization = characterCustomizations[characterId];
+      const hasSavedSoundSet = Boolean(
+        savedCustomization && Object.prototype.hasOwnProperty.call(savedCustomization, 'soundIds'),
+      );
+      const initialSoundIds = hasSavedSoundSet
+        ? (savedCustomization?.soundIds ?? [])
+        : getRandomCharacterSoundIds(characterId, MAX_CHARACTER_SOUNDS);
+
+      if (!hasSavedSoundSet) {
+        setCharacterCustomizations((previous) => {
+          const current = previous[characterId];
+          if (current && Object.prototype.hasOwnProperty.call(current, 'soundIds')) {
+            return previous;
+          }
+
+          const next = {
+            ...previous,
+            [characterId]: {
+              ...(current ?? {}),
+              soundIds: initialSoundIds,
+              cloudSoundIds: getCharacterSoundPool(characterId).map((sound) => sound.id),
+            },
+          };
+          persistCharacterCustomStorage(next);
+          return next;
+        });
+      }
+
       const currentSelected = activeSelection.length > 0
         ? activeSelection
-        : (characterCustomizations[characterId]?.soundIds ?? []);
+        : initialSoundIds;
       setPickerSelectedSoundIds(currentSelected);
       navigate(`/${characterId}/profile`);
       trackEvent('character_selected', { character_id: characterId });
