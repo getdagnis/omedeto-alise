@@ -38,7 +38,7 @@ const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
 const MAX_SOUNDS_TOTAL = 12;
 const LOW_GRAPHICS_STORAGE_KEY = 'alise-in-tokyo-low-graphics';
-const MAX_CHARACTER_SOUNDS = 9;
+const MAX_CHARACTER_SOUNDS = 7;
 
 const buildBackgroundImagePath = (backgroundKey: string, suffix: string) => `/${backgroundKey}-${suffix}.jpg`;
 
@@ -347,7 +347,7 @@ function App() {
         if (isAlreadySelected) {
           return previous.filter((id) => id !== soundId);
         }
-        if (previous.length >= 6) {
+        if (previous.length >= MAX_CHARACTER_SOUNDS) {
           return [...previous.slice(1), soundId];
         }
         return [...previous, soundId];
@@ -482,6 +482,24 @@ function App() {
       });
     },
     [buildAudioKey],
+  );
+
+  const clearCharacterSounds = useCallback(
+    (characterId: string) => {
+      const currentActive = activeSoundsByCharacter[characterId] ?? [];
+      currentActive.forEach((soundId) => {
+        const audioKey = buildAudioKey(characterId, soundId);
+        const audio = audioRefs.current[audioKey];
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          delete audioRefs.current[audioKey];
+        }
+      });
+      activeSoundOrderRef.current = activeSoundOrderRef.current.filter((entry) => entry.characterId !== characterId);
+      setActiveSoundsByCharacter((previous) => ({ ...previous, [characterId]: [] }));
+    },
+    [activeSoundsByCharacter, buildAudioKey],
   );
 
   const shuffleCharacterSounds = useCallback(
@@ -734,6 +752,10 @@ function App() {
             onClose={closeProfile}
             onToggleSound={(soundId, path) => toggleProfileSound(soundId, path)}
             onSetSounds={setPickerSelectedSoundIds}
+            onClearSounds={() => {
+              stopPickerPreview();
+              clearCharacterSounds(profileCharacterId);
+            }}
             onPreviewSound={(soundId, path) => togglePreviewSound(soundId, path)}
             onApply={(patch) => applyProfileSelection(profileCharacterId, patch)}
             onNavigateShop={() => navigate('/shop')}

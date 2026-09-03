@@ -24,7 +24,7 @@ import styles from './CharacterProfile.module.sass';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const IDENTITY_NOTICE_STORAGE_KEY = 'alise-in-tokyo-identity-sounds-applied';
-const MAX_CHARACTER_SOUNDS = 9;
+const MAX_CHARACTER_SOUNDS = 7;
 
 export type CharacterColorOption = {
   readonly id: string;
@@ -54,6 +54,7 @@ export type CharacterProfileProps = {
   onClose: () => void;
   onToggleSound: (soundId: string, path: string) => void;
   onSetSounds?: (soundIds: string[]) => void;
+  onClearSounds?: () => void;
   onPreviewSound: (soundId: string, path: string) => void;
   onApply: (patch?: CharacterCustomization) => void;
   onNavigateShop: () => void;
@@ -82,6 +83,7 @@ export function CharacterProfile({
   onClose,
   onToggleSound,
   onSetSounds,
+  onClearSounds,
   onPreviewSound,
   onApply,
   onNavigateShop,
@@ -150,6 +152,11 @@ export function CharacterProfile({
       return false;
     }
   })();
+  const canAddPlayingSound = Boolean(
+    previewingSoundId
+      && !activeSounds.includes(previewingSoundId)
+      && activeSounds.length < MAX_CHARACTER_SOUNDS,
+  );
 
   const PREDEFINED_IDS = ['akito', 'alise', 'gumi', 'hanako', 'foxy', 'kagamine', 'honekoneko'];
   const isPredefined = PREDEFINED_IDS.includes(characterId);
@@ -166,6 +173,17 @@ export function CharacterProfile({
     if (hasCompletedIdentitySounds) return;
     setIsNoticeOpen(true);
   }, [hasCompletedIdentitySounds]);
+
+  const dismissIdentityNotice = useCallback(() => {
+    setIsNoticeOpen(false);
+    setHasCompletedIdentitySounds(true);
+    try {
+      window.localStorage.setItem(IDENTITY_NOTICE_STORAGE_KEY, 'true');
+    } catch {
+      // Session state still prevents repeated notices when storage is unavailable.
+    }
+    setActiveTab('identity');
+  }, []);
 
 
   useEffect(() => {
@@ -326,6 +344,11 @@ export function CharacterProfile({
       }
     }
     onApply({ ...draftCustomization, soundIds: finalSounds, cloudSoundIds: constellationSounds.map(s => s.id) });
+  };
+
+  const handleAddPlayingSound = () => {
+    if (!previewingSoundId || !canAddPlayingSound || !onSetSounds) return;
+    onSetSounds([...activeSounds, previewingSoundId]);
   };
 
   const handleComboClick = (comboId: string) => {
@@ -740,8 +763,9 @@ export function CharacterProfile({
                 })}
               </div>
                 <div className={styles.inlineSoundActions}>
-                  <Button variant="secondary" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
-                  <Button variant="primary" size="md" className={styles.shuffleButton} onPress={handleRandomizePool}>SHUFFLE</Button>
+                  <Button variant="secondary" size="sm" onPress={() => { onClearSounds?.(); onSetSounds?.([]); }}>CLEAR</Button>
+                  <Button variant="primary" size="md" onPress={handleRandomizePool}>SHUFFLE</Button>
+                  <Button variant="primary" size="md" isDisabled={!canAddPlayingSound} onPress={handleAddPlayingSound}>ADD</Button>
                   <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
                 </div>
             </section>
@@ -934,8 +958,9 @@ export function CharacterProfile({
         <footer className={styles.footerActions}>
           {activeTab === 'sounds' && (
              <div className={styles.footerLeft}>
-               <Button variant="secondary" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
-               <Button variant="primary" size="md" className={styles.shuffleButton} onPress={handleRandomizePool}>SHUFFLE</Button>
+               <Button variant="secondary" size="sm" onPress={() => { onClearSounds?.(); onSetSounds?.([]); }}>CLEAR</Button>
+               <Button variant="primary" size="md" onPress={handleRandomizePool}>SHUFFLE</Button>
+               <Button variant="primary" size="md" isDisabled={!canAddPlayingSound} onPress={handleAddPlayingSound}>ADD</Button>
                <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
              </div>
           )}
@@ -960,10 +985,7 @@ export function CharacterProfile({
       />
       <Notice
         isOpen={isNoticeOpen}
-        onClose={() => {
-          setIsNoticeOpen(false);
-          handleTabChange('identity');
-        }}
+        onClose={dismissIdentityNotice}
         title="Identity Required"
         message="Choose a character first! Then add sounds!"
         okLabel="OK"

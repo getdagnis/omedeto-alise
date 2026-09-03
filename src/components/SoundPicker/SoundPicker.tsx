@@ -6,7 +6,7 @@ import { SoundBar } from '../SoundBar/SoundBar';
 import styles from './SoundPicker.module.sass';
 import type { CharacterOption, SoundOption } from '../../config';
 
-const MAX_CHARACTER_SOUNDS = 9;
+const MAX_CHARACTER_SOUNDS = 7;
 
 export type PickerRandomBusy = { kind: 'slot'; index: number } | { kind: 'shuffle' };
 

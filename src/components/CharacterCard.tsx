@@ -2,6 +2,7 @@ import type { CSSProperties, DragEvent } from 'react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { 
   UserRoundPen, 
+  Music,
   Play, 
   Pause, 
   Shuffle, 
@@ -126,6 +127,7 @@ function CharacterCard({
   
   const displayName = customization.name?.trim() || character.name;
   const displayImage = customization.image || character.img;
+  const hasCharacterImage = displayImage !== CHARACTER_PLACEHOLDER_PATH;
   const soundsPlayingAndNotMuted = soundIds.length > 0 && !isMuted;
   const isLooping = soundsPlayingAndNotMuted;
   const pulseClass = soundsPlayingAndNotMuted ? getDropTargetPulseClass(soundIds, soundCatalogById) : '';
@@ -365,10 +367,10 @@ function CharacterCard({
                     }}
                     aria-label="View Profile"
                   >
-                    <UserRoundPen size={14} />
+                    {hasCharacterImage ? <Music size={14} /> : <UserRoundPen size={14} />}
                     {noSoundsInLibrary && <span className={styles.actionLabel}>{displayName.toUpperCase()}</span>}
                   </Button>
-                  <Tooltip>{noSoundsInLibrary ? "add sounds!" : "PROFILE"}</Tooltip>
+                  <Tooltip>{noSoundsInLibrary ? (hasCharacterImage ? "add sounds!" : "create profile") : "PROFILE"}</Tooltip>
                 </TooltipTrigger>
               </div>
               {customization.soundIds && customization.soundIds.length > 0 && (
@@ -425,10 +427,10 @@ function CharacterCard({
                     }}
                     aria-label="View Profile"
                   >
-                    <UserRoundPen size={14} />
+                    {hasCharacterImage ? <Music size={14} /> : <UserRoundPen size={14} />}
                     {noSoundsInLibrary && <span className={styles.actionLabel}>{displayName.toUpperCase()}</span>}
                   </Button>
-                  <Tooltip>{noSoundsInLibrary ? "add sounds!" : "PROFILE"}</Tooltip>
+                  <Tooltip>{noSoundsInLibrary ? (hasCharacterImage ? "add sounds!" : "create profile") : "PROFILE"}</Tooltip>
                 </TooltipTrigger>
               </div>
               {customization.soundIds && customization.soundIds.length > 0 && (
