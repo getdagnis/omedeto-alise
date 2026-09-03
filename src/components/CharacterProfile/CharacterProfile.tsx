@@ -124,6 +124,7 @@ export function CharacterProfile({
     return image.startsWith('https://') ? image : 'https://';
   });
   const [isImageAddedNoticeOpen, setIsImageAddedNoticeOpen] = useState(false);
+  const [isSlotsFullNoticeOpen, setIsSlotsFullNoticeOpen] = useState(false);
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [soundRemovalId, setSoundRemovalId] = useState<string | null>(null);
   const [hasCompletedIdentitySounds, setHasCompletedIdentitySounds] = useState(() => {
@@ -349,6 +350,11 @@ export function CharacterProfile({
   const handleAddPlayingSound = () => {
     if (!previewingSoundId || !canAddPlayingSound || !onSetSounds) return;
     onSetSounds([...activeSounds, previewingSoundId]);
+    if (!constellationSounds.some((sound) => sound.id === previewingSoundId)) {
+      handleUpdateDraft({
+        cloudSoundIds: [...constellationSounds.map((sound) => sound.id), previewingSoundId].slice(0, 24),
+      });
+    }
   };
 
   const handleComboClick = (comboId: string) => {
@@ -681,7 +687,7 @@ export function CharacterProfile({
             <section className={styles.constellationSection}>
               <div className={styles.constellationHeader}>
                 <h2 className={styles.constellationTitle}>CHOOSE SOUNDS</h2>
-                <p className={styles.constellationSubtitle}>Choose up to nine new sounds</p>
+                <p className={styles.constellationSubtitle}>Choose up to {MAX_CHARACTER_SOUNDS} new sounds</p>
               </div>
               
               <div className={styles.constellationStage}>
@@ -718,6 +724,8 @@ export function CharacterProfile({
                                // If it's not selected at all, add to mix + start previewing
                                if (activeSounds.length < MAX_CHARACTER_SOUNDS) {
                                  onToggleSound(sound.id, sound.path);
+                               } else {
+                                 setIsSlotsFullNoticeOpen(true);
                                }
                              }
                           }}
@@ -765,7 +773,7 @@ export function CharacterProfile({
                 <div className={styles.inlineSoundActions}>
                   <Button variant="secondary" size="sm" onPress={() => { onClearSounds?.(); onSetSounds?.([]); }}>CLEAR</Button>
                   <Button variant="primary" size="md" onPress={handleRandomizePool}>SHUFFLE</Button>
-                  <Button variant="primary" size="md" isDisabled={!canAddPlayingSound} onPress={handleAddPlayingSound}>ADD</Button>
+                  <Button variant="primary" size="md" onPress={handleAddPlayingSound}>ADD</Button>
                   <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
                 </div>
             </section>
@@ -941,11 +949,13 @@ export function CharacterProfile({
                         >
                           USE THIS IMAGE
                         </Button>
+                        {customImageUrl.trim() !== 'https://' && !isCustomImageValid && (
+                          <span className={styles.customImageValidation}>Your image address must end with &quot;.png&quot;</span>
+                        )}
                         <p className={styles.customImageHint}>
-                          You can link to your own images here. They must start with https:// and end with &quot;.png&quot;.<br />
-                          It&apos;s not required, but they will look ugly with a background — you can remove background for free here:{' '}
-                          <a href="https://www.remove.bg/" target="_blank" rel="noreferrer">https://www.remove.bg/</a><br />
-                          Images we use are 805x1200px, so 2:3 proportion.
+                          You can link to your own images here. They must start with https:// and end with &quot;.png&quot;. Images we use are 805x1200px, so basically 2:3 proportion will look best.<br />
+                          If your image has background you you can remove it on sites like{' '}
+                          <a href="https://www.remove.bg/" target="_blank" rel="noreferrer">remove.bg</a>. And then host on sites like <a href="https://imgur.com/" target="_blank" rel="noreferrer">imgur.com</a> <br />
                         </p>
                      </div>
                   </div>
@@ -960,7 +970,7 @@ export function CharacterProfile({
              <div className={styles.footerLeft}>
                <Button variant="secondary" size="sm" onPress={() => { onClearSounds?.(); onSetSounds?.([]); }}>CLEAR</Button>
                <Button variant="primary" size="md" onPress={handleRandomizePool}>SHUFFLE</Button>
-               <Button variant="primary" size="md" isDisabled={!canAddPlayingSound} onPress={handleAddPlayingSound}>ADD</Button>
+               <Button variant="primary" size="md" onPress={handleAddPlayingSound}>ADD</Button>
                <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
              </div>
           )}
@@ -988,6 +998,13 @@ export function CharacterProfile({
         onClose={dismissIdentityNotice}
         title="Identity Required"
         message="Choose a character first! Then add sounds!"
+        okLabel="OK"
+      />
+      <Notice
+        isOpen={isSlotsFullNoticeOpen}
+        onClose={() => setIsSlotsFullNoticeOpen(false)}
+        title="SLOTS FULL"
+        message={`Your ${MAX_CHARACTER_SOUNDS} slots are full. Remove some sounds.`}
         okLabel="OK"
       />
       <Notice

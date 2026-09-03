@@ -418,7 +418,7 @@ function App() {
         );
       } else {
         const currentActive = activeSoundsByCharacter[characterId] ?? [];
-        const maxSounds = 6;
+        const maxSounds = MAX_CHARACTER_SOUNDS;
         if (currentActive.length >= maxSounds) {
           const oldestSoundId = currentActive[0];
           if (oldestSoundId) {
@@ -445,7 +445,7 @@ function App() {
         let nextList: string[];
         if (isRemoving) nextList = current.filter((id) => id !== soundId);
         else {
-          const maxSounds = 6;
+          const maxSounds = MAX_CHARACTER_SOUNDS;
           nextList = current.length >= maxSounds ? [...current.slice(1), soundId] : [...current, soundId];
         }
         return { ...previous, [characterId]: nextList };
