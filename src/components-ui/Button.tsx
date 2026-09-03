@@ -8,7 +8,7 @@ export interface ButtonProps extends RACButtonProps {
    * The visual style of the button (Vanilla CSS implementation specific).
    * @default 'primary'
    */
-  variant?: 'primary' | 'secondary' | 'quiet' | 'action';
+  variant?: 'primary' | 'secondary' | 'quiet' | 'action' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   shape?: 'default' | 'pill' | 'square';
 }

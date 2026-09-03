@@ -1149,9 +1149,7 @@ export const LIBRARY_BASE_SOUNDS: BaseSoundOption[] = [
 // Keep these paths explicit so they remain available in the picker and deploy reliably.
 export const PUBLIC_FOLDER_SOUNDS: BaseSoundOption[] = [
   ['acapella', 'flowers-on-the-moon-acapella-SBA-348956701-preview.mp3'],
-  ['city', 'machine-car-lift-operate-rumble-SBA-300083638-preview.mp3'],
   ['electronic', 'ah-ha-uk-SBA-300554938-preview.mp3'],
-  ['instruments', 'lonely-idea-minimal-documentary-marimba-cinematic-SBA-346744721-preview.mp3'],
   ['japan', '泣きたい;_;.mp3'],
   ['lounge', 'the_mountain-stylish-stylish-muisc-508037.mp3'],
 ].map(([folder, file], index) => ({

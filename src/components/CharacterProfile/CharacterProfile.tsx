@@ -227,12 +227,6 @@ export function CharacterProfile({
     return ids.map(id => soundCatalogById.get(id)).filter((s): s is SoundOption => !!s);
   }, [availableSounds, draftCustomization.cloudSoundIds, soundCatalogById]);
 
-  useEffect(() => {
-    if (previewingSoundId && constellationSounds.some((sound) => sound.id === previewingSoundId)) {
-      setIsLibraryOpen(true);
-    }
-  }, [previewingSoundId, constellationSounds]);
-
   const cloudCompletedComboIds = useMemo(() => {
     const cloudSet = new Set(constellationSounds.map(s => s.id));
     return COMBOS.filter(c => c.soundIds.every(id => cloudSet.has(id))).map(c => c.id);
@@ -318,6 +312,14 @@ export function CharacterProfile({
     setExpandedGroup(prev => (prev === group ? null : group));
   };
 
+  const closeLibrary = () => {
+    if (previewingSoundId) {
+      const sound = soundCatalogById.get(previewingSoundId);
+      if (sound) onPreviewSound(previewingSoundId, sound.path);
+    }
+    setIsLibraryOpen(false);
+  };
+
   const handleUpdateDraft = (patch: CharacterCustomization) => {
     trackEvent('character_customized', { character_id: characterId, metadata: patch });
     setDraftCustomization(prev => ({ ...prev, ...patch }));
@@ -338,6 +340,23 @@ export function CharacterProfile({
     handleUpdateDraft({ cloudSoundIds: availableSounds.map((sound) => sound.id).slice(0, 24) });
     trackEvent('constellation_reverted', { character_id: characterId });
   };
+
+  const handleDeletePlayingSound = () => {
+    if (!previewingSoundId) return;
+    const sound = soundCatalogById.get(previewingSoundId);
+    handleUpdateDraft({
+      cloudSoundIds: (draftCustomization.cloudSoundIds || []).filter((id) => id !== previewingSoundId),
+    });
+    if (sound) onPreviewSound(previewingSoundId, sound.path);
+    if (sound) {
+      addFloatingText('deleted!', window.innerWidth / 2, window.innerHeight / 2, `var(${sound.colorToken})`);
+    }
+    trackEvent('constellation_sound_removed', { character_id: characterId, sound_id: previewingSoundId });
+  };
+
+  const revertOrDeleteLabel = previewingSoundId ? 'DELETE' : 'REVERT';
+  const revertOrDeleteAction = previewingSoundId ? handleDeletePlayingSound : handleRevertPool;
+  const revertOrDeleteVariant = previewingSoundId ? 'danger' : 'secondary';
 
   const handleApply = () => {
     trackEvent('character_applied', { character_id: characterId });
@@ -539,7 +558,7 @@ export function CharacterProfile({
         <div
           className={styles.sidebarBackdrop}
           onClick={() => {
-            setIsLibraryOpen(false);
+            closeLibrary();
           }}
         />
       )}
@@ -632,7 +651,7 @@ export function CharacterProfile({
             size="sm"
             className={styles.applySelectedBtn}
             onPress={() => {
-              setIsLibraryOpen(false);
+              closeLibrary();
               setSessionAddedSounds([]);
             }}
           >
@@ -762,7 +781,7 @@ export function CharacterProfile({
                   <Button variant="secondary" size="sm" onPress={() => { onClearSounds?.(); onSetSounds?.([]); }}>CLEAR</Button>
                   <Button variant="primary" size="md" onPress={handleRandomizePool}>SHUFFLE</Button>
                   <Button variant="primary" size="md" onPress={handleAddPlayingSound}>ADD</Button>
-                  <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
+                  <Button variant={revertOrDeleteVariant} size="sm" onPress={revertOrDeleteAction}>{revertOrDeleteLabel}</Button>
                 </div>
             </section>
           )}
@@ -960,7 +979,7 @@ export function CharacterProfile({
                <Button variant="secondary" size="sm" onPress={() => { onClearSounds?.(); onSetSounds?.([]); }}>CLEAR</Button>
                <Button variant="primary" size="md" onPress={handleRandomizePool}>SHUFFLE</Button>
                <Button variant="primary" size="md" onPress={handleAddPlayingSound}>ADD</Button>
-               <Button variant="secondary" size="sm" onPress={handleRevertPool}>REVERT</Button>
+               <Button variant={revertOrDeleteVariant} size="sm" onPress={revertOrDeleteAction}>{revertOrDeleteLabel}</Button>
              </div>
           )}
           <div className={styles.footerRight}>
