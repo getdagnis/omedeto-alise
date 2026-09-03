@@ -1,4 +1,5 @@
 import { LIBRARY_BASE_SOUNDS, PUBLIC_FOLDER_SOUNDS } from './library_sounds';
+import { PUBLIC_SOUND_CATALOG } from './public_sound_catalog';
 
 export type SoundAnimation = 'slow' | 'fast' | 'both';
 
@@ -1134,6 +1135,7 @@ export const ALL_SOUNDS = mapSoundColors([
   ...ALISE_BASE_SOUNDS,
   ...LIBRARY_BASE_SOUNDS,
   ...PUBLIC_FOLDER_SOUNDS,
+  ...PUBLIC_SOUND_CATALOG,
 ]);
 
 export const SOUNDS = {
@@ -1141,7 +1143,7 @@ export const SOUNDS = {
   hanako: mapSoundColors(HANAKO_BASE_SOUNDS),
   akito: mapSoundColors(AKITO_BASE_SOUNDS),
   alise: mapSoundColors(ALISE_BASE_SOUNDS),
-  library: mapSoundColors([...LIBRARY_BASE_SOUNDS, ...PUBLIC_FOLDER_SOUNDS]),
+  library: mapSoundColors([...LIBRARY_BASE_SOUNDS, ...PUBLIC_FOLDER_SOUNDS, ...PUBLIC_SOUND_CATALOG]),
   all: ALL_SOUNDS,
 } as const;
 
