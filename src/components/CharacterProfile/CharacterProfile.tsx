@@ -1,6 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, type CSSProperties, useCallback } from 'react';
-import { 
-  X,
+import {
   Lock,
   UserRoundPen,
   Music,
@@ -75,7 +74,6 @@ export function CharacterProfile({
   characterCustomizations,
   activeSounds,
   previewingSoundId,
-  unlockedLevel,
   soundCatalogById,
   discoveredComboIds,
   favoriteSoundIds,
@@ -109,12 +107,23 @@ export function CharacterProfile({
   const [sessionAddedSounds, setSessionAddedSounds] = useState<string[]>([]);
   const { items: floatingItems, addText: addFloatingText } = useFloatingText();
   const floatingTextIndexRef = useRef(0);
-  const [draftCustomization, setDraftCustomization] = useState(characterCustomizations[characterId] || {});
+  const [draftCustomization, setDraftCustomization] = useState(() => {
+    const initial = characterCustomizations[characterId] || {};
+    const cloudSoundIds = initial.cloudSoundIds || character.sounds.map((sound) => sound.id).slice(0, 24);
+    const activeSoundIds = activeSounds.filter((soundId) => soundCatalogById.has(soundId));
+    const activeSoundSet = new Set(activeSoundIds);
+    return {
+      ...initial,
+      cloudSoundIds: [...activeSoundIds, ...cloudSoundIds.filter((soundId) => !activeSoundSet.has(soundId))].slice(0, 24),
+    };
+  });
   const [customImageUrl, setCustomImageUrl] = useState(() => {
     const image = characterCustomizations[characterId]?.image || '';
     return image.startsWith('https://') ? image : 'https://';
   });
+  const [isImageAddedNoticeOpen, setIsImageAddedNoticeOpen] = useState(false);
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+  const [soundRemovalId, setSoundRemovalId] = useState<string | null>(null);
   const [hasCompletedIdentitySounds, setHasCompletedIdentitySounds] = useState(() => {
     try {
       return window.localStorage.getItem(IDENTITY_NOTICE_STORAGE_KEY) === 'true';
@@ -133,6 +142,14 @@ export function CharacterProfile({
 
   const characterName = draftCustomization?.name?.trim() || character.name;
   const characterImage = draftCustomization?.image || character.img;
+  const isCustomImageValid = (() => {
+    try {
+      const url = new URL(customImageUrl.trim());
+      return url.protocol === 'https:' && /\.png$/i.test(url.pathname);
+    } catch {
+      return false;
+    }
+  })();
 
   const PREDEFINED_IDS = ['akito', 'alise', 'gumi', 'hanako', 'foxy', 'kagamine', 'honekoneko'];
   const isPredefined = PREDEFINED_IDS.includes(characterId);
@@ -340,6 +357,14 @@ export function CharacterProfile({
     if (combos && combos.length > 0) {
       handleComboClick(combos[0]);
     }
+  };
+
+  const confirmSoundRemoval = () => {
+    if (!soundRemovalId) return;
+    const sound = soundCatalogById.get(soundRemovalId);
+    if (sound) onToggleSound(sound.id, sound.path);
+    handleUpdateDraft({ cloudSoundIds: constellationSounds.filter((item) => item.id !== soundRemovalId).map((item) => item.id) });
+    setSoundRemovalId(null);
   };
 
   const groupedLibrary = useMemo(() => {
@@ -608,16 +633,12 @@ export function CharacterProfile({
       <main className={styles.mainContent}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <button className={styles.backLink} onClick={onClose}>
-              <span>BACK TO STAGE</span>
-              <ChevronRight size={14} />
-            </button>
             <h1 className={styles.characterName}>{characterName}</h1>
-            <span className={styles.characterLevel}>{isMain ? 'YOUR IDENTITY' : "FRIEND'S PROFILE"} • LEVEL {unlockedLevel + 1}</span>
-            <p className={styles.profileIntro}>Identity defines the character; appearances only change how it looks.</p>
+            <span className={styles.characterLevel}>{isMain ? 'YOUR IDENTITY' : "FRIEND'S PROFILE"}</span>
           </div>
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close">
-            <X size={24} />
+          <button className={styles.backLink} onClick={onClose}>
+            <span>CANCEL</span>
+            <ChevronRight size={14} />
           </button>
         </header>
 
@@ -687,20 +708,36 @@ export function CharacterProfile({
                   })}
                 </div>
 
-                <div className={styles.slotSystem}>
-                   <span className={styles.slotLabel}>{activeSounds.length} / {MAX_CHARACTER_SOUNDS} slots:</span>
-                   <div className={styles.slotsWrap}>
-                      {[...Array(MAX_CHARACTER_SOUNDS)].map((_, i) => {
-                         const soundId = activeSounds[i];
-                         const isFull = !!soundId;
-                         return (
-                           <div key={`${i}-${soundId || 'empty'}`} className={`${styles.slot} ${isFull ? styles.slotFull : ''}`}>
-                              {isFull ? '' : ''}
-                           </div>
-                         );
-                      })}
-                   </div>
+              </div>
+              <div className={styles.slotSystem}>
+                <span className={styles.slotLabel}>{activeSounds.length} / {MAX_CHARACTER_SOUNDS} slots:</span>
+                <div className={styles.slotsWrap}>
+                  {[...Array(MAX_CHARACTER_SOUNDS)].map((_, i) => {
+                    const soundId = activeSounds[i];
+                    const isFull = !!soundId;
+                    return (
+                      <div key={`${i}-${soundId || 'empty'}`} className={`${styles.slot} ${isFull ? styles.slotFull : ''}`} />
+                    );
+                  })}
                 </div>
+              </div>
+              <div className={styles.slotBarNote}>SELECTED SOUNDS</div>
+              <div className={styles.selectedSoundChips}>
+                {activeSounds.map((soundId) => {
+                  const sound = soundCatalogById.get(soundId);
+                  if (!sound) return null;
+                  return (
+                    <Chip
+                      key={`selected-${sound.id}`}
+                      tone="neutral"
+                      size="sm"
+                      className={styles.constellationChip}
+                      onClick={() => setSoundRemovalId(sound.id)}
+                    >
+                      {sound.name.toUpperCase()}
+                    </Chip>
+                  );
+                })}
               </div>
                 <div className={styles.inlineSoundActions}>
                   <Button variant="secondary" size="sm" onPress={() => onSetSounds?.([])}>CLEAR</Button>
@@ -861,22 +898,31 @@ export function CharacterProfile({
                           value={customImageUrl}
                           placeholder="https://"
                           onChange={(event) => {
-                            const value = event.target.value.replace(/^https?:\/\//i, '');
-                            setCustomImageUrl(`https://${value}`);
+                            const value = event.target.value.trim().replace(/^(?:https?:\/\/)+/i, '');
+                            setCustomImageUrl(value ? `https://${value}` : 'https://');
                           }}
                         />
                         <Button
-                          variant="secondary"
+                          variant={isCustomImageValid ? 'primary' : 'secondary'}
                           size="sm"
                           className={styles.useImageButton}
-                          isDisabled={customImageUrl.trim() === 'https://'}
+                          isDisabled={!isCustomImageValid}
                           onPress={() => {
                             const imageUrl = customImageUrl.trim();
-                            if (imageUrl) handleUpdateDraft({ image: imageUrl });
+                            if (isCustomImageValid) {
+                              handleUpdateDraft({ image: imageUrl });
+                              setIsImageAddedNoticeOpen(true);
+                            }
                           }}
                         >
                           USE THIS IMAGE
                         </Button>
+                        <p className={styles.customImageHint}>
+                          You can link to your own images here. They must start with https:// and end with &quot;.png&quot;.<br />
+                          It&apos;s not required, but they will look ugly with a background — you can remove background for free here:{' '}
+                          <a href="https://www.remove.bg/" target="_blank" rel="noreferrer">https://www.remove.bg/</a><br />
+                          Images we use are 805x1200px, so 2:3 proportion.
+                        </p>
                      </div>
                   </div>
                </div>
@@ -903,6 +949,16 @@ export function CharacterProfile({
       </main>
 
       <Notice
+        isOpen={isImageAddedNoticeOpen}
+        onClose={() => {
+          setIsImageAddedNoticeOpen(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        message="Your image was added! Apply it to stage if you like it!"
+        okLabel="OK"
+        messageClassName={styles.imageAddedNoticeMessage}
+      />
+      <Notice
         isOpen={isNoticeOpen}
         onClose={() => {
           setIsNoticeOpen(false);
@@ -911,6 +967,17 @@ export function CharacterProfile({
         title="Identity Required"
         message="Choose a character first! Then add sounds!"
         okLabel="OK"
+      />
+      <Notice
+        isOpen={soundRemovalId !== null}
+        onClose={confirmSoundRemoval}
+        onCancel={() => setSoundRemovalId(null)}
+        title="REMOVE SOUND?"
+        message={soundRemovalId
+          ? `Remove ${soundCatalogById.get(soundRemovalId)?.name ?? 'this sound'} from selection?`
+          : 'Remove this sound from selection?'}
+        okLabel="YES"
+        cancelLabel="NO"
       />
     </div>
   );

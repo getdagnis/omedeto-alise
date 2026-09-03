@@ -226,6 +226,7 @@ function App() {
   const [isResetNoticeOpen, setIsResetNoticeOpen] = useState(false);
 
   const savedScrollPositionRef = useRef<number>(0);
+  const lastProfileCharacterIdRef = useRef<string | null>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewingSoundId, setPreviewingSoundId] = useState<string | null>(null);
 
@@ -263,10 +264,19 @@ function App() {
   useEffect(() => {
     if (editingCharacterId || profileCharacterId) {
       savedScrollPositionRef.current = window.scrollY;
+      if (profileCharacterId) lastProfileCharacterIdRef.current = profileCharacterId;
       window.scrollTo(0, 0);
     } else if (savedScrollPositionRef.current !== 0) {
-      window.scrollTo(0, savedScrollPositionRef.current);
+      const stageCharacter = lastProfileCharacterIdRef.current
+        ? document.querySelector<HTMLElement>(`[data-character-id="${lastProfileCharacterIdRef.current}"]`)
+        : null;
+      if (stageCharacter) {
+        stageCharacter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        window.scrollTo(0, savedScrollPositionRef.current);
+      }
       savedScrollPositionRef.current = 0;
+      lastProfileCharacterIdRef.current = null;
     }
   }, [editingCharacterId, profileCharacterId]);
 

@@ -12,6 +12,7 @@ export interface NoticeProps {
   okLabel?: string;
   cancelLabel?: string;
   explainLabel?: string;
+  messageClassName?: string;
 }
 
 export function Notice({
@@ -24,6 +25,7 @@ export function Notice({
   okLabel = 'OK',
   explainLabel = 'LEARN MORE',
   cancelLabel = 'CANCEL',
+  messageClassName,
 }: NoticeProps) {
   if (!isOpen) return null;
 
@@ -31,7 +33,7 @@ export function Notice({
     <div className="app-Notice-Overlay">
       <div className="app-Notice" role="alertdialog" aria-modal="true">
         {title && <h3 className="app-Notice-Title">{title}</h3>}
-        <p className="app-Notice-Message">{message}</p>
+        <p className={`app-Notice-Message${messageClassName ? ` ${messageClassName}` : ''}`}>{message}</p>
         <div className="app-Notice-Actions">
           <Button variant="primary" size="sm" onPress={onClose}>
             {okLabel}
