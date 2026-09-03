@@ -1,4 +1,4 @@
-import type { SoundOption } from './config';
+import type { SoundCategory, SoundOption } from './config';
 
 type BaseSoundOption = Omit<SoundOption, 'colorToken'>;
 
@@ -1144,3 +1144,23 @@ export const LIBRARY_BASE_SOUNDS: BaseSoundOption[] = [
     price: 70,
   },
 ];
+
+// Folder-backed themes that were added to public/sounds after the original catalog.
+// Keep these paths explicit so they remain available in the picker and deploy reliably.
+export const PUBLIC_FOLDER_SOUNDS: BaseSoundOption[] = [
+  ['acapella', 'flowers-on-the-moon-acapella-SBA-348956701-preview.mp3'],
+  ['city', 'machine-car-lift-operate-rumble-SBA-300083638-preview.mp3'],
+  ['electronic', 'ah-ha-uk-SBA-300554938-preview.mp3'],
+  ['instruments', 'lonely-idea-minimal-documentary-marimba-cinematic-SBA-346744721-preview.mp3'],
+  ['japan', '泣きたい;_;.mp3'],
+  ['lounge', 'the_mountain-stylish-stylish-muisc-508037.mp3'],
+].map(([folder, file], index) => ({
+  id: `folder-${folder}-${index}`,
+  name: file.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '),
+  path: `/sounds/${folder === 'japan' ? 'kawaii' : folder}/${encodeURIComponent(file)}`,
+  animation: 'slow',
+  category: folder as SoundCategory,
+  type: 'music',
+  mood: 'other',
+  price: 20,
+}));

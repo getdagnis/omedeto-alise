@@ -39,7 +39,7 @@ const BG_MOBILE_SUFFIX = 'mob';
 const GLOW_BURST_MS = 2200;
 const MAX_SOUNDS_TOTAL = 12;
 const LOW_GRAPHICS_STORAGE_KEY = 'alise-in-tokyo-low-graphics';
-const MAX_CHARACTER_SOUNDS = 7;
+const MAX_CHARACTER_SOUNDS = 9;
 
 const buildBackgroundImagePath = (backgroundKey: string, suffix: string) => `/${backgroundKey}-${suffix}.jpg`;
 

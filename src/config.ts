@@ -1,8 +1,8 @@
-import { LIBRARY_BASE_SOUNDS } from './library_sounds';
+import { LIBRARY_BASE_SOUNDS, PUBLIC_FOLDER_SOUNDS } from './library_sounds';
 
 export type SoundAnimation = 'slow' | 'fast' | 'both';
 
-export type SoundCategory = 'voice' | 'beats' | 'drums' | 'animals' | 'melody' | 'creepy' | 'calm' | 'other';
+export type SoundCategory = 'voice' | 'beats' | 'drums' | 'animals' | 'melody' | 'creepy' | 'calm' | 'other' | 'acapella' | 'city' | 'cyberpunk' | 'drumloop' | 'electronic' | 'fun' | 'instruments' | 'japan' | 'lounge' | 'rhythm' | 'tune';
 
 export type SoundMood =
   | 'creepy'
@@ -271,6 +271,7 @@ export const CHARACTER_COLOR_TOKENS = SOUND_COLOR_TOKENS.slice(0, 18);
 const mapSoundColors = (baseSounds: BaseSoundOption[]): SoundOption[] =>
   baseSounds.map((sound, index) => ({
     ...sound,
+    category: sound.path.includes('/kawaii/') ? 'japan' : sound.path.includes('/loop%20(cyber)/') || sound.path.includes('/loop (cyber)/') ? 'cyberpunk' : sound.category,
     colorToken: SOUND_COLOR_TOKENS[index % SOUND_COLOR_TOKENS.length],
   }));
 
@@ -1132,6 +1133,7 @@ export const ALL_SOUNDS = mapSoundColors([
   ...AKITO_BASE_SOUNDS,
   ...ALISE_BASE_SOUNDS,
   ...LIBRARY_BASE_SOUNDS,
+  ...PUBLIC_FOLDER_SOUNDS,
 ]);
 
 export const SOUNDS = {
@@ -1139,7 +1141,7 @@ export const SOUNDS = {
   hanako: mapSoundColors(HANAKO_BASE_SOUNDS),
   akito: mapSoundColors(AKITO_BASE_SOUNDS),
   alise: mapSoundColors(ALISE_BASE_SOUNDS),
-  library: mapSoundColors(LIBRARY_BASE_SOUNDS),
+  library: mapSoundColors([...LIBRARY_BASE_SOUNDS, ...PUBLIC_FOLDER_SOUNDS]),
   all: ALL_SOUNDS,
 } as const;
 

@@ -31,7 +31,7 @@ import styles from './CharacterProfile.module.sass';
 
 const CHARACTER_PLACEHOLDER_PATH = '/alise-1.svg';
 const IDENTITY_NOTICE_STORAGE_KEY = 'alise-in-tokyo-identity-sounds-applied';
-const MAX_CHARACTER_SOUNDS = 7;
+const MAX_CHARACTER_SOUNDS = 9;
 
 export type CharacterColorOption = {
   readonly id: string;
@@ -70,7 +70,7 @@ export type CharacterProfileProps = {
   onUpgradeCharacter?: (characterId: string, level: number) => void;
 };
 
-type LibraryTab = 'favs' | 'theme' | 'mood' | 'chars';
+type LibraryTab = 'favs' | 'theme' | 'chars';
 
 /**
  * CharacterProfile
@@ -425,15 +425,12 @@ export function CharacterProfile({
     if (libTab === 'theme' && activeFilter) {
       base = base.filter(s => s.category === activeFilter);
     }
-    if (libTab === 'mood' && activeFilter) {
-      base = base.filter(s => s.mood === activeFilter);
-    }
 
     const grouped: Record<string, SoundOption[]> = {};
 
     if (!activeFilter) {
       base.forEach(s => {
-        const key = libTab === 'theme' ? s.category : (libTab === 'mood' ? s.mood : 'all');
+        const key = libTab === 'theme' ? s.category : 'all';
         const finalKey = key || 'other';
         if (!grouped[finalKey]) grouped[finalKey] = [];
         grouped[finalKey].push(s);
@@ -446,7 +443,6 @@ export function CharacterProfile({
 
   const filterOptions = useMemo(() => {
     if (libTab === 'theme') return Array.from(new Set(SOUNDS.library.map(s => s.category)));
-    if (libTab === 'mood') return Array.from(new Set([...soundCatalogById.values()].map(s => s.mood).filter(Boolean)));
     return [];
   }, [libTab, soundCatalogById]);
 
@@ -587,14 +583,6 @@ export function CharacterProfile({
             >
               THEME
             </button>
-            <button
-              className={`${styles.libTab} ${libTab === 'mood' ? styles.libTabActive : ''}`}
-              onClick={() => {
-                setLibTab('mood');
-              }}
-            >
-              MOOD
-            </button>
           </div>
         </header>
 
@@ -626,7 +614,7 @@ export function CharacterProfile({
           </button>
         </div>
 
-        {isCharacterSelected && (libTab === 'theme' || libTab === 'mood') && (
+        {isCharacterSelected && libTab === 'theme' && (
           <div className={styles.filterBar}>
             {filterOptions.map((opt) => (
               <button
