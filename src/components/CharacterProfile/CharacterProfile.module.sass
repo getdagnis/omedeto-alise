@@ -354,6 +354,7 @@
     color: var(--sound-color)
     animation: library-text-glow-pulse 0.9s ease-in-out infinite alternate
   .libraryItemDot
+    animation: library-dot-pulse 0.9s ease-in-out infinite alternate
     box-shadow: 0 0 0.625rem var(--sound-color)
   .dotIcon
     opacity: 1
@@ -364,6 +365,14 @@
     text-shadow: 0 0 0.15rem var(--sound-color)
   to
     text-shadow: 0 0 0.75rem var(--sound-color), 0 0 0.35rem var(--sound-color)
+
+@keyframes library-dot-pulse
+  from
+    opacity: 0.45
+    transform: scale(0.88)
+  to
+    opacity: 1
+    transform: scale(1.08)
 
 .libraryItemDot
   width: 0.75rem

@@ -798,7 +798,6 @@ function App() {
             }}
             onPreviewSound={(soundId, path) => togglePreviewSound(soundId, path)}
             onApply={(patch) => applyProfileSelection(profileCharacterId, patch)}
-            onNavigateShop={() => navigate('/shop')}
             discoveredComboIds={progressionState.discoveredComboIds}
             onRecordCombo={recordComboDiscovered}
             isMain={profileCharacterId === favoriteCharacterId}

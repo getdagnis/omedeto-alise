@@ -64,7 +64,6 @@ export type CharacterProfileProps = {
   onClearSounds?: () => void;
   onPreviewSound: (soundId: string, path: string) => void;
   onApply: (patch?: CharacterCustomization) => void;
-  onNavigateShop: () => void;
   onRecordCombo?: (comboId: string) => void;
   onToggleFavoriteSound: (soundId: string) => void;
   onUpgradeCharacter?: (characterId: string, level: number) => void;
@@ -93,7 +92,6 @@ export function CharacterProfile({
   onClearSounds,
   onPreviewSound,
   onApply,
-  onNavigateShop,
   onRecordCombo,
   onToggleFavoriteSound,
   onUpgradeCharacter,
@@ -114,6 +112,7 @@ export function CharacterProfile({
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [sessionAddedSounds, setSessionAddedSounds] = useState<string[]>([]);
+
   const { items: floatingItems, addText: addFloatingText } = useFloatingText();
   const floatingTextIndexRef = useRef(0);
   const [draftCustomization, setDraftCustomization] = useState(() => {
@@ -146,9 +145,7 @@ export function CharacterProfile({
   const [hoveredComboId, setHoveredComboId] = useState<string | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [isBottomReached, setIsBottomReached] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
-    new Set(['voice', 'beats', 'drums', 'animals', 'melody', 'creepy', 'calm', 'other', 'akito', 'alise', 'gumi', 'hanako']),
-  );
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -229,6 +226,12 @@ export function CharacterProfile({
     const ids = draftCustomization?.cloudSoundIds || availableSounds.map((sound) => sound.id).slice(0, 24);
     return ids.map(id => soundCatalogById.get(id)).filter((s): s is SoundOption => !!s);
   }, [availableSounds, draftCustomization.cloudSoundIds, soundCatalogById]);
+
+  useEffect(() => {
+    if (previewingSoundId && constellationSounds.some((sound) => sound.id === previewingSoundId)) {
+      setIsLibraryOpen(true);
+    }
+  }, [previewingSoundId, constellationSounds]);
 
   const cloudCompletedComboIds = useMemo(() => {
     const cloudSet = new Set(constellationSounds.map(s => s.id));
@@ -312,12 +315,7 @@ export function CharacterProfile({
   }, []);
 
   const toggleGroup = (group: string) => {
-    setCollapsedGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(group)) next.delete(group);
-      else next.add(group);
-      return next;
-    });
+    setExpandedGroup(prev => (prev === group ? null : group));
   };
 
   const handleUpdateDraft = (patch: CharacterCustomization) => {
@@ -438,11 +436,11 @@ export function CharacterProfile({
     } else {
       return base;
     }
-    return grouped;
+    return Object.fromEntries(Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)));
   }, [libTab, activeFilter, favoriteSoundIds, soundCatalogById]);
 
   const filterOptions = useMemo(() => {
-    if (libTab === 'theme') return Array.from(new Set(SOUNDS.library.map(s => s.category)));
+    if (libTab === 'theme') return Array.from(new Set(SOUNDS.library.map(s => s.category))).sort((a, b) => a.localeCompare(b));
     return [];
   }, [libTab, soundCatalogById]);
 
@@ -513,7 +511,7 @@ export function CharacterProfile({
   };
 
   const renderGroup = (key: string, title: string, sounds: SoundOption[]) => {
-    const isCollapsed = collapsedGroups.has(key);
+    const isCollapsed = expandedGroup !== key;
     const hasSelected = sounds.some(s => constellationSounds.some(cs => cs.id === s.id));
 
     return (
@@ -639,10 +637,6 @@ export function CharacterProfile({
             }}
           >
             APPLY SELECTED SOUNDS
-          </Button>
-          <Button variant="secondary" size="sm" className={styles.getMoreBtn} onPress={onNavigateShop}>
-            <Music size={12} />
-            <span>GET MORE</span>
           </Button>
         </div>
       </aside>
