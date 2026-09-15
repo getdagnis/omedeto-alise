@@ -15,6 +15,7 @@ export interface MenuProps {
 
 export function Menu({ isOpen, onClose, onNavigate, isLowGraphics, onToggleLowGraphics, onResetAllData }: MenuProps) {
   const [isReady, setIsReady] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const { trackEvent } = useAnalytics();
 
   useEffect(() => {
@@ -44,40 +45,6 @@ export function Menu({ isOpen, onClose, onNavigate, isLowGraphics, onToggleLowGr
           <div
             className={styles.liInner}
             onClick={() => {
-              trackEvent('nav_open_shop');
-              onNavigate('/shop');
-              onClose();
-            }}
-          >
-            SHOP
-          </div>
-        </li>
-        <Separator />
-        <li className={styles.menuItem}>
-          <div
-            className={styles.liInner}
-            onClick={() => {
-              trackEvent('nav_open_admin');
-              onNavigate('/admin');
-              onClose();
-            }}
-          >
-            ADMIN
-          </div>
-        </li>
-        <li className={styles.menuItem}>
-          <div
-            className={styles.liInner}
-            style={{ color: 'var(--neon-pink)', opacity: 0.8 }}
-            onClick={onResetAllData}
-          >
-            RESET ALL DATA
-          </div>
-        </li>
-        <li className={styles.menuItem}>
-          <div
-            className={styles.liInner}
-            onClick={() => {
               trackEvent('nav_open_stats');
               onNavigate('/stats');
               onClose();
@@ -87,21 +54,8 @@ export function Menu({ isOpen, onClose, onNavigate, isLowGraphics, onToggleLowGr
           </div>
         </li>
         <li className={styles.menuItem}>
-          <div
-            className={styles.liInner}
-            onClick={() => {
-              onNavigate('/sandbox');
-              onClose();
-            }}
-          >
-            UI Sandbox
-          </div>
-        </li>
-        <Separator />
-        <li className={styles.menuItem}>
-          <button type="button" className={`${styles.liInner} ${styles.menuToggle}`} onClick={onToggleLowGraphics}>
-            LOW GRAPHICS: {isLowGraphics ? 'ON' : 'OFF'}
-          </button>
+          <div className={styles.liInner} onClick={() => setIsAboutOpen((open) => !open)}>ABOUT</div>
+          {isAboutOpen && <div className={styles.aboutMessage}>I will tell you about it later.</div>}
         </li>
       </ul>
     </div>
